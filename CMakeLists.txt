@@ -23,6 +23,8 @@ endif(APPLE)
 add_executable(vulkan_engine main.cpp
         src/VulkanContext.h
         src/VulkanContext.cpp
+        src/VulkanAllocator.h
+        src/VulkanAllocator.cpp
 )
 if (APPLE)
     target_link_libraries(vulkan_engine "-framework CoreFoundation")

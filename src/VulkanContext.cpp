@@ -18,6 +18,7 @@ void VulkanContext::initVulkan() {
     createLogicalDevice();
     createSwapChain();
     createImageViews();
+    createAllocator();
 }
 
 void VulkanContext::initWindow() {
@@ -371,11 +372,22 @@ static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMesse
 }
 
 void VulkanContext::cleanup() {
+    allocator->destroy();
     glfwDestroyWindow(window);
     glfwTerminate();
 }
 
 VulkanContext::VulkanContext() {
+}
+
+void VulkanContext::createAllocator() {
+    allocator = new VulkanAllocator();
+    allocator->context = this;
+    allocator->init();
+}
+
+VulkanContext::~VulkanContext() {
+    delete allocator;
 }
 
 

@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <iostream>
 
+class VulkanAllocator;
+
 struct VulkanContext {
     GLFWwindow* window = nullptr;
     vk::raii::Context context {};
@@ -33,6 +35,7 @@ struct VulkanContext {
     std::vector<vk::raii::ImageView> swapChainImageViews;
     vk::Format swapChainImageFormat;
     vk::Extent2D swapChainExtent;
+    VulkanAllocator* allocator;
 
     VulkanContext();
 
@@ -54,6 +57,9 @@ struct VulkanContext {
     };
 
     QueueFamilyIndices findQueueFamilies(vk::raii::PhysicalDevice device);
+
+    virtual ~VulkanContext();
+
 private:
 
     void initWindow();
@@ -90,7 +96,10 @@ private:
     void createSwapChain();
 
     void createImageViews();
+
+    void createAllocator();
 };
 
+#include "VulkanAllocator.h"
 
 #endif //VULKAN_TEST_VULKANCONTEXT_H
