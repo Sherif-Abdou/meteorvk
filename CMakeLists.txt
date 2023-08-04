@@ -27,6 +27,8 @@ add_executable(vulkan_engine main.cpp
         src/VulkanAllocator.cpp
         src/Vertex.h
         src/Vertex.cpp
+        src/VertexBuffer.h
+        src/VertexBuffer.cpp
 )
 if (APPLE)
     target_link_libraries(vulkan_engine "-framework CoreFoundation")
