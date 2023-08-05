@@ -12,7 +12,7 @@ vk::VertexInputBindingDescription Vertex::bindingDescription() {
     return binding;
 }
 
-std::array<vk::VertexInputAttributeDescription, Vertex::VERTEX_NUM> Vertex::attributeDescription() {
+std::array<vk::VertexInputAttributeDescription, Vertex::VERTEX_NUM> Vertex::attributeDescriptions() {
     auto position_attribute = VkVertexInputAttributeDescription();
     position_attribute.binding = 0;
     position_attribute.location = 0;

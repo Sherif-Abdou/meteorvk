@@ -10,10 +10,22 @@
 #include <vma/vk_mem_alloc.h>
 
 #include "src/VulkanContext.h"
+#include "src/VertexBuffer.h"
+#include "src/graphics_pipeline/GraphicsRenderPass.h"
+#include "src/graphics_pipeline/GraphicsPipeline.h"
 
 int main() {
     VulkanContext context {};
     context.initVulkan();
+    GraphicsRenderPass renderPass(context);
+    renderPass.init();
+    GraphicsPipeline pipeline(context, std::move(renderPass));
+    pipeline.init();
+
+
+    char buffer[32];
+    std::cin >> buffer;
+
     std::cout << "Hello, World!" << std::endl;
     context.cleanup();
     return 0;

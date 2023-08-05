@@ -29,12 +29,20 @@ add_executable(vulkan_engine main.cpp
         src/Vertex.cpp
         src/VertexBuffer.h
         src/VertexBuffer.cpp
+        src/DescriptorSet.cpp
+        src/DescriptorSet.h
+        src/graphics_pipeline/GraphicsPipeline.cpp
+        src/graphics_pipeline/GraphicsPipeline.h
+        src/graphics_pipeline/GraphicsRenderPass.cpp
+        src/graphics_pipeline/GraphicsRenderPass.h
+        src/graphics_pipeline/GraphicsShaders.cpp
+        src/graphics_pipeline/GraphicsShaders.h
 )
 if (APPLE)
     target_link_libraries(vulkan_engine "-framework CoreFoundation")
     target_link_libraries(vulkan_engine "-framework CoreGraphics")
     target_link_libraries(vulkan_engine "-framework IOKit")
     target_link_libraries(vulkan_engine "-framework Cocoa")
-    target_link_libraries(vulkan_engine vulkan glfw)
+    target_link_libraries(vulkan_engine vulkan glfw shaderc_shared)
     target_include_directories(vulkan_engine PUBLIC ${VULKAN_INCLUDE_DIRS})
 endif (APPLE)

@@ -19,7 +19,7 @@ struct Vertex {
     glm::vec3 tangent;
 
     static vk::VertexInputBindingDescription bindingDescription();
-    static std::array<vk::VertexInputAttributeDescription, VERTEX_NUM> attributeDescription();
+    static std::array<vk::VertexInputAttributeDescription, VERTEX_NUM> attributeDescriptions();
     static void writeVectorToBuffer(const std::vector<Vertex>&, VulkanAllocator::VulkanBufferAllocation&);
 
     static Vertex positionOnly(glm::vec3);
