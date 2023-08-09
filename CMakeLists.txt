@@ -23,20 +23,22 @@ endif(APPLE)
 add_executable(vulkan_engine main.cpp
         src/VulkanContext.h
         src/VulkanContext.cpp
-        src/VulkanAllocator.h
-        src/VulkanAllocator.cpp
-        src/Vertex.h
-        src/Vertex.cpp
-        src/VertexBuffer.h
-        src/VertexBuffer.cpp
-        src/DescriptorSet.cpp
-        src/DescriptorSet.h
+        src/storage/VulkanAllocator.h
+        src/storage/VulkanAllocator.cpp
+        src/storage/Vertex.h
+        src/storage/Vertex.cpp
+        src/storage/VertexBuffer.h
+        src/storage/VertexBuffer.cpp
+        src/storage/DescriptorSet.cpp
+        src/storage/DescriptorSet.h
         src/graphics_pipeline/GraphicsPipeline.cpp
         src/graphics_pipeline/GraphicsPipeline.h
         src/graphics_pipeline/GraphicsRenderPass.cpp
         src/graphics_pipeline/GraphicsRenderPass.h
         src/graphics_pipeline/GraphicsShaders.cpp
         src/graphics_pipeline/GraphicsShaders.h
+        src/graphics_pipeline/GraphicsCommandBuffer.cpp
+        src/graphics_pipeline/GraphicsCommandBuffer.h
 )
 if (APPLE)
     target_link_libraries(vulkan_engine "-framework CoreFoundation")

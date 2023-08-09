@@ -3,13 +3,13 @@
 //
 
 #include "GraphicsPipeline.h"
-#include "../Vertex.h"
+#include "../storage/Vertex.h"
 #include "GraphicsShaders.h"
 
 void GraphicsPipeline::createFramebuffers() {
     for (auto& imageView: targetImageViews) {
         vk::FramebufferCreateInfo createInfo {};
-        auto attachments = {*imageView, *depthImageView};
+        auto attachments = {imageView, *depthImageView};
 
         createInfo.setRenderPass(*renderPass.getRenderPass());
         createInfo.setWidth(context.swapChainExtent.width);
@@ -56,8 +56,7 @@ void GraphicsPipeline::init() {
 void GraphicsPipeline::createSyncObjects() {
     vk::SemaphoreCreateInfo semaphoreCreateInfo {};
     vk::FenceCreateInfo fenceCreateInfo {};
-    signalSemaphore = context.device.createSemaphore(semaphoreCreateInfo);
-    waitSemaphore = context.device.createSemaphore(semaphoreCreateInfo);
+    pipelineSemaphore = context.device.createSemaphore(semaphoreCreateInfo);
     pipelineFence = context.device.createFence(fenceCreateInfo);
 }
 
@@ -150,3 +149,53 @@ void GraphicsPipeline::createPipelineLayout() {
 
 GraphicsPipeline::GraphicsPipeline(VulkanContext &context, GraphicsRenderPass&& renderPass)
         : context(context), renderPass(std::move(renderPass)) {}
+
+vk::raii::Semaphore & GraphicsPipeline::getPipelineSemaphore() {
+    return pipelineSemaphore;
+}
+
+vk::raii::Fence & GraphicsPipeline::getPipelineFence() {
+    return pipelineFence;
+}
+
+void GraphicsPipeline::renderPipeline(GraphicsPipeline::RenderArguments renderArguments) {
+    auto imageIndex = renderArguments.imageIndex;
+    vk::RenderPassBeginInfo beginInfo {};
+    imageIndex = std::min((long)imageIndex, (long)targetFramebuffers.size()-1);
+
+    vk::ClearValue clearValues[2] = {};
+    clearValues[0].setColor(vk::ClearColorValue(1.0f, 0.0f, 0.0f, 1.0f));
+    clearValues[1].setDepthStencil(vk::ClearDepthStencilValue(1.0, 0.0));
+
+    beginInfo.setFramebuffer(*targetFramebuffers[imageIndex]);
+    beginInfo.setRenderPass(*renderPass.getRenderPass());
+    beginInfo.setClearValues(clearValues);
+    auto rect = vk::Rect2D {};
+    rect.setOffset({0, 0});
+    rect.setExtent(context.swapChainExtent);
+    beginInfo.setRenderArea(rect);
+
+    renderArguments.commandBuffer.beginRenderPass(beginInfo, vk::SubpassContents::eInline);
+
+    vk::Viewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = static_cast<float>(context.swapChainExtent.height);;
+    viewport.width = static_cast<float>(context.swapChainExtent.width);
+    viewport.height = -static_cast<float>(context.swapChainExtent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    renderArguments.commandBuffer.setViewport(0, viewport);
+
+    vk::Rect2D scissor{};
+    scissor.offset = vk::Offset2D {0, 0};
+    scissor.extent = context.swapChainExtent;
+    renderArguments.commandBuffer.setScissor(0, scissor);
+    for (auto& vbo: renderArguments.vertexBuffers) {
+        vbo.draw(renderArguments.commandBuffer);
+    }
+    renderArguments.commandBuffer.endRenderPass();
+}
+
+GraphicsPipeline::~GraphicsPipeline() {
+    depthImage.destroy();
+}

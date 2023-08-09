@@ -19,6 +19,8 @@ public:
     void attachToCommandBuffer(vk::raii::CommandBuffer &buffer);
     void draw(vk::raii::CommandBuffer &buffer);
     void destroy();
+
+    VertexBuffer(VertexBuffer&&) = default;
 private:
     void initializeVertexBuffer();
     VulkanAllocator::VulkanBufferAllocation vertexBuffer;

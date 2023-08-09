@@ -100,6 +100,6 @@ private:
     void createAllocator();
 };
 
-#include "VulkanAllocator.h"
+#include "storage/VulkanAllocator.h"
 
 #endif //VULKAN_TEST_VULKANCONTEXT_H

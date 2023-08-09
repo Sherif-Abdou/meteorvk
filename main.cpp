@@ -10,9 +10,10 @@
 #include <vma/vk_mem_alloc.h>
 
 #include "src/VulkanContext.h"
-#include "src/VertexBuffer.h"
+#include "src/storage/VertexBuffer.h"
 #include "src/graphics_pipeline/GraphicsRenderPass.h"
 #include "src/graphics_pipeline/GraphicsPipeline.h"
+#include "src/graphics_pipeline/GraphicsCommandBuffer.h"
 
 int main() {
     VulkanContext context {};
@@ -20,13 +21,21 @@ int main() {
     GraphicsRenderPass renderPass(context);
     renderPass.init();
     GraphicsPipeline pipeline(context, std::move(renderPass));
+    for (auto& swapChainImage: context.swapChainImageViews) {
+        pipeline.targetImageViews.push_back(*swapChainImage);
+    }
     pipeline.init();
+    GraphicsCommandBuffer commandBuffer(context);
 
+    commandBuffer.pipelines.push_back(std::move(pipeline));
+    commandBuffer.init();
 
-    char buffer[32];
-    std::cin >> buffer;
+    commandBuffer.renderToSwapchain();
+    glfwShowWindow(context.window);
+    while (!glfwWindowShouldClose(context.window)) {
+        glfwPollEvents();
+    }
 
-    std::cout << "Hello, World!" << std::endl;
     context.cleanup();
     return 0;
 }
