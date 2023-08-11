@@ -14,6 +14,8 @@ public:
     VulkanContext& context;
     std::string vertexShaderPath;
     std::string fragmentShaderPath;
+    vk::raii::ShaderModule vertexShaderModule = nullptr;
+    vk::raii::ShaderModule fragmentShaderModule = nullptr;
     GraphicsShaders(VulkanContext &context, const std::string &vertexShaderPath, const std::string &fragmentShaderPath);
     std::vector<vk::PipelineShaderStageCreateInfo> getShaderStage();
 

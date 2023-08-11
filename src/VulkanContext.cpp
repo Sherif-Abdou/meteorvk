@@ -372,7 +372,6 @@ static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMesse
 }
 
 void VulkanContext::cleanup() {
-    allocator->destroy();
     glfwDestroyWindow(window);
     glfwTerminate();
 }
@@ -387,7 +386,9 @@ void VulkanContext::createAllocator() {
 }
 
 VulkanContext::~VulkanContext() {
+    allocator->destroy();
     delete allocator;
 }
+
 
 

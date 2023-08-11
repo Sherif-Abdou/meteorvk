@@ -39,6 +39,7 @@ public:
 
     void init();
     void renderToSwapchain();
+    void destroy();
 };
 
 

@@ -21,6 +21,8 @@ public:
     void destroy();
 
     VertexBuffer(VertexBuffer&&) = default;
+
+    virtual ~VertexBuffer();
 private:
     void initializeVertexBuffer();
     VulkanAllocator::VulkanBufferAllocation vertexBuffer;

@@ -66,6 +66,7 @@ void GraphicsPipeline::createPipeline() {
     auto shaders = GraphicsShaders(context, "shaders/basic.vert", "shaders/basic.frag");
     auto stages = shaders.getShaderStage();
 
+
     vk::Viewport viewport {};
     viewport.x = 0;
     viewport.y = 0;
@@ -164,7 +165,7 @@ void GraphicsPipeline::renderPipeline(GraphicsPipeline::RenderArguments renderAr
     imageIndex = std::min((long)imageIndex, (long)targetFramebuffers.size()-1);
 
     vk::ClearValue clearValues[2] = {};
-    clearValues[0].setColor(vk::ClearColorValue(1.0f, 0.0f, 0.0f, 1.0f));
+    clearValues[0].setColor(vk::ClearColorValue(0.4f, 0.0f, 0.8f, 1.0f));
     clearValues[1].setDepthStencil(vk::ClearDepthStencilValue(1.0, 0.0));
 
     beginInfo.setFramebuffer(*targetFramebuffers[imageIndex]);
@@ -176,6 +177,11 @@ void GraphicsPipeline::renderPipeline(GraphicsPipeline::RenderArguments renderAr
     beginInfo.setRenderArea(rect);
 
     renderArguments.commandBuffer.beginRenderPass(beginInfo, vk::SubpassContents::eInline);
+    renderArguments.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline);
+    for (auto& buffer: renderArguments.vertexBuffers) {
+        buffer.updateVertexBuffer();
+        buffer.attachToCommandBuffer(renderArguments.commandBuffer);
+    }
 
     vk::Viewport viewport{};
     viewport.x = 0.0f;
@@ -197,5 +203,8 @@ void GraphicsPipeline::renderPipeline(GraphicsPipeline::RenderArguments renderAr
 }
 
 GraphicsPipeline::~GraphicsPipeline() {
+}
+
+void GraphicsPipeline::destroy() {
     depthImage.destroy();
 }

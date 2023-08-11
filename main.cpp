@@ -15,6 +15,15 @@
 #include "src/graphics_pipeline/GraphicsPipeline.h"
 #include "src/graphics_pipeline/GraphicsCommandBuffer.h"
 
+VertexBuffer createVertexBuffer(VulkanContext& context) {
+    VertexBuffer buffer(*context.allocator);
+    buffer.vertices.push_back(Vertex::positionOnly({0, 0, 0}));
+    buffer.vertices.push_back(Vertex::positionOnly({1, 0, 0}));
+    buffer.vertices.push_back(Vertex::positionOnly({0, 1, 0}));
+
+    return buffer;
+}
+
 int main() {
     VulkanContext context {};
     context.initVulkan();
@@ -29,6 +38,9 @@ int main() {
 
     commandBuffer.pipelines.push_back(std::move(pipeline));
     commandBuffer.init();
+    auto vertexbuffer = createVertexBuffer(context);
+    vertexbuffer.init();
+    commandBuffer.vertexBuffers.push_back(std::move(vertexbuffer));
 
     commandBuffer.renderToSwapchain();
     glfwShowWindow(context.window);
@@ -36,6 +48,9 @@ int main() {
         glfwPollEvents();
     }
 
+
+    context.device.waitIdle();
+    commandBuffer.destroy();
     context.cleanup();
     return 0;
 }

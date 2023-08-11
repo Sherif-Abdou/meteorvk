@@ -25,6 +25,7 @@ public: // Inputs
     std::optional<DescriptorSet> descriptorSet;
 
     explicit GraphicsPipeline(VulkanContext &context, GraphicsRenderPass&& renderPass);
+    GraphicsPipeline(GraphicsPipeline&&) = default;
 
     void init();
 private:
@@ -45,6 +46,7 @@ public:
 
     virtual ~GraphicsPipeline();
 
+    void destroy();
 private:
     vk::raii::Fence pipelineFence = nullptr;
     VulkanAllocator::VulkanImageAllocation depthImage;

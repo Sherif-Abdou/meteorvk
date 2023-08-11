@@ -36,20 +36,20 @@ std::vector<vk::PipelineShaderStageCreateInfo> GraphicsShaders::getShaderStage()
     auto vertexShaderModuleCreateInfo = vk::ShaderModuleCreateInfo();
     auto vertexShader = compileShader(vertexShaderPath, shaderc_glsl_vertex_shader);
     vertexShaderModuleCreateInfo.setCode(vertexShader);
-    auto vertexShaderModule = context.device.createShaderModule(vertexShaderModuleCreateInfo).release();
+    vertexShaderModule = context.device.createShaderModule(vertexShaderModuleCreateInfo);
 
     auto fragmentShaderModuleCreateInfo = vk::ShaderModuleCreateInfo();
     auto fragmentShader = compileShader(fragmentShaderPath, shaderc_glsl_fragment_shader);
     fragmentShaderModuleCreateInfo.setCode(fragmentShader);
-    auto fragmentShaderModule = context.device.createShaderModule(fragmentShaderModuleCreateInfo).release();
+    fragmentShaderModule = context.device.createShaderModule(fragmentShaderModuleCreateInfo);
 
     auto vertexShaderStage = vk::PipelineShaderStageCreateInfo();
-    vertexShaderStage.setModule(vertexShaderModule);
+    vertexShaderStage.setModule(*vertexShaderModule);
     vertexShaderStage.setPName("main");
     vertexShaderStage.setStage(vk::ShaderStageFlagBits::eVertex);
 
     auto fragmentShaderStage = vk::PipelineShaderStageCreateInfo();
-    fragmentShaderStage.setModule(fragmentShaderModule);
+    fragmentShaderStage.setModule(*fragmentShaderModule);
     fragmentShaderStage.setPName("main");
     fragmentShaderStage.setStage(vk::ShaderStageFlagBits::eFragment);
 

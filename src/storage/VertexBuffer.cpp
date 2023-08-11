@@ -40,3 +40,6 @@ void VertexBuffer::draw(vk::raii::CommandBuffer &buffer) {
     attachToCommandBuffer(buffer);
     buffer.draw(vertices.size(), 1, 0, 0);
 }
+
+VertexBuffer::~VertexBuffer() {
+}

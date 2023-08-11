@@ -60,6 +60,7 @@ struct VulkanContext {
 
     virtual ~VulkanContext();
 
+
 private:
 
     void initWindow();

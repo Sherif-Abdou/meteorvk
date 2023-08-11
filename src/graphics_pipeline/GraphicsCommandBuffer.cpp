@@ -102,3 +102,12 @@ void GraphicsCommandBuffer::renderToSwapchain() {
 }
 
 GraphicsCommandBuffer::GraphicsCommandBuffer(VulkanContext &context) : context(context) {}
+
+void GraphicsCommandBuffer::destroy() {
+    for (auto& pipeline: pipelines) {
+        pipeline.destroy();
+    }
+    for (auto& buffer: vertexBuffers) {
+        buffer.destroy();
+    }
+}
