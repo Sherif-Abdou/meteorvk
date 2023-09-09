@@ -7,6 +7,7 @@
 
 #include "../VulkanContext.h"
 #include "GraphicsPipeline.h"
+#include "../storage/UniformBuffer.h"
 #include <vulkan/vulkan.hpp>
 
 class GraphicsCommandBuffer {
@@ -17,8 +18,6 @@ private:
     vk::raii::Semaphore imageAvailableSemaphore= nullptr;
     vk::raii::Semaphore renderFinishedSemaphore= nullptr;
     vk::raii::Fence inFlightFence= nullptr;
-
-private:
     uint32_t swapChainImageIndex;
 
     void createCommandPool();
@@ -32,6 +31,12 @@ private:
     void sendToSwapchain();
 
 public:
+    struct DescriptorPipelineBinding {
+        DescriptorSet* descriptorSet;
+        vk::raii::PipelineLayout* layout;
+        uint32_t set = 0;
+    };
+    std::vector<DescriptorPipelineBinding> bindings {};
     std::vector<VertexBuffer> vertexBuffers {};
     std::vector<GraphicsPipeline> pipelines {};
 
@@ -39,7 +44,14 @@ public:
 
     void init();
     void renderToSwapchain();
+    void bindDescriptorSet(DescriptorSet &descriptor_set, vk::raii::PipelineLayout &, uint32_t set_number = 0);
     void destroy();
+
+    void beginCommandBuffer() const;
+
+    void beginSwapchainRender();
+
+    void finishSwapchainRender();
 };
 
 

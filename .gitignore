@@ -4,3 +4,5 @@ compiled_shaders
 build
 .idea
 .vscode
+*.xcworkspace/
+.cache/

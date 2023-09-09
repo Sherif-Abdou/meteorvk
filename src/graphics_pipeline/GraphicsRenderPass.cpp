@@ -37,9 +37,9 @@ GraphicsRenderPass::Subpass GraphicsRenderPass::createSubpass() {
     subpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
     subpassDependency.dstSubpass = 0;
     subpassDependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-    subpassDependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+    subpassDependency.dstStageMask = vk::PipelineStageFlagBits::eFragmentShader;
     subpassDependency.srcAccessMask = vk::AccessFlags();
-    subpassDependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+    subpassDependency.dstAccessMask = vk::AccessFlagBits::eShaderRead;
 
     return {
         subpassDescription,
@@ -48,22 +48,23 @@ GraphicsRenderPass::Subpass GraphicsRenderPass::createSubpass() {
 }
 
 void GraphicsRenderPass::createAttachments() {
-    colorDescription.setFormat(context.swapChainImageFormat);
-    colorDescription.setInitialLayout(vk::ImageLayout::eUndefined);
-    colorDescription.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
-    colorDescription.setFormat(context.swapChainImageFormat);
-    colorDescription.setLoadOp(vk::AttachmentLoadOp::eClear);
-    colorDescription.setStoreOp(vk::AttachmentStoreOp::eStore);
-    colorDescription.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
-    colorDescription.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
+    colorDescription.setFormat(context.swapChainImageFormat)
+        .setInitialLayout(vk::ImageLayout::eUndefined)
+        .setFinalLayout(vk::ImageLayout::ePresentSrcKHR)
+        .setFormat(context.swapChainImageFormat)
+        .setLoadOp(vk::AttachmentLoadOp::eClear)
+        .setStoreOp(vk::AttachmentStoreOp::eStore)
+        .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+        .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
 
-    depthDescription.setInitialLayout(vk::ImageLayout::eUndefined);
-    depthDescription.setFinalLayout(vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal);
-    depthDescription.setFormat(vk::Format::eD32Sfloat);
-    depthDescription.setLoadOp(vk::AttachmentLoadOp::eClear);
-    depthDescription.setStoreOp(vk::AttachmentStoreOp::eDontCare);
-    depthDescription.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
-    depthDescription.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
+    depthDescription
+        .setInitialLayout(vk::ImageLayout::eUndefined)
+        .setFinalLayout(vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal)
+        .setFormat(vk::Format::eD32Sfloat)
+        .setLoadOp(vk::AttachmentLoadOp::eClear)
+        .setStoreOp(vk::AttachmentStoreOp::eDontCare)
+        .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+        .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
 }
 
 vk::raii::RenderPass & GraphicsRenderPass::getRenderPass() {

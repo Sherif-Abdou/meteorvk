@@ -110,6 +110,12 @@ void GraphicsPipeline::createPipeline() {
 
     vk::PipelineColorBlendAttachmentState colorBlendAttachmentState {};
     colorBlendAttachmentState.setBlendEnable(false);
+    colorBlendAttachmentState.setColorBlendOp(vk::BlendOp::eAdd);
+    colorBlendAttachmentState.setAlphaBlendOp(vk::BlendOp::eAdd);
+    colorBlendAttachmentState.setSrcColorBlendFactor(vk::BlendFactor::eDstAlpha);
+    colorBlendAttachmentState.setDstColorBlendFactor(vk::BlendFactor::eOneMinusDstAlpha);
+    colorBlendAttachmentState.setSrcAlphaBlendFactor(vk::BlendFactor::eDstAlpha);
+    colorBlendAttachmentState.setDstAlphaBlendFactor(vk::BlendFactor::eOneMinusDstAlpha);
     colorBlendAttachmentState.setColorWriteMask(vk::ColorComponentFlagBits::eA | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eR);
 
     vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
@@ -141,7 +147,7 @@ void GraphicsPipeline::createPipeline() {
 void GraphicsPipeline::createPipelineLayout() {
     vk::PipelineLayoutCreateInfo layoutCreateInfo {};
     if (descriptorSet.has_value()) {
-        auto layouts = {*descriptorSet.value().getDescriptorSetLayout()};
+        auto layouts = {*descriptorSet.value()->getDescriptorSetLayout()};
         layoutCreateInfo.setSetLayouts(layouts);
     }
 
@@ -164,8 +170,8 @@ void GraphicsPipeline::renderPipeline(GraphicsPipeline::RenderArguments renderAr
     vk::RenderPassBeginInfo beginInfo {};
     imageIndex = std::min((long)imageIndex, (long)targetFramebuffers.size()-1);
 
-    vk::ClearValue clearValues[2] = {};
-    clearValues[0].setColor(vk::ClearColorValue(0.4f, 0.0f, 0.8f, 1.0f));
+    vk::ClearValue clearValues[2];
+    clearValues[0].setColor(vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f));
     clearValues[1].setDepthStencil(vk::ClearDepthStencilValue(1.0, 0.0));
 
     beginInfo.setFramebuffer(*targetFramebuffers[imageIndex]);
@@ -207,4 +213,8 @@ GraphicsPipeline::~GraphicsPipeline() {
 
 void GraphicsPipeline::destroy() {
     depthImage.destroy();
+}
+
+vk::raii::PipelineLayout &GraphicsPipeline::getPipelineLayout() {
+    return pipelineLayout;
 }

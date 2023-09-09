@@ -22,7 +22,7 @@ public: // Inputs
     std::vector<vk::ImageView> targetImageViews;
     GraphicsRenderPass renderPass;
     unsigned int subPassIndex = 0;
-    std::optional<DescriptorSet> descriptorSet;
+    std::optional<DescriptorSet*> descriptorSet;
 
     explicit GraphicsPipeline(VulkanContext &context, GraphicsRenderPass&& renderPass);
     GraphicsPipeline(GraphicsPipeline&&) = default;
@@ -35,6 +35,10 @@ private:
     void createDepthImage();
     std::vector<vk::raii::Framebuffer> targetFramebuffers;
     vk::raii::PipelineLayout pipelineLayout = nullptr;
+public:
+    vk::raii::PipelineLayout &getPipelineLayout();
+
+private:
     vk::raii::Pipeline pipeline = nullptr;
     vk::raii::Semaphore pipelineSemaphore = nullptr;
 public:

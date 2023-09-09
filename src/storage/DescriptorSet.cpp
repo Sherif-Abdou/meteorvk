@@ -17,6 +17,7 @@ void DescriptorSet::createDescriptorPool() {
     vk::DescriptorPoolSize uniformBufferSize {};
     uniformBufferSize.setType(vk::DescriptorType::eUniformBuffer);
     uniformBufferSize.setDescriptorCount(MAX_UNIFORM_BUFFERS);
+
     vk::DescriptorPoolSize samplerSize {};
     samplerSize.setType(vk::DescriptorType::eCombinedImageSampler);
     samplerSize.setDescriptorCount(MAX_SAMPLERS);
@@ -34,14 +35,13 @@ void DescriptorSet::createDescriptorSet() {
 
     auto list = std::vector<vk::DescriptorSetLayout> {*descriptorSetLayout};
     allocateInfo.setDescriptorPool(*descriptorPool);
-
     allocateInfo.setSetLayouts(list);
 
     vk::raii::DescriptorSets sets(context.device, allocateInfo);
 
-    assert(sets.size() > 0);
+    assert(!sets.empty());
 
-    descriptorSet = std::move(sets[0]);
+    descriptorSet = std::move(sets);
 }
 
 const std::vector<vk::DescriptorSetLayoutBinding> &DescriptorSet::getBindings() const {
@@ -52,11 +52,11 @@ void DescriptorSet::setBindings(const std::vector<vk::DescriptorSetLayoutBinding
     DescriptorSet::bindings = bindings;
 }
 
-const vk::raii::DescriptorSet &DescriptorSet::getDescriptorSet() const {
-    return descriptorSet;
+vk::raii::DescriptorSet &DescriptorSet::getDescriptorSet() {
+    return descriptorSet[0];
 }
 
-const vk::raii::DescriptorSetLayout &DescriptorSet::getDescriptorSetLayout() const {
+vk::raii::DescriptorSetLayout &DescriptorSet::getDescriptorSetLayout() {
     return descriptorSetLayout;
 }
 
@@ -72,5 +72,8 @@ void DescriptorSet::buildDescriptor() {
 
 void
 DescriptorSet::bindToCommandBuffer(vk::raii::CommandBuffer &commandBuffer, vk::raii::PipelineLayout& pipelineLayout, uint32_t set) {
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipelineLayout, set, {*descriptorSet}, {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipelineLayout, set, *descriptorSet[0], {});
 }
+
+DescriptorSet::DescriptorSet(VulkanContext &context, const std::vector<vk::DescriptorSetLayoutBinding> &bindings)
+        : context(context), bindings(bindings) {}

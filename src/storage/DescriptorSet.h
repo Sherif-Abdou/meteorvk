@@ -11,20 +11,7 @@ class DescriptorSet {
 private:
     VulkanContext& context;
     std::vector<vk::DescriptorSetLayoutBinding> bindings;
-public:
-    [[nodiscard]] const std::vector<vk::DescriptorSetLayoutBinding> &getBindings() const;
-
-    void setBindings(const std::vector<vk::DescriptorSetLayoutBinding> &bindings);
-private:
-    vk::raii::DescriptorSet descriptorSet = nullptr;
-public:
-    [[nodiscard]] const vk::raii::DescriptorSet &getDescriptorSet() const;
-
-    [[nodiscard]] const vk::raii::DescriptorSetLayout &getDescriptorSetLayout() const;
-
-    [[nodiscard]] const vk::raii::DescriptorPool &getDescriptorPool() const;
-
-private:
+    std::vector<vk::raii::DescriptorSet> descriptorSet {};
     vk::raii::DescriptorSetLayout descriptorSetLayout = nullptr;
     vk::raii::DescriptorPool descriptorPool = nullptr;
 
@@ -32,7 +19,17 @@ private:
     void createDescriptorPool();
     void createDescriptorSet();
 public:
+    [[nodiscard]] const std::vector<vk::DescriptorSetLayoutBinding> &getBindings() const;
+
+    void setBindings(const std::vector<vk::DescriptorSetLayoutBinding> &bindings);
+    [[nodiscard]] vk::raii::DescriptorSet &getDescriptorSet();
+
+    [[nodiscard]] vk::raii::DescriptorSetLayout &getDescriptorSetLayout();
+
+    [[nodiscard]] const vk::raii::DescriptorPool &getDescriptorPool() const;
     explicit DescriptorSet(VulkanContext &context);
+
+    DescriptorSet(VulkanContext &context, const std::vector<vk::DescriptorSetLayoutBinding> &bindings);
 
     constexpr static unsigned int MAX_UNIFORM_BUFFERS = 8;
     constexpr static unsigned int MAX_SAMPLERS = 16;

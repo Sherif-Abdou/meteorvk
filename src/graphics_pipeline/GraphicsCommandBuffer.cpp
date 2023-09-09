@@ -38,8 +38,14 @@ void GraphicsCommandBuffer::init() {
 }
 
 void GraphicsCommandBuffer::recordCommandBuffer() {
-    vk::CommandBufferBeginInfo beginInfo {};
-    commandBuffer.begin(beginInfo);
+    for (auto& binding : bindings) {
+        auto descriptorSet = binding.descriptorSet;
+        auto layout = binding.layout;
+        auto set = binding.set;
+        if (descriptorSet != nullptr && layout != nullptr) {
+            descriptorSet->bindToCommandBuffer(commandBuffer, *layout, set);
+        }
+    }
 
     for (auto& pipeline: pipelines) {
         GraphicsPipeline::RenderArguments arguments {
@@ -52,6 +58,11 @@ void GraphicsCommandBuffer::recordCommandBuffer() {
     }
 
     commandBuffer.end();
+}
+
+void GraphicsCommandBuffer::beginCommandBuffer() const {
+    vk::CommandBufferBeginInfo beginInfo {};
+    commandBuffer.begin(beginInfo);
 }
 
 void GraphicsCommandBuffer::submitCommandBuffer() {
@@ -94,11 +105,20 @@ void GraphicsCommandBuffer::fetchSwapchain() {
 }
 
 void GraphicsCommandBuffer::renderToSwapchain() {
-    waitForFence();
-    fetchSwapchain();
+    beginSwapchainRender();
+    finishSwapchainRender();
+}
+
+void GraphicsCommandBuffer::finishSwapchainRender() {
     recordCommandBuffer();
     submitCommandBuffer();
     sendToSwapchain();
+}
+
+void GraphicsCommandBuffer::beginSwapchainRender() {
+    waitForFence();
+    fetchSwapchain();
+    beginCommandBuffer();
 }
 
 GraphicsCommandBuffer::GraphicsCommandBuffer(VulkanContext &context) : context(context) {}
@@ -110,4 +130,9 @@ void GraphicsCommandBuffer::destroy() {
     for (auto& buffer: vertexBuffers) {
         buffer.destroy();
     }
+}
+
+void GraphicsCommandBuffer::bindDescriptorSet(DescriptorSet &descriptor_set, vk::raii::PipelineLayout &layout,
+                                              uint32_t set_number) {
+    descriptor_set.bindToCommandBuffer(commandBuffer, layout, set_number);
 }
