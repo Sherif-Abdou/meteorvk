@@ -17,6 +17,7 @@
 #include "src/graphics_pipeline/GraphicsPipeline.h"
 #include "src/graphics_pipeline/GraphicsCommandBuffer.h"
 #include "src/storage/UniformBuffer.h"
+#include "src/graphics_pipeline/GraphicsPipelineBuilder.h"
 
 VertexBuffer createVertexBuffer(VulkanContext& context) {
     VertexBuffer buffer(*context.allocator);
@@ -27,11 +28,32 @@ VertexBuffer createVertexBuffer(VulkanContext& context) {
     return buffer;
 }
 
+
 struct UBO {
     glm::mat4 proj;
     glm::mat4 view;
     glm::mat4 model;
 };
+
+struct ImageViewPair {
+    VulkanAllocator::VulkanImageAllocation image;
+    vk::ImageView imageView;
+};
+
+GraphicsPipeline createShadowPipeline(VulkanContext& context, DescriptorSet* descriptorSet) {
+    GraphicsRenderPass renderPass(context);
+    renderPass.useColor = false;
+    renderPass.init();
+    auto shaders = GraphicsShaders(context, "shaders/basic.vert", "shaders/shadow.frag");
+    auto builder = GraphicsPipelineBuilder(context, shaders, renderPass);
+    builder.addDepthImage();
+    if (descriptorSet != nullptr) {
+        builder.descriptorSets.push_back(descriptorSet);
+    }
+    auto pipeline = builder.buildGraphicsPipeline();
+
+    return std::move(pipeline);
+}
 
 VulkanAllocator::VulkanBufferAllocation createUniformBuffer(VulkanContext& context) {
     vk::BufferCreateInfo bufferCreateInfo {};
@@ -77,15 +99,27 @@ int main() {
     GraphicsRenderPass renderPass(context);
     renderPass.init();
 
-    GraphicsPipeline pipeline(context, std::move(renderPass));
-    pipeline.descriptorSet = &descriptor;
-    for (auto& swapChainImage: context.swapChainImageViews) {
-        pipeline.targetImageViews.push_back(*swapChainImage);
+//    GraphicsPipeline pipeline(context, std::move(renderPass));
+//    pipeline.descriptorSet = &descriptor;
+//    for (auto& swapChainImage: context.swapChainImageViews) {
+//        pipeline.targetImageViews.push_back(*swapChainImage);
+//    }
+//    pipeline.init();
+    auto shaders = GraphicsShaders(context, "shaders/basic.vert", "shaders/basic.frag");
+    GraphicsPipelineBuilder builder = GraphicsPipelineBuilder(context, shaders, renderPass);
+    builder.targetImageViews = {};
+    for (auto& targetSwapchainImageView: context.swapChainImageViews) {
+        builder.targetImageViews.push_back(*targetSwapchainImageView);
     }
-    pipeline.init();
+    builder.descriptorSets = {&descriptor};
+    builder.addDepthImage();
+    auto pipeline = builder.buildGraphicsPipeline();
+    auto shadow_pipeline = createShadowPipeline(context, &descriptor);
     GraphicsCommandBuffer commandBuffer(context);
 
+    commandBuffer.pipelines.push_back(std::move(shadow_pipeline));
     commandBuffer.pipelines.push_back(std::move(pipeline));
+
 
     commandBuffer.init();
     auto vertexbuffer = createVertexBuffer(context);

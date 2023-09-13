@@ -8,7 +8,15 @@ void GraphicsRenderPass::createRenderPass() {
     createAttachments();
     auto subpass = createSubpass();
 
-    auto attachments = {colorDescription, depthDescription};
+    std::vector<vk::AttachmentDescription> attachments {};
+
+    if (useColor) {
+        attachments.push_back(colorDescription);
+    }
+    if (useDepth) {
+        attachments.push_back(depthDescription);
+    }
+
     auto subpasses = {subpass.description};
     auto dependencies = {subpass.dependency};
     vk::RenderPassCreateInfo createInfo {};
@@ -20,26 +28,33 @@ void GraphicsRenderPass::createRenderPass() {
 }
 
 GraphicsRenderPass::Subpass GraphicsRenderPass::createSubpass() {
-    auto* colorReference = new vk::AttachmentReference {};
-    colorReference->setAttachment(0);
-    colorReference->setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-    auto depthReference = new vk::AttachmentReference {};
-    depthReference->setAttachment(1);
-    depthReference->setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
     vk::SubpassDescription subpassDescription {};
-    subpassDescription.setColorAttachments(*colorReference);
-    subpassDescription.setPDepthStencilAttachment(depthReference);
+
+    if (useColor) {
+        //TODO: Potential Memory Leak
+        auto* colorReference = new vk::AttachmentReference {};
+        colorReference->setAttachment(0);
+        colorReference->setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+        subpassDescription.setColorAttachments(*colorReference);
+    }
+
+    if (useDepth) {
+        //TODO: Potential Memory Leak
+        auto depthReference = new vk::AttachmentReference {};
+        depthReference->setAttachment(1 ? useColor : 0);
+        depthReference->setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+        subpassDescription.setPDepthStencilAttachment(depthReference);
+    }
+
     subpassDescription.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
 
     vk::SubpassDependency subpassDependency {};
     subpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
     subpassDependency.dstSubpass = 0;
-    subpassDependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-    subpassDependency.dstStageMask = vk::PipelineStageFlagBits::eFragmentShader;
+    subpassDependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests;
+    subpassDependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests;
     subpassDependency.srcAccessMask = vk::AccessFlags();
-    subpassDependency.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+    subpassDependency.dstAccessMask =  vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
 
     return {
         subpassDescription,
@@ -48,30 +63,38 @@ GraphicsRenderPass::Subpass GraphicsRenderPass::createSubpass() {
 }
 
 void GraphicsRenderPass::createAttachments() {
-    colorDescription.setFormat(context.swapChainImageFormat)
-        .setInitialLayout(vk::ImageLayout::eUndefined)
-        .setFinalLayout(vk::ImageLayout::ePresentSrcKHR)
-        .setFormat(context.swapChainImageFormat)
-        .setLoadOp(vk::AttachmentLoadOp::eClear)
-        .setStoreOp(vk::AttachmentStoreOp::eStore)
-        .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-        .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
+    if (useColor) {
+        colorDescription.setFormat(context.swapChainImageFormat)
+            .setInitialLayout(vk::ImageLayout::eUndefined)
+            .setFinalLayout(vk::ImageLayout::ePresentSrcKHR)
+            .setFormat(context.swapChainImageFormat)
+            .setLoadOp(vk::AttachmentLoadOp::eClear)
+            .setStoreOp(vk::AttachmentStoreOp::eStore)
+            .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+            .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
+    }
 
-    depthDescription
-        .setInitialLayout(vk::ImageLayout::eUndefined)
-        .setFinalLayout(vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal)
-        .setFormat(vk::Format::eD32Sfloat)
-        .setLoadOp(vk::AttachmentLoadOp::eClear)
-        .setStoreOp(vk::AttachmentStoreOp::eDontCare)
-        .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-        .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
+    if (useDepth) {
+        depthDescription
+            .setInitialLayout(vk::ImageLayout::eUndefined)
+            .setFinalLayout(vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal)
+            .setFormat(vk::Format::eD32Sfloat)
+            .setLoadOp(vk::AttachmentLoadOp::eClear)
+            .setStoreOp(vk::AttachmentStoreOp::eDontCare)
+            .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+            .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
+    }
 }
 
 vk::raii::RenderPass & GraphicsRenderPass::getRenderPass() {
     return renderPass;
 }
 
-GraphicsRenderPass::GraphicsRenderPass(VulkanContext &context) : context(context) {}
+GraphicsRenderPass::GraphicsRenderPass(VulkanContext &context) : context(context) {
+    if (colorFormat == vk::Format::eUndefined) {
+        colorFormat = context.swapChainImageFormat;
+    }
+}
 
 void GraphicsRenderPass::init() {
     createRenderPass();

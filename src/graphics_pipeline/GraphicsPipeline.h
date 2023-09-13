@@ -11,37 +11,28 @@
 #include "../storage/VertexBuffer.h"
 
 class GraphicsPipeline {
-public: // Inputs
+public:
+    struct ImagePair {
+        VulkanAllocator::VulkanImageAllocation imageAllocation;
+        vk::raii::ImageView imageView;
+    };
     struct RenderArguments {
         vk::raii::CommandBuffer& commandBuffer;
         uint32_t imageIndex;
         std::vector<VertexBuffer>& vertexBuffers;
     };
     VulkanContext& context;
-
-    std::vector<vk::ImageView> targetImageViews;
     GraphicsRenderPass renderPass;
-    unsigned int subPassIndex = 0;
+    std::vector<vk::raii::Framebuffer> targetFramebuffers {};
     std::optional<DescriptorSet*> descriptorSet;
 
     explicit GraphicsPipeline(VulkanContext &context, GraphicsRenderPass&& renderPass);
     GraphicsPipeline(GraphicsPipeline&&) = default;
 
     void init();
-private:
-    void createPipeline();
-    void createSyncObjects();
-    void createFramebuffers();
-    void createDepthImage();
-    std::vector<vk::raii::Framebuffer> targetFramebuffers;
     vk::raii::PipelineLayout pipelineLayout = nullptr;
-public:
+    std::vector<ImagePair> ownedImages {};
     vk::raii::PipelineLayout &getPipelineLayout();
-
-private:
-    vk::raii::Pipeline pipeline = nullptr;
-    vk::raii::Semaphore pipelineSemaphore = nullptr;
-public:
     vk::raii::Semaphore & getPipelineSemaphore();
 
     vk::raii::Fence & getPipelineFence();
@@ -52,11 +43,17 @@ public:
 
     void destroy();
 private:
-    vk::raii::Fence pipelineFence = nullptr;
-    VulkanAllocator::VulkanImageAllocation depthImage;
-    vk::raii::ImageView depthImageView = nullptr;
+    vk::raii::Pipeline pipeline = nullptr;
+public:
+    const vk::raii::Pipeline &getPipeline() const;
 
-    void createPipelineLayout();
+    void setPipeline(vk::raii::Pipeline && pipeline);
+
+private:
+    vk::raii::Semaphore pipelineSemaphore = nullptr;
+    void createSyncObjects();
+    vk::raii::Fence pipelineFence = nullptr;
+
 };
 
 

@@ -20,6 +20,10 @@ public:
     vk::raii::RenderPass & getRenderPass();
 
     void init();
+
+    bool useColor = true;
+    vk::Format colorFormat = vk::Format::eUndefined;
+    bool useDepth = true;
 private:
     vk::raii::RenderPass renderPass = nullptr;
 

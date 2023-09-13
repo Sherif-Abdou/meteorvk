@@ -37,11 +37,9 @@ void DescriptorSet::createDescriptorSet() {
     allocateInfo.setDescriptorPool(*descriptorPool);
     allocateInfo.setSetLayouts(list);
 
-    vk::raii::DescriptorSets sets(context.device, allocateInfo);
+    descriptorSet = vk::raii::DescriptorSets (context.device, allocateInfo);
 
-    assert(!sets.empty());
 
-    descriptorSet = std::move(sets);
 }
 
 const std::vector<vk::DescriptorSetLayoutBinding> &DescriptorSet::getBindings() const {
@@ -77,3 +75,6 @@ DescriptorSet::bindToCommandBuffer(vk::raii::CommandBuffer &commandBuffer, vk::r
 
 DescriptorSet::DescriptorSet(VulkanContext &context, const std::vector<vk::DescriptorSetLayoutBinding> &bindings)
         : context(context), bindings(bindings) {}
+
+DescriptorSet::~DescriptorSet() {
+}

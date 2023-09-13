@@ -28,6 +28,7 @@ public:
 
     [[nodiscard]] const vk::raii::DescriptorPool &getDescriptorPool() const;
     explicit DescriptorSet(VulkanContext &context);
+    DescriptorSet(DescriptorSet&&) = default;
 
     DescriptorSet(VulkanContext &context, const std::vector<vk::DescriptorSetLayoutBinding> &bindings);
 
@@ -36,6 +37,8 @@ public:
 
     void buildDescriptor();
     void bindToCommandBuffer(vk::raii::CommandBuffer &, vk::raii::PipelineLayout& pipelineLayout, uint32_t set=0);
+
+    virtual ~DescriptorSet();
 };
 
 
