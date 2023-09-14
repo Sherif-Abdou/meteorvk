@@ -18,6 +18,7 @@
 #include "src/graphics_pipeline/GraphicsCommandBuffer.h"
 #include "src/storage/UniformBuffer.h"
 #include "src/graphics_pipeline/GraphicsPipelineBuilder.h"
+#include "src/storage/DescriptorSampler.h"
 
 VertexBuffer createVertexBuffer(VulkanContext& context) {
     VertexBuffer buffer(*context.allocator);
@@ -43,10 +44,22 @@ struct ImageViewPair {
 GraphicsPipeline createShadowPipeline(VulkanContext& context, DescriptorSet* descriptorSet) {
     GraphicsRenderPass renderPass(context);
     renderPass.useColor = false;
+
+    vk::SubpassDependency dependency {};
+    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass = 0;
+    dependency.srcStageMask = vk::PipelineStageFlagBits::eFragmentShader;
+    dependency.dstStageMask = vk::PipelineStageFlagBits::eEarlyFragmentTests;
+    dependency.srcAccessMask = {};
+    dependency.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+
+
     renderPass.init();
     auto shaders = GraphicsShaders(context, "shaders/basic.vert", "shaders/shadow.frag");
     auto builder = GraphicsPipelineBuilder(context, shaders, renderPass);
     builder.addDepthImage();
+
+
     if (descriptorSet != nullptr) {
         builder.descriptorSets.push_back(descriptorSet);
     }
@@ -68,15 +81,27 @@ VulkanAllocator::VulkanBufferAllocation createUniformBuffer(VulkanContext& conte
     return buffer;
 }
 
-DescriptorSet createUniformBindings(VulkanContext& context) {
+std::pair<DescriptorSet, DescriptorSampler> createUniformBindings(VulkanContext& context) {
     vk::DescriptorSetLayoutBinding bufferBinding {};
     bufferBinding.setBinding(0);
     bufferBinding.setDescriptorCount(1);
     bufferBinding.setDescriptorType(vk::DescriptorType::eUniformBuffer);
     bufferBinding.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
-    DescriptorSet descriptorSet(context, {bufferBinding});
+
+    DescriptorSampler descriptorSampler(context);
+    descriptorSampler.buildSampler();
+
+    vk::DescriptorSetLayoutBinding imageBinding {};
+    imageBinding.setBinding(1);
+    imageBinding.setDescriptorCount(1);
+    imageBinding.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
+    imageBinding.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
+    imageBinding.setImmutableSamplers(*descriptorSampler.getSampler());
+
+    DescriptorSet descriptorSet(context, {bufferBinding, imageBinding});
     descriptorSet.buildDescriptor();
-    return std::move(descriptorSet);
+
+    return {std::move(descriptorSet), std::move(descriptorSampler)};
 }
 
 UBO initialBuffer() {
@@ -95,7 +120,7 @@ UBO initialBuffer() {
 int main() {
     VulkanContext context {};
     context.initVulkan();
-    auto descriptor = createUniformBindings(context);
+    auto [descriptor, descriptorSampler] = createUniformBindings(context);
     GraphicsRenderPass renderPass(context);
     renderPass.init();
 
@@ -120,6 +145,9 @@ int main() {
     commandBuffer.pipelines.push_back(std::move(shadow_pipeline));
     commandBuffer.pipelines.push_back(std::move(pipeline));
 
+    descriptorSampler.targetImageView = *commandBuffer.pipelines[0].ownedImages[0].imageView;
+    descriptorSampler.updateSampler(descriptor, 1);
+
 
     commandBuffer.init();
     auto vertexbuffer = createVertexBuffer(context);
@@ -132,8 +160,21 @@ int main() {
     ubo_buffer.updateBuffer(initial_ubo);
     ubo_buffer.writeToDescriptor();
 
+    vk::ImageMemoryBarrier2 imageMemoryBarrier {};
+    auto depthImage = commandBuffer.pipelines[0].ownedImages[0].imageAllocation.image;
+    imageMemoryBarrier.setImage(depthImage);
+    imageMemoryBarrier.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1));
+    imageMemoryBarrier.setSrcAccessMask(vk::AccessFlagBits2::eDepthStencilAttachmentWrite);
+    imageMemoryBarrier.setDstAccessMask(vk::AccessFlagBits2::eShaderRead);
+    imageMemoryBarrier.setSrcStageMask(vk::PipelineStageFlagBits2::eLateFragmentTests);
+    imageMemoryBarrier.setDstStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
 
-    auto* layout = &(commandBuffer.pipelines[0].getPipelineLayout());
+    vk::DependencyInfoKHR dependencyInfo {};
+    dependencyInfo.setImageMemoryBarriers(imageMemoryBarrier);
+
+    commandBuffer.dependencies.push_back(dependencyInfo);
+
+    auto* layout = &(commandBuffer.pipelines[1].getPipelineLayout());
     commandBuffer.bindings.push_back({
          &descriptor,
          layout,
@@ -186,6 +227,7 @@ int main() {
             ubo_buffer.writeToDescriptor();
         }
 
+        descriptorSampler.updateSampler(descriptor, 1);
         last_time = glfwGetTime();
         commandBuffer.finishSwapchainRender();
     }

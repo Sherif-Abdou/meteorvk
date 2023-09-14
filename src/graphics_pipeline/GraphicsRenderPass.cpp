@@ -6,7 +6,6 @@
 
 void GraphicsRenderPass::createRenderPass() {
     createAttachments();
-    auto subpass = createSubpass();
 
     std::vector<vk::AttachmentDescription> attachments {};
 
@@ -51,10 +50,10 @@ GraphicsRenderPass::Subpass GraphicsRenderPass::createSubpass() {
     vk::SubpassDependency subpassDependency {};
     subpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
     subpassDependency.dstSubpass = 0;
-    subpassDependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests;
-    subpassDependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests;
-    subpassDependency.srcAccessMask = vk::AccessFlags();
-    subpassDependency.dstAccessMask =  vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+    subpassDependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+    subpassDependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+    subpassDependency.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+    subpassDependency.dstAccessMask =  vk::AccessFlagBits::eColorAttachmentWrite;
 
     return {
         subpassDescription,
@@ -80,7 +79,7 @@ void GraphicsRenderPass::createAttachments() {
             .setFinalLayout(vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal)
             .setFormat(vk::Format::eD32Sfloat)
             .setLoadOp(vk::AttachmentLoadOp::eClear)
-            .setStoreOp(vk::AttachmentStoreOp::eDontCare)
+            .setStoreOp(vk::AttachmentStoreOp::eStore)
             .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
             .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
     }
@@ -97,5 +96,12 @@ GraphicsRenderPass::GraphicsRenderPass(VulkanContext &context) : context(context
 }
 
 void GraphicsRenderPass::init() {
+    subpass = createSubpass();
+    createRenderPass();
+}
+
+void GraphicsRenderPass::init(vk::SubpassDependency dependency) {
+    subpass = createSubpass();
+    subpass.dependency = dependency;
     createRenderPass();
 }

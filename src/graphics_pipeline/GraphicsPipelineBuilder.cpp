@@ -154,7 +154,7 @@ void GraphicsPipelineBuilder::addDepthImage() {
     imageCreateInfo.setSamples(vk::SampleCountFlagBits::e1);
     imageCreateInfo.setSharingMode(vk::SharingMode::eExclusive);
     imageCreateInfo.setTiling(vk::ImageTiling::eOptimal);
-    imageCreateInfo.setUsage(vk::ImageUsageFlagBits::eDepthStencilAttachment);
+    imageCreateInfo.setUsage(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
 
     VkImageCreateInfo rawImageCreateInfo = imageCreateInfo;
     context.allocator->allocateImage(&rawImageCreateInfo, VMA_MEMORY_USAGE_AUTO, &depthImage);
@@ -256,13 +256,20 @@ GraphicsPipeline GraphicsPipelineBuilder::buildGraphicsPipeline() {
 
     pipeline.init();
 
-    if (depthImageAttachment.has_value()) {
-        pipeline.ownedImages.push_back(std::move(*depthImageAttachment));
+    if (!targetImageViews.empty()) {
+        pipeline.clearValues.push_back(vk::ClearValue(vk::ClearColorValue(1.0f, 1.0f, 1.0f, 1.0f)));
     }
 
     for (auto& colorImageAttachment : colorImageAttachments) {
+        pipeline.clearValues.push_back(vk::ClearValue(vk::ClearColorValue(1.0f, 1.0f, 1.0f, 1.0f)));
         pipeline.ownedImages.push_back(std::move(colorImageAttachment));
     }
+
+    if (depthImageAttachment.has_value()) {
+        pipeline.clearValues.push_back(vk::ClearValue(vk::ClearDepthStencilValue(1.0f, 0)));
+        pipeline.ownedImages.push_back(std::move(*depthImageAttachment));
+    }
+
 
     return pipeline;
 }

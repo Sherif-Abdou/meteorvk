@@ -33,13 +33,10 @@ void GraphicsPipeline::renderPipeline(GraphicsPipeline::RenderArguments renderAr
     vk::RenderPassBeginInfo beginInfo {};
     imageIndex = std::min((long)imageIndex, (long)targetFramebuffers.size()-1);
 
-    vk::ClearValue clearValues[2];
-    clearValues[0].setColor(vk::ClearColorValue(1.0f, 1.0f, 1.0f, 1.0f));
-    clearValues[1].setDepthStencil(vk::ClearDepthStencilValue(1.0, 0.0));
 
     beginInfo.setFramebuffer(*targetFramebuffers[imageIndex]);
     beginInfo.setRenderPass(*renderPass.getRenderPass());
-    beginInfo.setClearValues(clearValues);
+    beginInfo.setClearValues(this->clearValues);
     auto rect = vk::Rect2D {};
     rect.setOffset({0, 0});
     rect.setExtent(context.swapChainExtent);

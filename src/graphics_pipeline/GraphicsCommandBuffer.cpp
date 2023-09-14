@@ -46,8 +46,11 @@ void GraphicsCommandBuffer::recordCommandBuffer() {
             descriptorSet->bindToCommandBuffer(commandBuffer, *layout, set);
         }
     }
-
+    uint32_t i = 0;
     for (auto& pipeline: pipelines) {
+        if (i - 1 > 0 && i - 1 < dependencies.size()) {
+            commandBuffer.pipelineBarrier2KHR(dependencies[i - 1]);
+        }
         GraphicsPipeline::RenderArguments arguments {
             .commandBuffer = commandBuffer,
             .imageIndex = swapChainImageIndex,
@@ -55,6 +58,7 @@ void GraphicsCommandBuffer::recordCommandBuffer() {
         };
 
         pipeline.renderPipeline(arguments);
+        i++;
     }
 
     commandBuffer.end();

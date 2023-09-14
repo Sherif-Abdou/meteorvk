@@ -20,6 +20,7 @@ public:
     vk::raii::RenderPass & getRenderPass();
 
     void init();
+    void init(vk::SubpassDependency dependency);
 
     bool useColor = true;
     vk::Format colorFormat = vk::Format::eUndefined;
@@ -30,6 +31,7 @@ private:
 private:
     vk::AttachmentDescription colorDescription {};
     vk::AttachmentDescription depthDescription {};
+    Subpass subpass;
 
     void createRenderPass();
 

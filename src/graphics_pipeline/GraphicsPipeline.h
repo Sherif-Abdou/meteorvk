@@ -34,6 +34,7 @@ public:
     std::vector<ImagePair> ownedImages {};
     vk::raii::PipelineLayout &getPipelineLayout();
     vk::raii::Semaphore & getPipelineSemaphore();
+    std::vector<vk::ClearValue> clearValues;
 
     vk::raii::Fence & getPipelineFence();
 

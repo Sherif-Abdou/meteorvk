@@ -39,6 +39,7 @@ public:
     std::vector<DescriptorPipelineBinding> bindings {};
     std::vector<VertexBuffer> vertexBuffers {};
     std::vector<GraphicsPipeline> pipelines {};
+    std::vector<vk::DependencyInfoKHR> dependencies {};
 
     explicit GraphicsCommandBuffer(VulkanContext &context);
 
