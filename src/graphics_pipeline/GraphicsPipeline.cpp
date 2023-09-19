@@ -27,16 +27,33 @@ vk::raii::Fence & GraphicsPipeline::getPipelineFence() {
     return pipelineFence;
 }
 
-void GraphicsPipeline::renderPipeline(GraphicsPipeline::RenderArguments renderArguments) {
+void GraphicsPipeline::renderPipeline(Renderable::RenderArguments renderArguments) {
     assert(targetFramebuffers.size() > 0);
+    prepareRender(renderArguments);
+
+    for (VertexBuffer* vbo: renderArguments.vertexBuffers) {
+        renderVertexBuffer(renderArguments, vbo);
+    }
+
+    finishRender(renderArguments);
+}
+
+void GraphicsPipeline::finishRender(
+        const Renderable::RenderArguments &renderArguments) const { renderArguments.commandBuffer.endRenderPass(); }
+
+void GraphicsPipeline::renderVertexBuffer(Renderable::RenderArguments renderArguments, VertexBuffer *vbo) const {
+    vbo->draw(renderArguments.commandBuffer);
+}
+
+void GraphicsPipeline::prepareRender(Renderable::RenderArguments &renderArguments) {
     auto imageIndex = renderArguments.imageIndex;
     vk::RenderPassBeginInfo beginInfo {};
-    imageIndex = std::min((long)imageIndex, (long)targetFramebuffers.size()-1);
+    imageIndex = std::min((long)imageIndex, (long) targetFramebuffers.size() - 1);
 
 
     beginInfo.setFramebuffer(*targetFramebuffers[imageIndex]);
     beginInfo.setRenderPass(*renderPass.getRenderPass());
-    beginInfo.setClearValues(this->clearValues);
+    beginInfo.setClearValues(clearValues);
     auto rect = vk::Rect2D {};
     rect.setOffset({0, 0});
     rect.setExtent(context.swapChainExtent);
@@ -45,8 +62,9 @@ void GraphicsPipeline::renderPipeline(GraphicsPipeline::RenderArguments renderAr
     renderArguments.commandBuffer.beginRenderPass(beginInfo, vk::SubpassContents::eInline);
     renderArguments.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline);
     for (auto& buffer: renderArguments.vertexBuffers) {
-        buffer.updateVertexBuffer();
-        buffer.attachToCommandBuffer(renderArguments.commandBuffer);
+        if (buffer == nullptr) continue;
+        buffer->updateVertexBuffer();
+        buffer->attachToCommandBuffer(renderArguments.commandBuffer);
     }
 
     vk::Viewport viewport{};
@@ -62,10 +80,6 @@ void GraphicsPipeline::renderPipeline(GraphicsPipeline::RenderArguments renderAr
     scissor.offset = vk::Offset2D {0, 0};
     scissor.extent = context.swapChainExtent;
     renderArguments.commandBuffer.setScissor(0, scissor);
-    for (auto& vbo: renderArguments.vertexBuffers) {
-        vbo.draw(renderArguments.commandBuffer);
-    }
-    renderArguments.commandBuffer.endRenderPass();
 }
 
 GraphicsPipeline::~GraphicsPipeline() {

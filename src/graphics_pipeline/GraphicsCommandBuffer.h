@@ -13,11 +13,11 @@
 class GraphicsCommandBuffer {
 private:
     VulkanContext& context;
-    vk::raii::CommandPool pool= nullptr;
-    vk::raii::CommandBuffer commandBuffer= nullptr;
-    vk::raii::Semaphore imageAvailableSemaphore= nullptr;
-    vk::raii::Semaphore renderFinishedSemaphore= nullptr;
-    vk::raii::Fence inFlightFence= nullptr;
+    vk::raii::CommandPool pool = nullptr;
+    vk::raii::CommandBuffer commandBuffer = nullptr;
+    vk::raii::Semaphore imageAvailableSemaphore = nullptr;
+    vk::raii::Semaphore renderFinishedSemaphore = nullptr;
+    vk::raii::Fence inFlightFence = nullptr;
     uint32_t swapChainImageIndex;
 
     void createCommandPool();
@@ -37,15 +37,14 @@ public:
         uint32_t set = 0;
     };
     std::vector<DescriptorPipelineBinding> bindings {};
-    std::vector<VertexBuffer> vertexBuffers {};
-    std::vector<GraphicsPipeline> pipelines {};
+    std::vector<VertexBuffer*> vertexBuffers {};
+    std::vector<Renderable*> pipelines {};
     std::vector<vk::DependencyInfoKHR> dependencies {};
 
     explicit GraphicsCommandBuffer(VulkanContext &context);
 
     void init();
     void renderToSwapchain();
-    void bindDescriptorSet(DescriptorSet &descriptor_set, vk::raii::PipelineLayout &, uint32_t set_number = 0);
     void destroy();
 
     void beginCommandBuffer() const;

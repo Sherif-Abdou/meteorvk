@@ -9,22 +9,19 @@
 #include "GraphicsRenderPass.h"
 #include "../storage/DescriptorSet.h"
 #include "../storage/VertexBuffer.h"
+#include "../interfaces/Renderable.h"
 
-class GraphicsPipeline {
+class GraphicsPipeline: public Renderable {
 public:
     struct ImagePair {
         VulkanAllocator::VulkanImageAllocation imageAllocation;
         vk::raii::ImageView imageView;
     };
-    struct RenderArguments {
-        vk::raii::CommandBuffer& commandBuffer;
-        uint32_t imageIndex;
-        std::vector<VertexBuffer>& vertexBuffers;
-    };
+
     VulkanContext& context;
     GraphicsRenderPass renderPass;
+
     std::vector<vk::raii::Framebuffer> targetFramebuffers {};
-    std::optional<DescriptorSet*> descriptorSet;
 
     explicit GraphicsPipeline(VulkanContext &context, GraphicsRenderPass&& renderPass);
     GraphicsPipeline(GraphicsPipeline&&) = default;
@@ -38,7 +35,7 @@ public:
 
     vk::raii::Fence & getPipelineFence();
 
-    void renderPipeline(GraphicsPipeline::RenderArguments renderArguments);
+    void renderPipeline(Renderable::RenderArguments renderArguments) override;
 
     virtual ~GraphicsPipeline();
 
@@ -55,6 +52,11 @@ private:
     void createSyncObjects();
     vk::raii::Fence pipelineFence = nullptr;
 
+    void prepareRender(RenderArguments &renderArguments);
+
+    void renderVertexBuffer(RenderArguments renderArguments, VertexBuffer *vbo) const;
+
+    void finishRender(const RenderArguments &renderArguments) const;
 };
 
 

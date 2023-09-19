@@ -7,19 +7,19 @@
 
 #include <vulkan/vulkan_raii.hpp>
 #include "../VulkanContext.h"
+#include "DescriptorSet.h"
 
 template<typename T>
 class UniformBuffer {
     VulkanContext& context;
     VulkanAllocator::VulkanBufferAllocation bufferAllocation;
-    vk::raii::DescriptorSet& descriptorSet;
 
 public:
-    explicit UniformBuffer(VulkanContext &context, vk::raii::DescriptorSet& set) : context(context), descriptorSet(set) {}
+    explicit UniformBuffer(VulkanContext &context) : context(context) {}
 
     void allocateBuffer();
     void updateBuffer(const T&);
-    void writeToDescriptor();
+    void writeToDescriptor(DescriptorSet& descriptorSet, uint32_t binding = 0);
 
     void destroy();
 };
@@ -30,7 +30,7 @@ void UniformBuffer<T>::destroy() {
 }
 
 template<typename T>
-void UniformBuffer<T>::writeToDescriptor() {
+void UniformBuffer<T>::writeToDescriptor(DescriptorSet& descriptorSet, uint32_t binding) {
     vk::WriteDescriptorSet writeDescriptorSet {};
     vk::DescriptorBufferInfo bufferInfo {};
     bufferInfo.setOffset(0);
@@ -38,10 +38,10 @@ void UniformBuffer<T>::writeToDescriptor() {
     bufferInfo.setBuffer(bufferAllocation.buffer);
 
     writeDescriptorSet.setDescriptorCount(1);
-    writeDescriptorSet.setDstBinding(0);
+    writeDescriptorSet.setDstBinding(binding);
     writeDescriptorSet.setDstArrayElement(0);
     writeDescriptorSet.setDescriptorType(vk::DescriptorType::eUniformBuffer);
-    writeDescriptorSet.setDstSet(*descriptorSet);
+    writeDescriptorSet.setDstSet(*descriptorSet.getDescriptorSet());
     writeDescriptorSet.setBufferInfo(bufferInfo);
 //    writeDescriptorSet.setDstSet();
 

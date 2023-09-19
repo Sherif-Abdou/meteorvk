@@ -23,8 +23,9 @@ public:
     void init(vk::SubpassDependency dependency);
 
     bool useColor = true;
-    vk::Format colorFormat = vk::Format::eUndefined;
     bool useDepth = true;
+    bool storeDepth = false;
+    vk::Format colorFormat = vk::Format::eUndefined;
 private:
     vk::raii::RenderPass renderPass = nullptr;
 

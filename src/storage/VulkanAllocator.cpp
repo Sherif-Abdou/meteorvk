@@ -21,7 +21,12 @@ void VulkanAllocator::allocateBuffer(VkBufferCreateInfo* bufferCreateInfo, VmaMe
     allocation->allocator = &allocator;
 
     VmaAllocationCreateInfo allocationCreateInfo {};
-    allocationCreateInfo.usage = memoryUsage;
+    if (memoryUsage == VMA_MEMORY_USAGE_CPU_TO_GPU) {
+        allocationCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+        allocationCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+    } else {
+        allocationCreateInfo.usage = memoryUsage;
+    }
 
     VkBuffer tmpBuffer;
     if (vmaCreateBuffer(allocator, bufferCreateInfo, &allocationCreateInfo, &tmpBuffer, &allocation->allocation,

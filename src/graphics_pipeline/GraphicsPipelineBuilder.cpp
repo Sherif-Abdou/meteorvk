@@ -247,9 +247,6 @@ GraphicsPipeline GraphicsPipelineBuilder::buildGraphicsPipeline() {
     }
     auto pipeline = GraphicsPipeline(context, std::move(renderPass));
     pipeline.targetFramebuffers = std::move(framebuffers);
-    if (!descriptorSets.empty()) {
-        pipeline.descriptorSet = descriptorSets[0];
-    }
     pipeline.pipelineLayout = std::move(pipelineLayout);
     auto actual_pipeline = context.device.createGraphicsPipeline(nullptr, pipelineCreateInfo);
     pipeline.setPipeline(std::move(actual_pipeline));

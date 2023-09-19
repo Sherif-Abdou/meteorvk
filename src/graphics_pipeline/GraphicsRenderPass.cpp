@@ -79,7 +79,7 @@ void GraphicsRenderPass::createAttachments() {
             .setFinalLayout(vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal)
             .setFormat(vk::Format::eD32Sfloat)
             .setLoadOp(vk::AttachmentLoadOp::eClear)
-            .setStoreOp(vk::AttachmentStoreOp::eStore)
+            .setStoreOp(storeDepth ? vk::AttachmentStoreOp::eStore : vk::AttachmentStoreOp::eDontCare)
             .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
             .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
     }

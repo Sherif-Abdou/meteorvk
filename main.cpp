@@ -19,31 +19,34 @@
 #include "src/storage/UniformBuffer.h"
 #include "src/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "src/storage/DescriptorSampler.h"
+#include "src/storage/OBJFile.h"
+#include "src/graphics_pipeline/special_pipelines/ShadowGraphicsPipeline.h"
+#include "src/graphics_pipeline/special_pipelines/ForwardRenderedGraphicsPipeline.h"
 
 VertexBuffer createVertexBuffer(VulkanContext& context) {
     VertexBuffer buffer(*context.allocator);
-    buffer.vertices.push_back(Vertex::positionOnly({0, 0, 0}));
-    buffer.vertices.push_back(Vertex::positionOnly({1, 0, 0}));
-    buffer.vertices.push_back(Vertex::positionOnly({0, 1, 0}));
+    OBJFile file = OBJFile::fromFilePath("./models/super_backpack.obj");
+    auto raw = file.createVulkanBuffer();
+    buffer.vertices = std::move(raw);
+//    buffer.vertices.push_back(Vertex::positionOnly({0, 0, 0}));
+//    buffer.vertices.push_back(Vertex::positionOnly({1, 0, 0}));
+//    buffer.vertices.push_back(Vertex::positionOnly({0, 1, 0}));
 
     return buffer;
 }
 
-
-struct UBO {
-    glm::mat4 proj;
-    glm::mat4 view;
-    glm::mat4 model;
-};
 
 struct ImageViewPair {
     VulkanAllocator::VulkanImageAllocation image;
     vk::ImageView imageView;
 };
 
+using UBO = ForwardRenderedGraphicsPipeline::UBO;
+
 GraphicsPipeline createShadowPipeline(VulkanContext& context, DescriptorSet* descriptorSet) {
     GraphicsRenderPass renderPass(context);
     renderPass.useColor = false;
+    renderPass.storeDepth = true;
 
     vk::SubpassDependency dependency {};
     dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -105,10 +108,10 @@ std::pair<DescriptorSet, DescriptorSampler> createUniformBindings(VulkanContext&
 }
 
 UBO initialBuffer() {
-    glm::mat4 proj = glm::perspectiveFov(glm::radians(90.0), 1920.0, 1080.0, 0.1, 100.0);
+    glm::mat4 proj = glm::perspective(glm::radians(90.0), 1920.0 / 1080.0, 0.1, 100.0);
     glm::mat4 view = glm::translate(glm::identity<glm::mat4>(), glm::vec3(0.0));
+    view = glm::translate(view, glm::vec3(0, 0, -4));
     auto model = glm::identity<glm::mat4>();
-    model = glm::translate(model, glm::vec3(0, 0, -2));
 
     return {
         proj,
@@ -138,30 +141,28 @@ int main() {
     }
     builder.descriptorSets = {&descriptor};
     builder.addDepthImage();
-    auto pipeline = builder.buildGraphicsPipeline();
-    auto shadow_pipeline = createShadowPipeline(context, &descriptor);
+    auto pipeline = ForwardRenderedGraphicsPipeline(builder.buildGraphicsPipeline());
+    auto shadow_pipeline = ShadowGraphicsPipeline(createShadowPipeline(context, &descriptor));
+    shadow_pipeline.descriptorSet = &descriptor;
+    pipeline.descriptorSet = &descriptor;
     GraphicsCommandBuffer commandBuffer(context);
 
-    commandBuffer.pipelines.push_back(std::move(shadow_pipeline));
-    commandBuffer.pipelines.push_back(std::move(pipeline));
+    commandBuffer.pipelines.push_back(&shadow_pipeline);
+    commandBuffer.pipelines.push_back(&pipeline);
 
-    descriptorSampler.targetImageView = *commandBuffer.pipelines[0].ownedImages[0].imageView;
+    descriptorSampler.targetImageView = *shadow_pipeline.getPipeline().ownedImages[0].imageView;
     descriptorSampler.updateSampler(descriptor, 1);
 
 
     commandBuffer.init();
     auto vertexbuffer = createVertexBuffer(context);
     vertexbuffer.init();
-    commandBuffer.vertexBuffers.push_back(std::move(vertexbuffer));
+    commandBuffer.vertexBuffers.push_back(&vertexbuffer);
 
-    auto ubo_buffer = UniformBuffer<UBO>(context, descriptor.getDescriptorSet());
-    ubo_buffer.allocateBuffer();
     auto initial_ubo = initialBuffer();
-    ubo_buffer.updateBuffer(initial_ubo);
-    ubo_buffer.writeToDescriptor();
 
     vk::ImageMemoryBarrier2 imageMemoryBarrier {};
-    auto depthImage = commandBuffer.pipelines[0].ownedImages[0].imageAllocation.image;
+    auto depthImage = shadow_pipeline.getPipeline().ownedImages[0].imageAllocation.image;
     imageMemoryBarrier.setImage(depthImage);
     imageMemoryBarrier.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1));
     imageMemoryBarrier.setSrcAccessMask(vk::AccessFlagBits2::eDepthStencilAttachmentWrite);
@@ -174,10 +175,13 @@ int main() {
 
     commandBuffer.dependencies.push_back(dependencyInfo);
 
-    auto* layout = &(commandBuffer.pipelines[1].getPipelineLayout());
     commandBuffer.bindings.push_back({
          &descriptor,
-         layout,
+         &pipeline.getPipeline().getPipelineLayout(),
+    });
+    commandBuffer.bindings.push_back({
+        &descriptor,
+        &shadow_pipeline.getPipeline().getPipelineLayout(),
     });
 //    commandBuffer.layout = layout;
 //    commandBuffer.descriptorSet = &descriptor;
@@ -192,39 +196,27 @@ int main() {
         auto delta = glfwGetTime() - last_time;
 
         if (glfwGetKey(context.window, GLFW_KEY_W)) {
-            initial_ubo.view = glm::translate(initial_ubo.view, glm::vec3(0, 0, speed * delta));
-            ubo_buffer.updateBuffer(initial_ubo);
-            ubo_buffer.writeToDescriptor();
+            pipeline.ubo.view = glm::translate(pipeline.ubo.view, glm::vec3(0, 0, speed * delta));
         }
 
         if (glfwGetKey(context.window, GLFW_KEY_S)) {
-            initial_ubo.view = glm::translate(initial_ubo.view, glm::vec3(0, 0, -speed * delta));
-            ubo_buffer.updateBuffer(initial_ubo);
-            ubo_buffer.writeToDescriptor();
+            pipeline.ubo.view = glm::translate(pipeline.ubo.view, glm::vec3(0, 0, -speed * delta));
         }
 
         if (glfwGetKey(context.window, GLFW_KEY_D)) {
-            initial_ubo.view = glm::translate(initial_ubo.view, glm::vec3(-speed * delta, 0, 0));
-            ubo_buffer.updateBuffer(initial_ubo);
-            ubo_buffer.writeToDescriptor();
+            pipeline.ubo.view = glm::translate(pipeline.ubo.view, glm::vec3(-speed * delta, 0, 0));
         }
 
         if (glfwGetKey(context.window, GLFW_KEY_A)) {
-            initial_ubo.view = glm::translate(initial_ubo.view, glm::vec3(speed * delta, 0, 0));
-            ubo_buffer.updateBuffer(initial_ubo);
-            ubo_buffer.writeToDescriptor();
+            pipeline.ubo.view = glm::translate(pipeline.ubo.view, glm::vec3(speed * delta, 0, 0));
         }
 
         if (glfwGetKey(context.window, GLFW_KEY_Q)) {
-            initial_ubo.view = glm::rotate(initial_ubo.view, 1.0f * (float)delta, glm::vec3(0,1,0));
-            ubo_buffer.updateBuffer(initial_ubo);
-            ubo_buffer.writeToDescriptor();
+            pipeline.ubo.view = glm::rotate(pipeline.ubo.view, 1.0f * (float)delta, glm::vec3(0,1,0));
         }
 
         if (glfwGetKey(context.window, GLFW_KEY_E)) {
-            initial_ubo.view = glm::rotate(initial_ubo.view, -1.0f * (float)delta, glm::vec3(0,1,0));
-            ubo_buffer.updateBuffer(initial_ubo);
-            ubo_buffer.writeToDescriptor();
+            pipeline.ubo.view = glm::rotate(pipeline.ubo.view, -1.0f * (float)delta, glm::vec3(0,1,0));
         }
 
         descriptorSampler.updateSampler(descriptor, 1);
@@ -234,7 +226,8 @@ int main() {
 
 
     context.device.waitIdle();
-    ubo_buffer.destroy();
+    shadow_pipeline.getPipeline().destroy();
+    pipeline.getPipeline().destroy();
     commandBuffer.destroy();
     context.cleanup();
     return 0;

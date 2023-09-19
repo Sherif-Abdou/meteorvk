@@ -57,7 +57,7 @@ void GraphicsCommandBuffer::recordCommandBuffer() {
             .vertexBuffers = vertexBuffers,
         };
 
-        pipeline.renderPipeline(arguments);
+        pipeline->renderPipeline(arguments);
         i++;
     }
 
@@ -128,15 +128,8 @@ void GraphicsCommandBuffer::beginSwapchainRender() {
 GraphicsCommandBuffer::GraphicsCommandBuffer(VulkanContext &context) : context(context) {}
 
 void GraphicsCommandBuffer::destroy() {
-    for (auto& pipeline: pipelines) {
-        pipeline.destroy();
-    }
     for (auto& buffer: vertexBuffers) {
-        buffer.destroy();
+        buffer->destroy();
     }
 }
 
-void GraphicsCommandBuffer::bindDescriptorSet(DescriptorSet &descriptor_set, vk::raii::PipelineLayout &layout,
-                                              uint32_t set_number) {
-    descriptor_set.bindToCommandBuffer(commandBuffer, layout, set_number);
-}
