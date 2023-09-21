@@ -229,7 +229,7 @@ int main() {
             pipeline.ubo.view = glm::rotate(pipeline.ubo.view, -1.0f * (float)delta, glm::vec3(0,1,0));
         }
 
-        sampler.updateSampler(descriptor, 1);
+        sampler.updateSampler(forward_descriptor, 1);
         last_time = glfwGetTime();
         commandBuffer.finishSwapchainRender();
     }

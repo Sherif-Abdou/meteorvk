@@ -25,7 +25,7 @@ void DescriptorSet::createDescriptorPool() {
     vk::DescriptorPoolCreateInfo createInfo {};
     auto sizes = std::vector<vk::DescriptorPoolSize> {uniformBufferSize, samplerSize};
     createInfo.setPoolSizes(sizes);
-    createInfo.setMaxSets(1);
+    createInfo.setMaxSets(FRAMES_IN_FLIGHT);
 
     descriptorPool = context.device.createDescriptorPool(createInfo);
 }
@@ -34,6 +34,7 @@ void DescriptorSet::createDescriptorSet() {
     vk::DescriptorSetAllocateInfo allocateInfo {};
 
     auto list = std::vector<vk::DescriptorSetLayout> {*descriptorSetLayout};
+    list.push_back(*descriptorSetLayout);
     allocateInfo.setDescriptorPool(*descriptorPool);
     allocateInfo.setSetLayouts(list);
 
@@ -49,7 +50,7 @@ void DescriptorSet::setBindings(const std::vector<vk::DescriptorSetLayoutBinding
 }
 
 vk::raii::DescriptorSet &DescriptorSet::getDescriptorSet() {
-    return descriptorSet[0];
+    return descriptorSet[current_frame];
 }
 
 vk::raii::DescriptorSetLayout &DescriptorSet::getDescriptorSetLayout() {
@@ -68,7 +69,7 @@ void DescriptorSet::buildDescriptor() {
 
 void
 DescriptorSet::bindToCommandBuffer(vk::raii::CommandBuffer &commandBuffer, vk::raii::PipelineLayout& pipelineLayout, uint32_t set) {
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipelineLayout, set, *descriptorSet[0], dynamic_offsets);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipelineLayout, set, *descriptorSet[current_frame], dynamic_offsets);
 }
 
 DescriptorSet::DescriptorSet(VulkanContext &context, const std::vector<vk::DescriptorSetLayoutBinding> &bindings)
@@ -83,4 +84,8 @@ DescriptorSet DescriptorSet::duplicateWithSameLayout() {
     descriptorset.buildDescriptor();
 
     return descriptorset;
+}
+
+void DescriptorSet::nextFrame() {
+    current_frame = (current_frame + 1) % 2;
 }

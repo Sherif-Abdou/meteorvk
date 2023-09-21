@@ -5,8 +5,6 @@
 #include "ShadowGraphicsPipeline.h"
 
 void ShadowGraphicsPipeline::renderPipeline(GraphicsPipeline::RenderArguments renderArguments) {
-    lightUniformBuffer.updateBuffer(lightUBO);
-    lightUniformBuffer.writeToDescriptor(*descriptorSet, binding);
     pipeline.renderPipeline(renderArguments);
 }
 
@@ -24,4 +22,9 @@ ShadowGraphicsPipeline::ShadowGraphicsPipeline(GraphicsPipeline &&pipeline) : pi
 
 GraphicsPipeline &ShadowGraphicsPipeline::getPipeline() {
     return pipeline;
+}
+
+void ShadowGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {
+    lightUniformBuffer.updateBuffer(lightUBO);
+    lightUniformBuffer.writeToDescriptor(*descriptorSet, binding);
 }

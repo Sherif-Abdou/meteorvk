@@ -12,12 +12,14 @@
 
 class GraphicsCommandBuffer {
 private:
+    unsigned int current_frame = 0;
+    static constexpr unsigned int FRAMES_IN_FLIGHT = 2;
     VulkanContext& context;
     vk::raii::CommandPool pool = nullptr;
-    vk::raii::CommandBuffer commandBuffer = nullptr;
-    vk::raii::Semaphore imageAvailableSemaphore = nullptr;
-    vk::raii::Semaphore renderFinishedSemaphore = nullptr;
-    vk::raii::Fence inFlightFence = nullptr;
+    std::array<vk::raii::CommandBuffer, FRAMES_IN_FLIGHT> commandBuffer = {nullptr, nullptr};
+    std::array<vk::raii::Semaphore, FRAMES_IN_FLIGHT> imageAvailableSemaphore = {nullptr, nullptr};
+    std::array<vk::raii::Semaphore, FRAMES_IN_FLIGHT> renderFinishedSemaphore = {nullptr, nullptr};
+    std::array<vk::raii::Fence, FRAMES_IN_FLIGHT> inFlightFence = {nullptr, nullptr};
     uint32_t swapChainImageIndex;
 
     void createCommandPool();

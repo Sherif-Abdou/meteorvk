@@ -9,6 +9,8 @@
 
 class DescriptorSet {
 private:
+    static constexpr unsigned int FRAMES_IN_FLIGHT = 2;
+    unsigned int current_frame = 0;
     VulkanContext& context;
     std::vector<vk::DescriptorSetLayoutBinding> bindings;
     std::vector<vk::raii::DescriptorSet> descriptorSet {};
@@ -41,6 +43,8 @@ public:
 
     void buildDescriptor();
     void bindToCommandBuffer(vk::raii::CommandBuffer &, vk::raii::PipelineLayout& pipelineLayout, uint32_t set=0);
+
+    void nextFrame();
 
     virtual ~DescriptorSet();
 };
