@@ -24,18 +24,23 @@ public:
         glm::mat4 proj;
         glm::mat4 view;
         glm::mat4 model;
+        glm::mat4 lightProjView;
     };
 
     UBO ubo {
         glm::identity<glm::mat4>(),
         glm::identity<glm::mat4>(),
         glm::identity<glm::mat4>(),
+        glm::zero<glm::mat4>(),
     };
 
     UniformBuffer<UBO> uniformBuffer;
 
     DescriptorSet* descriptorSet = nullptr;
     GraphicsPipeline &getPipeline();
+
+    void prepareRender(Renderable::RenderArguments renderArguments) override;
+
 private:
     GraphicsPipeline pipeline;
 };

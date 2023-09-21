@@ -38,15 +38,15 @@ void GraphicsCommandBuffer::init() {
 }
 
 void GraphicsCommandBuffer::recordCommandBuffer() {
-    for (auto& binding : bindings) {
-        auto descriptorSet = binding.descriptorSet;
-        auto layout = binding.layout;
-        auto set = binding.set;
-        if (descriptorSet != nullptr && layout != nullptr) {
-            descriptorSet->bindToCommandBuffer(commandBuffer, *layout, set);
-        }
-    }
     uint32_t i = 0;
+    for (auto& pipeline: pipelines) {
+        GraphicsPipeline::RenderArguments arguments {
+                .commandBuffer = commandBuffer,
+                .imageIndex = swapChainImageIndex,
+                .vertexBuffers = vertexBuffers,
+        };
+        pipeline->prepareRender(arguments);
+    }
     for (auto& pipeline: pipelines) {
         if (i - 1 > 0 && i - 1 < dependencies.size()) {
             commandBuffer.pipelineBarrier2KHR(dependencies[i - 1]);
@@ -56,6 +56,14 @@ void GraphicsCommandBuffer::recordCommandBuffer() {
             .imageIndex = swapChainImageIndex,
             .vertexBuffers = vertexBuffers,
         };
+
+        auto binding = bindings[i];
+        auto descriptorSet = binding.descriptorSet;
+        auto layout = binding.layout;
+        auto set = binding.set;
+        if (descriptorSet != nullptr && layout != nullptr) {
+            descriptorSet->bindToCommandBuffer(commandBuffer, *layout, set);
+        }
 
         pipeline->renderPipeline(arguments);
         i++;

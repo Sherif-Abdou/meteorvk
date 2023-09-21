@@ -4,8 +4,8 @@
 
 #include "VulkanContext.h"
 
-constexpr int WIDTH = 600.0f;
-constexpr int HEIGHT = 400.0f;
+constexpr int WIDTH = 2560.0f / 2;
+constexpr int HEIGHT = 1440.0f / 2;
 
 void VulkanContext::initVulkan() {
     initWindow();

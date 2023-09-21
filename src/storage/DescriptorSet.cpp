@@ -38,8 +38,6 @@ void DescriptorSet::createDescriptorSet() {
     allocateInfo.setSetLayouts(list);
 
     descriptorSet = vk::raii::DescriptorSets (context.device, allocateInfo);
-
-
 }
 
 const std::vector<vk::DescriptorSetLayoutBinding> &DescriptorSet::getBindings() const {
@@ -70,11 +68,19 @@ void DescriptorSet::buildDescriptor() {
 
 void
 DescriptorSet::bindToCommandBuffer(vk::raii::CommandBuffer &commandBuffer, vk::raii::PipelineLayout& pipelineLayout, uint32_t set) {
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipelineLayout, set, *descriptorSet[0], {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipelineLayout, set, *descriptorSet[0], dynamic_offsets);
 }
 
 DescriptorSet::DescriptorSet(VulkanContext &context, const std::vector<vk::DescriptorSetLayoutBinding> &bindings)
         : context(context), bindings(bindings) {}
 
 DescriptorSet::~DescriptorSet() {
+}
+
+DescriptorSet DescriptorSet::duplicateWithSameLayout() {
+    auto descriptorset = DescriptorSet(context);
+    descriptorset.bindings = this->bindings;
+    descriptorset.buildDescriptor();
+
+    return descriptorset;
 }

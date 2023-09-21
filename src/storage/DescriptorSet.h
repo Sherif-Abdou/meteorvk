@@ -30,7 +30,11 @@ public:
     explicit DescriptorSet(VulkanContext &context);
     DescriptorSet(DescriptorSet&&) = default;
 
+    std::vector<unsigned int> dynamic_offsets = {};
+
     DescriptorSet(VulkanContext &context, const std::vector<vk::DescriptorSetLayoutBinding> &bindings);
+
+    DescriptorSet duplicateWithSameLayout();
 
     constexpr static unsigned int MAX_UNIFORM_BUFFERS = 8;
     constexpr static unsigned int MAX_SAMPLERS = 16;

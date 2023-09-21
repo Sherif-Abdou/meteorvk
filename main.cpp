@@ -41,6 +41,8 @@ struct ImageViewPair {
     vk::ImageView imageView;
 };
 
+DescriptorSampler createSampler(VulkanContext &context);
+
 using UBO = ForwardRenderedGraphicsPipeline::UBO;
 
 GraphicsPipeline createShadowPipeline(VulkanContext& context, DescriptorSet* descriptorSet) {
@@ -84,15 +86,14 @@ VulkanAllocator::VulkanBufferAllocation createUniformBuffer(VulkanContext& conte
     return buffer;
 }
 
-std::pair<DescriptorSet, DescriptorSampler> createUniformBindings(VulkanContext& context) {
+DescriptorSet createUniformBindings(VulkanContext& context, DescriptorSampler& descriptorSampler) {
     vk::DescriptorSetLayoutBinding bufferBinding {};
     bufferBinding.setBinding(0);
     bufferBinding.setDescriptorCount(1);
     bufferBinding.setDescriptorType(vk::DescriptorType::eUniformBuffer);
     bufferBinding.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
 
-    DescriptorSampler descriptorSampler(context);
-    descriptorSampler.buildSampler();
+
 
     vk::DescriptorSetLayoutBinding imageBinding {};
     imageBinding.setBinding(1);
@@ -104,7 +105,13 @@ std::pair<DescriptorSet, DescriptorSampler> createUniformBindings(VulkanContext&
     DescriptorSet descriptorSet(context, {bufferBinding, imageBinding});
     descriptorSet.buildDescriptor();
 
-    return {std::move(descriptorSet), std::move(descriptorSampler)};
+    return std::move(descriptorSet);
+}
+
+DescriptorSampler createSampler(VulkanContext &context) {
+    auto descriptorSampler = DescriptorSampler(context);
+    descriptorSampler.buildSampler();
+    return descriptorSampler;
 }
 
 UBO initialBuffer() {
@@ -123,7 +130,9 @@ UBO initialBuffer() {
 int main() {
     VulkanContext context {};
     context.initVulkan();
-    auto [descriptor, descriptorSampler] = createUniformBindings(context);
+    DescriptorSampler sampler = createSampler(context);
+    auto descriptor = createUniformBindings(context, sampler);
+    auto forward_descriptor = createUniformBindings(context, sampler);
     GraphicsRenderPass renderPass(context);
     renderPass.init();
 
@@ -139,19 +148,19 @@ int main() {
     for (auto& targetSwapchainImageView: context.swapChainImageViews) {
         builder.targetImageViews.push_back(*targetSwapchainImageView);
     }
-    builder.descriptorSets = {&descriptor};
+    builder.descriptorSets = {&forward_descriptor};
     builder.addDepthImage();
     auto pipeline = ForwardRenderedGraphicsPipeline(builder.buildGraphicsPipeline());
     auto shadow_pipeline = ShadowGraphicsPipeline(createShadowPipeline(context, &descriptor));
+    pipeline.descriptorSet = &forward_descriptor;
     shadow_pipeline.descriptorSet = &descriptor;
-    pipeline.descriptorSet = &descriptor;
     GraphicsCommandBuffer commandBuffer(context);
 
     commandBuffer.pipelines.push_back(&shadow_pipeline);
     commandBuffer.pipelines.push_back(&pipeline);
 
-    descriptorSampler.targetImageView = *shadow_pipeline.getPipeline().ownedImages[0].imageView;
-    descriptorSampler.updateSampler(descriptor, 1);
+    sampler.targetImageView = *shadow_pipeline.getPipeline().ownedImages[0].imageView;
+    sampler.updateSampler(forward_descriptor, 1);
 
 
     commandBuffer.init();
@@ -176,12 +185,12 @@ int main() {
     commandBuffer.dependencies.push_back(dependencyInfo);
 
     commandBuffer.bindings.push_back({
-         &descriptor,
-         &pipeline.getPipeline().getPipelineLayout(),
-    });
-    commandBuffer.bindings.push_back({
         &descriptor,
         &shadow_pipeline.getPipeline().getPipelineLayout(),
+    });
+    commandBuffer.bindings.push_back({
+         &forward_descriptor,
+         &pipeline.getPipeline().getPipelineLayout(),
     });
 //    commandBuffer.layout = layout;
 //    commandBuffer.descriptorSet = &descriptor;
@@ -195,6 +204,7 @@ int main() {
         commandBuffer.beginSwapchainRender();
         auto delta = glfwGetTime() - last_time;
 
+        pipeline.ubo.lightProjView = shadow_pipeline.lightUBO.proj * shadow_pipeline.lightUBO.view;
         if (glfwGetKey(context.window, GLFW_KEY_W)) {
             pipeline.ubo.view = glm::translate(pipeline.ubo.view, glm::vec3(0, 0, speed * delta));
         }
@@ -219,7 +229,7 @@ int main() {
             pipeline.ubo.view = glm::rotate(pipeline.ubo.view, -1.0f * (float)delta, glm::vec3(0,1,0));
         }
 
-        descriptorSampler.updateSampler(descriptor, 1);
+        sampler.updateSampler(descriptor, 1);
         last_time = glfwGetTime();
         commandBuffer.finishSwapchainRender();
     }

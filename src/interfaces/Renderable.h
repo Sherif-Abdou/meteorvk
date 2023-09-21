@@ -18,6 +18,8 @@ public:
     };
 
     virtual void renderPipeline(Renderable::RenderArguments renderArguments) = 0;
+
+    virtual void prepareRender(Renderable::RenderArguments renderArguments) {};
 };
 
 
