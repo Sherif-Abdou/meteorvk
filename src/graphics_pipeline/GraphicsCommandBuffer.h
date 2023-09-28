@@ -38,10 +38,16 @@ public:
         vk::raii::PipelineLayout* layout;
         uint32_t set = 0;
     };
+
+    struct Dependency {
+        vk::ImageMemoryBarrier imageBarrier;
+        vk::PipelineStageFlags srcStageMask;
+        vk::PipelineStageFlags dstStageMask;
+    };
     std::vector<DescriptorPipelineBinding> bindings {};
     std::vector<VertexBuffer*> vertexBuffers {};
     std::vector<Renderable*> pipelines {};
-    std::vector<vk::DependencyInfoKHR> dependencies {};
+    std::vector<Dependency> dependencies {};
 
     explicit GraphicsCommandBuffer(VulkanContext &context);
 

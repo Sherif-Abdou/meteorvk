@@ -53,8 +53,10 @@ void GraphicsCommandBuffer::recordCommandBuffer() {
         pipeline->prepareRender(arguments);
     }
     for (auto& pipeline: pipelines) {
-        if (i - 1 > 0 && i - 1 < dependencies.size()) {
-            commandBuffer[current_frame].pipelineBarrier2KHR(dependencies[i - 1]);
+        if (i - 1 > 0 && i < dependencies.size()) {
+//            commandBuffer[current_frame].pipelineBarrier2(dependencies[i - 1]);
+            auto dependency = dependencies[i];
+            commandBuffer[current_frame].pipelineBarrier(dependency.srcStageMask, dependency.dstStageMask, {}, {}, {}, dependency.imageBarrier);
         }
         GraphicsPipeline::RenderArguments arguments {
             .commandBuffer = commandBuffer[current_frame],

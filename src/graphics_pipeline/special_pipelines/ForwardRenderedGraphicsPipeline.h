@@ -41,6 +41,8 @@ public:
 
     void prepareRender(Renderable::RenderArguments renderArguments) override;
 
+    virtual ~ForwardRenderedGraphicsPipeline();
+
 private:
     GraphicsPipeline pipeline;
 };

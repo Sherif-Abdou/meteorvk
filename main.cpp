@@ -94,7 +94,6 @@ DescriptorSet createUniformBindings(VulkanContext& context, DescriptorSampler& d
     bufferBinding.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
 
 
-
     vk::DescriptorSetLayoutBinding imageBinding {};
     imageBinding.setBinding(1);
     imageBinding.setDescriptorCount(1);
@@ -102,7 +101,13 @@ DescriptorSet createUniformBindings(VulkanContext& context, DescriptorSampler& d
     imageBinding.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
     imageBinding.setImmutableSamplers(*descriptorSampler.getSampler());
 
-    DescriptorSet descriptorSet(context, {bufferBinding, imageBinding});
+    vk::DescriptorSetLayoutBinding dynamicBufferBinding {};
+    dynamicBufferBinding.setBinding(2);
+    dynamicBufferBinding.setDescriptorCount(1);
+    dynamicBufferBinding.setDescriptorType(vk::DescriptorType::eUniformBufferDynamic);
+    dynamicBufferBinding.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
+
+    DescriptorSet descriptorSet(context, {bufferBinding, imageBinding, dynamicBufferBinding});
     descriptorSet.buildDescriptor();
 
     return std::move(descriptorSet);
@@ -170,19 +175,20 @@ int main() {
 
     auto initial_ubo = initialBuffer();
 
-    vk::ImageMemoryBarrier2 imageMemoryBarrier {};
+    vk::ImageMemoryBarrier imageMemoryBarrier {};
     auto depthImage = shadow_pipeline.getPipeline().ownedImages[0].imageAllocation.image;
     imageMemoryBarrier.setImage(depthImage);
     imageMemoryBarrier.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1));
-    imageMemoryBarrier.setSrcAccessMask(vk::AccessFlagBits2::eDepthStencilAttachmentWrite);
-    imageMemoryBarrier.setDstAccessMask(vk::AccessFlagBits2::eShaderRead);
-    imageMemoryBarrier.setSrcStageMask(vk::PipelineStageFlagBits2::eLateFragmentTests);
-    imageMemoryBarrier.setDstStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
+    imageMemoryBarrier.setSrcAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite);
+    imageMemoryBarrier.setDstAccessMask(vk::AccessFlagBits::eShaderRead);
+    imageMemoryBarrier.setOldLayout(vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal);
+    imageMemoryBarrier.setNewLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+    GraphicsCommandBuffer::Dependency dependency {};
+    dependency.imageBarrier = imageMemoryBarrier;
+    dependency.srcStageMask = vk::PipelineStageFlagBits::eLateFragmentTests;
+    dependency.dstStageMask = vk::PipelineStageFlagBits::eFragmentShader;
 
-    vk::DependencyInfoKHR dependencyInfo {};
-    dependencyInfo.setImageMemoryBarriers(imageMemoryBarrier);
-
-    commandBuffer.dependencies.push_back(dependencyInfo);
+    commandBuffer.dependencies.push_back(dependency);
 
     commandBuffer.bindings.push_back({
         &descriptor,

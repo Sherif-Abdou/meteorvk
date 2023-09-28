@@ -29,7 +29,7 @@ void GraphicsPipelineBuilder::initializeDefaults() {
     pipelineViewportStateCreateInfo.setViewportCount(1);
     pipelineViewportStateCreateInfo.setScissorCount(1);
 
-    pipelineRasterizationStateCreateInfo.setCullMode(vk::CullModeFlagBits::eNone);
+    pipelineRasterizationStateCreateInfo.setCullMode(vk::CullModeFlagBits::eFront);
     pipelineRasterizationStateCreateInfo.setRasterizerDiscardEnable(false);
     pipelineRasterizationStateCreateInfo.setLineWidth(1.0f);
     pipelineRasterizationStateCreateInfo.setPolygonMode(vk::PolygonMode::eFill);

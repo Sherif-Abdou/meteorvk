@@ -28,3 +28,7 @@ void ShadowGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArg
     lightUniformBuffer.updateBuffer(lightUBO);
     lightUniformBuffer.writeToDescriptor(*descriptorSet, binding);
 }
+
+ShadowGraphicsPipeline::~ShadowGraphicsPipeline() {
+    lightUniformBuffer.destroy();
+}

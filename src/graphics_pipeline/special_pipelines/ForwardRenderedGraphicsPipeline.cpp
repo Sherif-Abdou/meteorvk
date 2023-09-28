@@ -26,3 +26,7 @@ void ForwardRenderedGraphicsPipeline::prepareRender(Renderable::RenderArguments 
     uniformBuffer.updateBuffer(ubo);
     uniformBuffer.writeToDescriptor(*descriptorSet, 0);
 }
+
+ForwardRenderedGraphicsPipeline::~ForwardRenderedGraphicsPipeline() {
+    uniformBuffer.destroy();
+}
