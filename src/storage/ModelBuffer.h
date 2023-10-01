@@ -17,14 +17,25 @@ public:
 private:
     VulkanContext& context;
     unsigned int size;
+    unsigned int current_index;
     DynamicUniformBuffer<PerModelBuffer> buffer;
-
 public:
     ModelBuffer(VulkanContext &context, unsigned int size);
 
     unsigned int getSize() const;
 
-    void updateBuffer(PerModelBuffer& permodel, unsigned int index);
+    void updateBuffer(const ModelBuffer::PerModelBuffer &permodel, unsigned int index);
+
+    void writeBuffer(DescriptorSet &descriptorSet, unsigned int binding);
+
+    void resetIndex();
+    void nextIndex();
+
+    unsigned long getOffset();
+
+    void attachOffsetToDescriptor(DescriptorSet& descriptorSet, unsigned int index=0);
+
+    void destroy();
 };
 
 

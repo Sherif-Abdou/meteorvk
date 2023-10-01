@@ -16,9 +16,9 @@ layout(binding = 0) uniform UBO {
 
 layout(binding = 1) uniform sampler2D depthSampler;
 
-vec4 lightPosition = vec4(-10, 10, 0, 1);
+vec4 lightPosition = vec4(5, 5, 0, 1);
 
-const vec3 albedo = vec3(1.0, 0.0, 0.3);
+const vec3 albedo = vec3(0.054901960784313725, 0.4549019607843137, 0.5647058823529412);
 const float kA = 0.3f;
 const float kD = 0.8f;
 
@@ -30,15 +30,21 @@ float calculateShadow() {
     float closestLightDepth = texture(depthSampler, screenLocation.xy).r;
     float currentLightDepth = lightSpacePosition.z;
 
-    return currentLightDepth - 0.005 > closestLightDepth ? 0.8 : 0.0;
+    float bias = max(0.05 * (1.0 - normal.y), 0.005);
+
+    if (currentLightDepth > 1.0) {
+        return 0.0;
+    }
+
+    return currentLightDepth - bias > closestLightDepth ? 0.8 : 0.0;
 }
 
 void main() {
     float shadow = calculateShadow();
 
-    lightPosition = lightPosition;
+    lightPosition = view * lightPosition;
     lightPosition /= lightPosition.w;
     float diffuse = max(dot(normalize(normal) , normalize(lightPosition.xyz-position)), 0);
 
-    color = vec4(albedo * kA + kD * shadow * diffuse * albedo , 1.0);
+    color = vec4(diffuse * (1-shadow) * kD * albedo + kA * albedo, 1.0);
 }

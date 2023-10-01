@@ -33,6 +33,8 @@ public:
     vk::raii::Semaphore & getPipelineSemaphore();
     std::vector<vk::ClearValue> clearValues;
 
+    vk::Extent2D extent;
+
     vk::raii::Fence & getPipelineFence();
 
     void renderPipeline(Renderable::RenderArguments renderArguments) override;
@@ -40,6 +42,9 @@ public:
     virtual ~GraphicsPipeline();
 
     void destroy();
+
+    void renderVertexBuffer(RenderArguments renderArguments, VertexBuffer *vbo) const;
+
 private:
     vk::raii::Pipeline pipeline = nullptr;
 public:
@@ -47,16 +52,14 @@ public:
 
     void setPipeline(vk::raii::Pipeline && pipeline);
 
+    void prepareRender(RenderArguments &renderArguments);
+
+    void finishRender(const RenderArguments &renderArguments) const;
 private:
     vk::raii::Semaphore pipelineSemaphore = nullptr;
     void createSyncObjects();
     vk::raii::Fence pipelineFence = nullptr;
 
-    void prepareRender(RenderArguments &renderArguments);
-
-    void renderVertexBuffer(RenderArguments renderArguments, VertexBuffer *vbo) const;
-
-    void finishRender(const RenderArguments &renderArguments) const;
 };
 
 

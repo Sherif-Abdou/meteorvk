@@ -69,6 +69,13 @@ private:
     vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
     vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
     vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
+    vk::Extent2D extent = context.swapChainExtent;
+public:
+    const vk::Extent2D &getExtent() const;
+
+    void setExtent(const vk::Extent2D &extent);
+
+private:
 
     std::vector<vk::DynamicState> dynamic_states {};
     std::vector<vk::PipelineShaderStageCreateInfo> stages {};

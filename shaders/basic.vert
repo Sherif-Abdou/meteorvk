@@ -13,6 +13,9 @@ layout(location = 3) out vec3 outputTangent;
 layout(binding = 0) uniform UBO {
     mat4 proj;
     mat4 view;
+};
+
+layout(binding = 2) uniform DynamicUBO {
     mat4 model;
 };
 

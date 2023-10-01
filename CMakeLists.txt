@@ -57,6 +57,8 @@ add_executable(vulkan_engine main.cpp
         src/storage/DynamicUniformBuffer.h
         src/storage/ModelBuffer.cpp
         src/storage/ModelBuffer.h
+        src/graphics_pipeline/special_pipelines/ModelBufferGraphicsPipeline.cpp
+        src/graphics_pipeline/special_pipelines/ModelBufferGraphicsPipeline.h
 )
 if (APPLE)
     target_link_libraries(vulkan_engine "-framework CoreFoundation")

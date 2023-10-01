@@ -41,7 +41,7 @@ void UniformBuffer<T>::writeToDescriptor(DescriptorSet& descriptorSet, uint32_t 
     writeDescriptorSet.setDstBinding(binding);
     writeDescriptorSet.setDstArrayElement(0);
     writeDescriptorSet.setDescriptorType(vk::DescriptorType::eUniformBuffer);
-    writeDescriptorSet.setDstSet(*descriptorSet.getDescriptorSet());
+    writeDescriptorSet.setDstSet(descriptorSet.getDescriptorSet());
     writeDescriptorSet.setBufferInfo(bufferInfo);
 //    writeDescriptorSet.setDstSet();
 

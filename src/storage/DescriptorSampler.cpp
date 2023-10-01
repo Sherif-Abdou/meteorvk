@@ -19,7 +19,7 @@ void DescriptorSampler::buildSampler() {
 void DescriptorSampler::updateSampler(DescriptorSet& descriptorSet, unsigned int binding) {
     vk::WriteDescriptorSet writeDescriptorSet {};
     writeDescriptorSet.setDstBinding(binding);
-    writeDescriptorSet.setDstSet(*descriptorSet.getDescriptorSet());
+    writeDescriptorSet.setDstSet(descriptorSet.getDescriptorSet());
     writeDescriptorSet.setDescriptorCount(1);
     writeDescriptorSet.setDstArrayElement(0);
     writeDescriptorSet.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);

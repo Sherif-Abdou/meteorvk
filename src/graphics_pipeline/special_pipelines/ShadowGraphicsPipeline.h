@@ -11,11 +11,12 @@
 
 #include "../GraphicsPipeline.h"
 #include "../../storage/UniformBuffer.h"
+#include "ModelBufferGraphicsPipeline.h"
 #include <glm/ext.hpp>
 
 class ShadowGraphicsPipeline: public Renderable {
 private:
-    GraphicsPipeline pipeline;
+    ModelBufferGraphicsPipeline& pipeline;
 public:
     GraphicsPipeline &getPipeline();
     DescriptorSet* descriptorSet = nullptr;
@@ -28,15 +29,14 @@ public:
 
     UBO lightUBO = {
             glm::ortho(-10.f, 10.f, -10.f, 10.f, 0.1f, 20.0f),
-            glm::lookAt(glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.0, 0.0, 1.0)),
+            glm::lookAt(glm::vec3(5.0f, 5.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.0, 0.0, 1.0)),
             glm::identity<glm::mat4>(),
     };
 
     UniformBuffer<UBO> lightUniformBuffer;
 
-    ShadowGraphicsPipeline(VulkanContext &context, GraphicsRenderPass &&renderPass);
 
-    ShadowGraphicsPipeline(GraphicsPipeline &&pipeline);
+    ShadowGraphicsPipeline(ModelBufferGraphicsPipeline &pipeline);
 
     void renderPipeline(Renderable::RenderArguments renderArguments) override;
 

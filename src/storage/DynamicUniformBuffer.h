@@ -35,6 +35,7 @@ public:
         bufferCreateInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
         this->context.allocator->allocateBuffer(&bufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, &this->bufferAllocation);
+        this->buffer_count = buffer_count;
     }
 
     void updateBuffer(const T & data, unsigned int index) {
@@ -49,14 +50,14 @@ public:
         vk::WriteDescriptorSet writeDescriptorSet {};
         vk::DescriptorBufferInfo bufferInfo {};
         bufferInfo.setOffset(0); // Writing to the entire descriptor, should optimize this in the future
-        bufferInfo.setRange(dynamicAlignment * buffer_count);
+        bufferInfo.setRange(dynamicAlignment);
         bufferInfo.setBuffer(bufferAllocation.buffer);
 
         writeDescriptorSet.setDescriptorCount(1);
         writeDescriptorSet.setDstBinding(binding);
         writeDescriptorSet.setDstArrayElement(0);
         writeDescriptorSet.setDescriptorType(vk::DescriptorType::eUniformBufferDynamic);
-        writeDescriptorSet.setDstSet(*descriptorSet.getDescriptorSet());
+        writeDescriptorSet.setDstSet(descriptorSet.getDescriptorSet());
         writeDescriptorSet.setBufferInfo(bufferInfo);
 //    writeDescriptorSet.setDstSet();
 
@@ -65,6 +66,10 @@ public:
 
     unsigned long getOffsetForIndex(unsigned int index) {
         return dynamicAlignment * index;
+    }
+
+    void destroy() {
+        bufferAllocation.destroy();
     }
 };
 

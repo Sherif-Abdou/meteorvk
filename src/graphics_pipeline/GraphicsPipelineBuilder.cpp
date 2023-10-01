@@ -13,8 +13,8 @@ void GraphicsPipelineBuilder::initializeDefaults() {
 
     viewport.x = 0;
     viewport.y = 0;
-    viewport.width = (float)context.swapChainExtent.width;
-    viewport.height = (float)context.swapChainExtent.height;
+    viewport.width = (float)extent.width;
+    viewport.height = (float)extent.height;
 
 
     dynamic_states = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
@@ -84,7 +84,7 @@ void GraphicsPipelineBuilder::createPipelineLayout() {
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts {};
     descriptorSetLayouts.reserve(descriptorSets.size());
     for (auto descriptorSet: descriptorSets) {
-        descriptorSetLayouts.push_back(*descriptorSet->getDescriptorSetLayout());
+        descriptorSetLayouts.push_back(descriptorSet->getDescriptorSetLayout());
     }
     layoutCreateInfo.setSetLayouts(descriptorSetLayouts);
 
@@ -148,7 +148,7 @@ void GraphicsPipelineBuilder::addDepthImage() {
     imageCreateInfo.setInitialLayout(vk::ImageLayout::eUndefined);
     imageCreateInfo.setFormat(vk::Format::eD32Sfloat);
     imageCreateInfo.setArrayLayers(1);
-    imageCreateInfo.setExtent({context.swapChainExtent.width, context.swapChainExtent.height, 1});
+    imageCreateInfo.setExtent({extent.width, extent.height, 1});
     imageCreateInfo.setImageType(vk::ImageType::e2D);
     imageCreateInfo.setMipLevels(1);
     imageCreateInfo.setSamples(vk::SampleCountFlagBits::e1);
@@ -180,7 +180,7 @@ void GraphicsPipelineBuilder::addColorImage(vk::Format format) {
     imageCreateInfo.setInitialLayout(vk::ImageLayout::eUndefined);
     imageCreateInfo.setFormat(format);
     imageCreateInfo.setArrayLayers(1);
-    imageCreateInfo.setExtent({context.swapChainExtent.width, context.swapChainExtent.height, 1});
+    imageCreateInfo.setExtent({extent.width, extent.height, 1});
     imageCreateInfo.setImageType(vk::ImageType::e2D);
     imageCreateInfo.setMipLevels(1);
     imageCreateInfo.setSamples(vk::SampleCountFlagBits::e1);
@@ -220,8 +220,8 @@ GraphicsPipeline GraphicsPipelineBuilder::buildGraphicsPipeline() {
             }
 
             createInfo.setRenderPass(*renderPass.getRenderPass());
-            createInfo.setWidth(context.swapChainExtent.width);
-            createInfo.setHeight(context.swapChainExtent.height);
+            createInfo.setWidth(extent.width);
+            createInfo.setHeight(extent.height);
             createInfo.setAttachments(attachments);
             createInfo.setLayers(1);
 
@@ -238,14 +238,15 @@ GraphicsPipeline GraphicsPipelineBuilder::buildGraphicsPipeline() {
         }
 
         createInfo.setRenderPass(*renderPass.getRenderPass());
-        createInfo.setWidth(context.swapChainExtent.width);
-        createInfo.setHeight(context.swapChainExtent.height);
+        createInfo.setWidth(extent.width);
+        createInfo.setHeight(extent.height);
         createInfo.setAttachments(attachments);
         createInfo.setLayers(1);
 
         framebuffers.push_back(context.device.createFramebuffer(createInfo));
     }
     auto pipeline = GraphicsPipeline(context, std::move(renderPass));
+    pipeline.extent = this->extent;
     pipeline.targetFramebuffers = std::move(framebuffers);
     pipeline.pipelineLayout = std::move(pipelineLayout);
     auto actual_pipeline = context.device.createGraphicsPipeline(nullptr, pipelineCreateInfo);
@@ -277,4 +278,12 @@ const std::vector<DescriptorSet *> &GraphicsPipelineBuilder::getDescriptorSets()
 
 void GraphicsPipelineBuilder::setDescriptorSets(const std::vector<DescriptorSet *> &descriptorSets) {
     GraphicsPipelineBuilder::descriptorSets = descriptorSets;
+}
+
+const vk::Extent2D &GraphicsPipelineBuilder::getExtent() const {
+    return extent;
+}
+
+void GraphicsPipelineBuilder::setExtent(const vk::Extent2D &extent) {
+    GraphicsPipelineBuilder::extent = extent;
 }

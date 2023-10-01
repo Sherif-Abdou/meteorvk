@@ -13,30 +13,24 @@ private:
     unsigned int current_frame = 0;
     VulkanContext& context;
     std::vector<vk::DescriptorSetLayoutBinding> bindings;
-    std::vector<vk::raii::DescriptorSet> descriptorSet {};
-    vk::raii::DescriptorSetLayout descriptorSetLayout = nullptr;
-    vk::raii::DescriptorPool descriptorPool = nullptr;
+    std::vector<vk::DescriptorSet> descriptorSet {};
+    vk::DescriptorSetLayout descriptorSetLayout = nullptr;
+    vk::DescriptorPool descriptorPool = nullptr;
 
     void createDescriptorLayout();
     void createDescriptorPool();
     void createDescriptorSet();
 public:
-    [[nodiscard]] const std::vector<vk::DescriptorSetLayoutBinding> &getBindings() const;
+    [[nodiscard]] vk::DescriptorSet getDescriptorSet();
 
-    void setBindings(const std::vector<vk::DescriptorSetLayoutBinding> &bindings);
-    [[nodiscard]] vk::raii::DescriptorSet &getDescriptorSet();
+    [[nodiscard]] vk::DescriptorSetLayout getDescriptorSetLayout();
 
-    [[nodiscard]] vk::raii::DescriptorSetLayout &getDescriptorSetLayout();
-
-    [[nodiscard]] const vk::raii::DescriptorPool &getDescriptorPool() const;
     explicit DescriptorSet(VulkanContext &context);
     DescriptorSet(DescriptorSet&&) = default;
 
     std::vector<unsigned int> dynamic_offsets = {};
 
     DescriptorSet(VulkanContext &context, const std::vector<vk::DescriptorSetLayoutBinding> &bindings);
-
-    DescriptorSet duplicateWithSameLayout();
 
     constexpr static unsigned int MAX_UNIFORM_BUFFERS = 8;
     constexpr static unsigned int MAX_SAMPLERS = 16;

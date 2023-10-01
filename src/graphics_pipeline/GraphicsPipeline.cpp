@@ -56,7 +56,7 @@ void GraphicsPipeline::prepareRender(Renderable::RenderArguments &renderArgument
     beginInfo.setClearValues(clearValues);
     auto rect = vk::Rect2D {};
     rect.setOffset({0, 0});
-    rect.setExtent(context.swapChainExtent);
+    rect.setExtent(extent);
     beginInfo.setRenderArea(rect);
 
     renderArguments.commandBuffer.beginRenderPass(beginInfo, vk::SubpassContents::eInline);
@@ -69,16 +69,16 @@ void GraphicsPipeline::prepareRender(Renderable::RenderArguments &renderArgument
 
     vk::Viewport viewport{};
     viewport.x = 0.0f;
-    viewport.y = static_cast<float>(context.swapChainExtent.height);;
-    viewport.width = static_cast<float>(context.swapChainExtent.width);
-    viewport.height = -static_cast<float>(context.swapChainExtent.height);
+    viewport.y = static_cast<float>(extent.height);;
+    viewport.width = static_cast<float>(extent.width);
+    viewport.height = -static_cast<float>(extent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     renderArguments.commandBuffer.setViewport(0, viewport);
 
     vk::Rect2D scissor{};
     scissor.offset = vk::Offset2D {0, 0};
-    scissor.extent = context.swapChainExtent;
+    scissor.extent = extent;
     renderArguments.commandBuffer.setScissor(0, scissor);
 }
 

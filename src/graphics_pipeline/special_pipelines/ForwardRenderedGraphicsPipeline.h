@@ -14,10 +14,11 @@
 #include "../GraphicsPipeline.h"
 #include "../../interfaces/Renderable.h"
 #include "../../storage/UniformBuffer.h"
+#include "ModelBufferGraphicsPipeline.h"
 
 class ForwardRenderedGraphicsPipeline: public Renderable {
 public:
-    explicit ForwardRenderedGraphicsPipeline(GraphicsPipeline &&pipeline);
+    explicit ForwardRenderedGraphicsPipeline(ModelBufferGraphicsPipeline &pipeline);
 
     void renderPipeline(Renderable::RenderArguments renderArguments) override;
     struct UBO {
@@ -42,9 +43,8 @@ public:
     void prepareRender(Renderable::RenderArguments renderArguments) override;
 
     virtual ~ForwardRenderedGraphicsPipeline();
-
 private:
-    GraphicsPipeline pipeline;
+    ModelBufferGraphicsPipeline& pipeline;
 };
 
 

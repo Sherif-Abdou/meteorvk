@@ -8,23 +8,18 @@ void ShadowGraphicsPipeline::renderPipeline(GraphicsPipeline::RenderArguments re
     pipeline.renderPipeline(renderArguments);
 }
 
-ShadowGraphicsPipeline::ShadowGraphicsPipeline(VulkanContext &context, GraphicsRenderPass &&renderPass)
-        : pipeline(context, std::move(renderPass)), lightUniformBuffer(context) {
-    lightUniformBuffer.allocateBuffer();
-    lightUniformBuffer.updateBuffer(lightUBO);
-}
-
-ShadowGraphicsPipeline::ShadowGraphicsPipeline(GraphicsPipeline &&pipeline) : pipeline(std::move(pipeline)),
-                                                                              lightUniformBuffer(this->pipeline.context) {
+ShadowGraphicsPipeline::ShadowGraphicsPipeline(ModelBufferGraphicsPipeline &pipeline) : pipeline(pipeline),
+                                                                              lightUniformBuffer(this->pipeline.getGraphicsPipeline().context) {
     lightUniformBuffer.allocateBuffer();
     lightUniformBuffer.updateBuffer(lightUBO);
 }
 
 GraphicsPipeline &ShadowGraphicsPipeline::getPipeline() {
-    return pipeline;
+    return pipeline.getGraphicsPipeline();
 }
 
 void ShadowGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {
+    pipeline.prepareRender(renderArguments);
     lightUniformBuffer.updateBuffer(lightUBO);
     lightUniformBuffer.writeToDescriptor(*descriptorSet, binding);
 }

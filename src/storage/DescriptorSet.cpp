@@ -16,7 +16,7 @@ void DescriptorSet::createDescriptorLayout() {
         }
     }
 
-    this->descriptorSetLayout = context.device.createDescriptorSetLayout(createInfo);
+    this->descriptorSetLayout = context.device.createDescriptorSetLayout(createInfo).release();
 }
 
 void DescriptorSet::createDescriptorPool() {
@@ -37,40 +37,27 @@ void DescriptorSet::createDescriptorPool() {
     createInfo.setPoolSizes(sizes);
     createInfo.setMaxSets(FRAMES_IN_FLIGHT);
 
-    descriptorPool = context.device.createDescriptorPool(createInfo);
+    descriptorPool = context.device.createDescriptorPool(createInfo).release();
 }
 
 void DescriptorSet::createDescriptorSet() {
     vk::DescriptorSetAllocateInfo allocateInfo {};
 
-    auto list = std::vector<vk::DescriptorSetLayout> {*descriptorSetLayout};
-    list.push_back(*descriptorSetLayout);
-    allocateInfo.setDescriptorPool(*descriptorPool);
+    auto list = std::vector<vk::DescriptorSetLayout> {descriptorSetLayout};
+    list.push_back(descriptorSetLayout);
+    allocateInfo.setDescriptorPool(descriptorPool);
     allocateInfo.setSetLayouts(list);
 
-    descriptorSet = vk::raii::DescriptorSets (context.device, allocateInfo);
+    descriptorSet = (*context.device).allocateDescriptorSets(allocateInfo);
 }
 
-const std::vector<vk::DescriptorSetLayoutBinding> &DescriptorSet::getBindings() const {
-    return bindings;
-}
-
-void DescriptorSet::setBindings(const std::vector<vk::DescriptorSetLayoutBinding> &bindings) {
-    DescriptorSet::bindings = bindings;
-}
-
-vk::raii::DescriptorSet &DescriptorSet::getDescriptorSet() {
+vk::DescriptorSet DescriptorSet::getDescriptorSet() {
     return descriptorSet[current_frame];
 }
 
-vk::raii::DescriptorSetLayout &DescriptorSet::getDescriptorSetLayout() {
+vk::DescriptorSetLayout DescriptorSet::getDescriptorSetLayout() {
     return descriptorSetLayout;
 }
-
-const vk::raii::DescriptorPool &DescriptorSet::getDescriptorPool() const {
-    return descriptorPool;
-}
-
 void DescriptorSet::buildDescriptor() {
     createDescriptorLayout();
     createDescriptorPool();
@@ -79,21 +66,15 @@ void DescriptorSet::buildDescriptor() {
 
 void
 DescriptorSet::bindToCommandBuffer(vk::raii::CommandBuffer &commandBuffer, vk::raii::PipelineLayout& pipelineLayout, uint32_t set) {
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipelineLayout, set, *descriptorSet[current_frame], dynamic_offsets);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipelineLayout, set, descriptorSet[current_frame], dynamic_offsets);
 }
 
 DescriptorSet::DescriptorSet(VulkanContext &context, const std::vector<vk::DescriptorSetLayoutBinding> &bindings)
         : context(context), bindings(bindings) {}
 
 DescriptorSet::~DescriptorSet() {
-}
-
-DescriptorSet DescriptorSet::duplicateWithSameLayout() {
-    auto descriptorset = DescriptorSet(context);
-    descriptorset.bindings = this->bindings;
-    descriptorset.buildDescriptor();
-
-    return descriptorset;
+    (*context.device).destroy(descriptorSetLayout);
+    (*context.device).destroy(descriptorPool);
 }
 
 void DescriptorSet::nextFrame() {
