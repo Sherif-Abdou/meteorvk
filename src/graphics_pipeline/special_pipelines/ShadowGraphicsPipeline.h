@@ -14,6 +14,7 @@
 #include "ModelBufferGraphicsPipeline.h"
 #include <glm/ext.hpp>
 
+/// Graphics pipeline meant for generating a shadow map
 class ShadowGraphicsPipeline: public Renderable {
 private:
     ModelBufferGraphicsPipeline& pipeline;

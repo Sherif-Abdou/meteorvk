@@ -190,7 +190,12 @@ int main() {
     vertexbuffer2.init();
     commandBuffer.vertexBuffers.push_back(&vertexbuffer2);
     modelPipeline.modelBuffer->updateBuffer({
+        glm::identity<glm::mat4>(),
+        glm::vec4(0.8f, 0.1f, 0.26f, 0.0f)
+    }, 0);
+    modelPipeline.modelBuffer->updateBuffer({
         glm::translate(glm::scale(glm::identity<glm::mat4>(), glm::vec3(2.3, 0.3, 2.3)), glm::vec3(0, -8, 0)),
+        glm::vec4(127.0f, 255.0f, 212.0f, 0.0f) / glm::vec4(256.f),
     }, 1);
 
     auto initial_ubo = initialBuffer();

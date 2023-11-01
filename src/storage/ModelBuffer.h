@@ -9,10 +9,13 @@
 #include "../VulkanContext.h"
 #include "DynamicUniformBuffer.h"
 
+/// Buffer that stores model specific uniforms, wrapper over a dynamic uniform
 class ModelBuffer {
 public:
+    /// TODO: Abstract this into a generic
     struct PerModelBuffer {
         glm::mat4 model;
+        glm::vec4 albedo;
     };
 private:
     VulkanContext& context;

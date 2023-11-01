@@ -16,6 +16,7 @@
 #include "../../storage/UniformBuffer.h"
 #include "ModelBufferGraphicsPipeline.h"
 
+/// Graphics pipelines that stores render specific uniforms
 class ForwardRenderedGraphicsPipeline: public Renderable {
 public:
     explicit ForwardRenderedGraphicsPipeline(ModelBufferGraphicsPipeline &pipeline);

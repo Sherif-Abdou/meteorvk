@@ -7,6 +7,7 @@
 
 #include "../VulkanContext.h"
 
+/// Wrappper over VkRenderPass
 class GraphicsRenderPass {
 public:
     VulkanContext& context;

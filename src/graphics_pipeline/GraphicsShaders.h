@@ -9,6 +9,7 @@
 #include <shaderc/shaderc.hpp>
 #include "../VulkanContext.h"
 
+/// Handles the compilation of glsl shaders
 class GraphicsShaders {
 public:
     VulkanContext& context;

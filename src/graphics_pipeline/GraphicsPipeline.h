@@ -11,6 +11,8 @@
 #include "../storage/VertexBuffer.h"
 #include "../interfaces/Renderable.h"
 
+/// Core of a pipeline, wrapper over VkPipeline
+/// Stores the vulkan pipeline and the images it owns
 class GraphicsPipeline: public Renderable {
 public:
     struct ImagePair {

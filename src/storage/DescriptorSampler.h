@@ -8,6 +8,7 @@
 #include "../VulkanContext.h"
 #include "DescriptorSet.h"
 
+/// Wrapper around a sampler for a particular imageview
 class DescriptorSampler {
 private:
     VulkanContext& context;

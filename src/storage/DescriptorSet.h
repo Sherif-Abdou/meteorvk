@@ -7,6 +7,7 @@
 
 #include "../VulkanContext.h"
 
+/// Wrapper around VkDescriptorSet
 class DescriptorSet {
 private:
     static constexpr unsigned int FRAMES_IN_FLIGHT = 2;
@@ -35,9 +36,11 @@ public:
     constexpr static unsigned int MAX_UNIFORM_BUFFERS = 8;
     constexpr static unsigned int MAX_SAMPLERS = 16;
 
+    /// Builds the Vulkan Descriptor pool and sets
     void buildDescriptor();
     void bindToCommandBuffer(vk::raii::CommandBuffer &, vk::raii::PipelineLayout& pipelineLayout, uint32_t set=0);
 
+    /// Moves to the next frame's DescriptorSet, used for multiple frames in flight
     void nextFrame();
 
     virtual ~DescriptorSet();

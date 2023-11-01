@@ -5,7 +5,7 @@
 #include "GraphicsCommandBuffer.h"
 
 void GraphicsCommandBuffer::createCommandPool() {
-    vk::CommandPoolCreateInfo commandPoolCreateInfo {};
+    vk::CommandPoolCreateInfo commandPoolCreateInfo{};
     auto graphicsIndex = context.findQueueFamilies(context.physicalDevice).graphicsFamily.value();
     commandPoolCreateInfo.setQueueFamilyIndex(graphicsIndex);
     commandPoolCreateInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
@@ -14,28 +14,29 @@ void GraphicsCommandBuffer::createCommandPool() {
 }
 
 void GraphicsCommandBuffer::createCommandBuffer() {
-    vk::CommandBufferAllocateInfo allocateInfo {};
+    vk::CommandBufferAllocateInfo allocateInfo{};
     allocateInfo.commandPool = *pool;
     allocateInfo.setLevel(vk::CommandBufferLevel::ePrimary);
     allocateInfo.setCommandBufferCount(FRAMES_IN_FLIGHT);
 
     auto array = context.device.allocateCommandBuffers(allocateInfo);
-    for (unsigned int i = 0; i < FRAMES_IN_FLIGHT; i++) {
+    for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++) {
         commandBuffer[i] = std::move(array[i]);
     }
 }
 
 void GraphicsCommandBuffer::createSyncObjects() {
-    vk::SemaphoreCreateInfo semaphoreCreateInfo {};
-    vk::FenceCreateInfo fenceCreateInfo {};
+    vk::SemaphoreCreateInfo semaphoreCreateInfo{};
+    vk::FenceCreateInfo fenceCreateInfo{};
     fenceCreateInfo.setFlags(vk::FenceCreateFlagBits::eSignaled);
-    for (unsigned int i = 0; i < FRAMES_IN_FLIGHT; i++) {
+    for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++) {
         imageAvailableSemaphore[i] = context.device.createSemaphore(semaphoreCreateInfo);
         renderFinishedSemaphore[i] = context.device.createSemaphore(semaphoreCreateInfo);
         inFlightFence[i] = context.device.createFence(fenceCreateInfo);
     }
 
 }
+
 void GraphicsCommandBuffer::init() {
     createCommandPool();
     createCommandBuffer();
@@ -44,24 +45,26 @@ void GraphicsCommandBuffer::init() {
 
 void GraphicsCommandBuffer::recordCommandBuffer() {
     uint32_t i = 0;
-    for (auto& pipeline: pipelines) {
-        GraphicsPipeline::RenderArguments arguments {
+    for (auto &pipeline: pipelines) {
+        GraphicsPipeline::RenderArguments arguments{
                 .commandBuffer = commandBuffer[current_frame],
                 .imageIndex = swapChainImageIndex,
                 .vertexBuffers = vertexBuffers,
         };
         pipeline->prepareRender(arguments);
     }
-    for (auto& pipeline: pipelines) {
+
+    for (auto &pipeline: pipelines) {
         if (i - 1 > 0 && i < dependencies.size()) {
 //            commandBuffer[current_frame].pipelineBarrier2(dependencies[i - 1]);
             auto dependency = dependencies[i];
-            commandBuffer[current_frame].pipelineBarrier(dependency.srcStageMask, dependency.dstStageMask, {}, {}, {}, dependency.imageBarrier);
+            commandBuffer[current_frame].pipelineBarrier(dependency.srcStageMask, dependency.dstStageMask, {}, {}, {},
+                                                         dependency.imageBarrier);
         }
-        GraphicsPipeline::RenderArguments arguments {
-            .commandBuffer = commandBuffer[current_frame],
-            .imageIndex = swapChainImageIndex,
-            .vertexBuffers = vertexBuffers,
+        GraphicsPipeline::RenderArguments arguments{
+                .commandBuffer = commandBuffer[current_frame],
+                .imageIndex = swapChainImageIndex,
+                .vertexBuffers = vertexBuffers,
         };
 
         auto binding = bindings[i];
@@ -80,12 +83,12 @@ void GraphicsCommandBuffer::recordCommandBuffer() {
 }
 
 void GraphicsCommandBuffer::beginCommandBuffer() const {
-    vk::CommandBufferBeginInfo beginInfo {};
+    vk::CommandBufferBeginInfo beginInfo{};
     commandBuffer[current_frame].begin(beginInfo);
 }
 
 void GraphicsCommandBuffer::submitCommandBuffer() {
-    vk::SubmitInfo submitInfo {};
+    vk::SubmitInfo submitInfo{};
     vk::PipelineStageFlags waitStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
     submitInfo.setCommandBuffers(*commandBuffer[current_frame]);
     submitInfo.setWaitSemaphores(*imageAvailableSemaphore[current_frame]);
@@ -104,7 +107,7 @@ void GraphicsCommandBuffer::waitForFence() {
 }
 
 void GraphicsCommandBuffer::sendToSwapchain() {
-    vk::PresentInfoKHR presentInfo {};
+    vk::PresentInfoKHR presentInfo{};
     presentInfo.setWaitSemaphores(*renderFinishedSemaphore[current_frame]);
     presentInfo.setSwapchains(*context.swapChain);
     presentInfo.setImageIndices(swapChainImageIndex);
@@ -115,13 +118,14 @@ void GraphicsCommandBuffer::sendToSwapchain() {
     }
 
     current_frame = (current_frame + 1) % FRAMES_IN_FLIGHT;
-    for (auto& binding : bindings) {
+    for (auto &binding: bindings) {
         binding.descriptorSet->nextFrame();
     }
 }
 
 void GraphicsCommandBuffer::fetchSwapchain() {
-    auto [result, index] = context.swapChain.acquireNextImage(UINT32_MAX, *imageAvailableSemaphore[current_frame], nullptr);
+    auto [result, index] = context.swapChain.acquireNextImage(UINT32_MAX, *imageAvailableSemaphore[current_frame],
+                                                              nullptr);
     if (result != vk::Result::eSuccess) {
         throw std::runtime_error("Fence failure");
     }
@@ -148,7 +152,7 @@ void GraphicsCommandBuffer::beginSwapchainRender() {
 GraphicsCommandBuffer::GraphicsCommandBuffer(VulkanContext &context) : context(context) {}
 
 void GraphicsCommandBuffer::destroy() {
-    for (auto& buffer: vertexBuffers) {
+    for (auto &buffer: vertexBuffers) {
         buffer->destroy();
     }
 }

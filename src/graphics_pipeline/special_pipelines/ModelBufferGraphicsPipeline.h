@@ -10,6 +10,8 @@
 #include "../GraphicsPipeline.h"
 #include "../../storage/ModelBuffer.h"
 
+/// Graphics pipeline that adjusts the model buffer per vertexbuffer
+/// Modelbuffer indices must be in the same order as the vertexbuffers
 class ModelBufferGraphicsPipeline: public Renderable {
 private:
     GraphicsPipeline graphicsPipeline;

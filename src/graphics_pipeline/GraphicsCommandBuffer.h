@@ -10,10 +10,11 @@
 #include "../storage/UniformBuffer.h"
 #include <vulkan/vulkan.hpp>
 
+/// Command buffer that runs pipelines
 class GraphicsCommandBuffer {
 private:
-    unsigned int current_frame = 0;
-    static constexpr unsigned int FRAMES_IN_FLIGHT = 2;
+    uint32_t current_frame = 0;
+    constexpr static uint32_t FRAMES_IN_FLIGHT = 2;
     VulkanContext& context;
     vk::raii::CommandPool pool = nullptr;
     std::array<vk::raii::CommandBuffer, FRAMES_IN_FLIGHT> commandBuffer = {nullptr, nullptr};
@@ -33,21 +34,23 @@ private:
     void sendToSwapchain();
 
 public:
+    /// The pipeline layout to bind to a descriptor set
     struct DescriptorPipelineBinding {
         DescriptorSet* descriptorSet;
         vk::raii::PipelineLayout* layout;
         uint32_t set = 0;
     };
 
+    /// Helper struct to establish a dependency between pipelines
     struct Dependency {
         vk::ImageMemoryBarrier imageBarrier;
         vk::PipelineStageFlags srcStageMask;
         vk::PipelineStageFlags dstStageMask;
     };
-    std::vector<DescriptorPipelineBinding> bindings {};
-    std::vector<VertexBuffer*> vertexBuffers {};
-    std::vector<Renderable*> pipelines {};
-    std::vector<Dependency> dependencies {};
+    std::vector<DescriptorPipelineBinding> bindings {}; /// Descriptor set to bind for each pipeline
+    std::vector<VertexBuffer*> vertexBuffers {}; /// All vertex buffers to render
+    std::vector<Renderable*> pipelines {}; /// Pipelines to run in order
+    std::vector<Dependency> dependencies {}; /// Dependency to bind per pipeline
 
     explicit GraphicsCommandBuffer(VulkanContext &context);
 

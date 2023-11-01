@@ -8,7 +8,8 @@
 #include <glm/glm.hpp>
 #include "UniformBuffer.h"
 
-// Questionable Inheritance here, might separate entirely
+/// Wrapper around a Dynamic Uniform Buffer
+/// Handles buffer storage and generating a dynamic offset
 template<typename T>
 class DynamicUniformBuffer {
     VulkanContext& context;
@@ -64,6 +65,7 @@ public:
         context.device.updateDescriptorSets(writeDescriptorSet, {});
     }
 
+    /// Gets the dynamic offset to use to a particular index in the dynamic buffer
     unsigned long getOffsetForIndex(unsigned int index) {
         return dynamicAlignment * index;
     }

@@ -10,6 +10,7 @@
 #include "GraphicsRenderPass.h"
 #include "GraphicsPipeline.h"
 
+/// Handles construction of GraphicsPipeline, including building images
 class GraphicsPipelineBuilder {
 private:
     using ImagePair = GraphicsPipeline::ImagePair;
