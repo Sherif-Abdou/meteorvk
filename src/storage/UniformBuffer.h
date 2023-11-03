@@ -13,7 +13,9 @@ template<typename T>
 class UniformBuffer {
     VulkanContext& context;
     VulkanAllocator::VulkanBufferAllocation bufferAllocation;
-
+protected:
+    vk::DescriptorType descriptorType = vk::DescriptorType::eUniformBuffer;
+    VkBufferUsageFlags usageFlags = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 public:
     explicit UniformBuffer(VulkanContext &context) : context(context) {}
 
@@ -59,8 +61,11 @@ template<typename T>
 void UniformBuffer<T>::allocateBuffer() {
     VkBufferCreateInfo bufferCreateInfo {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
     bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    if (usageFlags == VK_BUFFER_USAGE_STORAGE_BUFFER_BIT) {
+        bufferCreateInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
+    }
     bufferCreateInfo.size = sizeof(T);
-    bufferCreateInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    bufferCreateInfo.usage = usageFlags;
 
     context.allocator->allocateBuffer(&bufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, &bufferAllocation);
 }

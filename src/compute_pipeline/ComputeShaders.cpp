@@ -4,7 +4,7 @@
 
 #include <shaderc/shaderc.h>
 #include "ComputeShaders.h"
-#include "GraphicsShaders.h"
+#include "../graphics_pipeline/GraphicsShaders.h"
 
 ComputeShaders::ComputeShaders(VulkanContext &context, const std::string &computeShaderPath)
     :context(context), computeShaderPath(computeShaderPath) {
