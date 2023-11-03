@@ -20,7 +20,6 @@ public:
     GraphicsShaders(VulkanContext &context, const std::string &vertexShaderPath, const std::string &fragmentShaderPath);
     std::vector<vk::PipelineShaderStageCreateInfo> getShaderStage();
 
-private:
     static std::vector<uint32_t> compileShader(const std::string&, shaderc_shader_kind);
 };
 

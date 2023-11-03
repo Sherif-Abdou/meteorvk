@@ -16,7 +16,6 @@
 #include "src/graphics_pipeline/GraphicsRenderPass.h"
 #include "src/graphics_pipeline/GraphicsPipeline.h"
 #include "src/graphics_pipeline/GraphicsCommandBuffer.h"
-#include "src/storage/UniformBuffer.h"
 #include "src/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "src/storage/DescriptorSampler.h"
 #include "src/storage/OBJFile.h"
@@ -28,10 +27,6 @@ VertexBuffer createVertexBuffer(VulkanContext &context, const char *path) {
     OBJFile file = OBJFile::fromFilePath(path);
     auto raw = file.createVulkanBuffer();
     buffer.vertices = std::move(raw);
-//    buffer.vertices.push_back(Vertex::positionOnly({0, 0, 0}));
-//    buffer.vertices.push_back(Vertex::positionOnly({1, 0, 0}));
-//    buffer.vertices.push_back(Vertex::positionOnly({0, 1, 0}));
-
     return buffer;
 }
 
@@ -70,7 +65,7 @@ GraphicsPipeline createShadowPipeline(VulkanContext& context, DescriptorSet* des
     renderPass.init();
     auto shaders = GraphicsShaders(context, "shaders/basic.vert", "shaders/shadow.frag");
     auto builder = GraphicsPipelineBuilder(context, shaders, renderPass);
-    builder.setExtent({2048, 2048});
+    builder.setExtent({1024, 1024});
     builder.setPipelineRasterizationStateCreateInfo(pipelineRasterizationStateCreateInfo);
     builder.addDepthImage();
 
@@ -81,19 +76,6 @@ GraphicsPipeline createShadowPipeline(VulkanContext& context, DescriptorSet* des
     auto pipeline = builder.buildGraphicsPipeline();
 
     return std::move(pipeline);
-}
-
-VulkanAllocator::VulkanBufferAllocation createUniformBuffer(VulkanContext& context) {
-    vk::BufferCreateInfo bufferCreateInfo {};
-    bufferCreateInfo.setSharingMode(vk::SharingMode::eExclusive);
-    bufferCreateInfo.setSize(sizeof (UBO));
-    bufferCreateInfo.setUsage(vk::BufferUsageFlagBits::eUniformBuffer);
-
-    VkBufferCreateInfo rawCreateInfo = bufferCreateInfo;
-
-    VulkanAllocator::VulkanBufferAllocation buffer;
-    context.allocator->allocateBuffer(&rawCreateInfo, VMA_MEMORY_USAGE_AUTO, &buffer);
-    return buffer;
 }
 
 DescriptorSet createUniformBindings(VulkanContext& context, DescriptorSampler& descriptorSampler) {
@@ -145,21 +127,17 @@ UBO initialBuffer() {
 int main() {
     VulkanContext context {};
     context.initVulkan();
+
+    // Create Descriptors for pipeline stages
     DescriptorSampler sampler = createSampler(context);
-    auto descriptor = createUniformBindings(context, sampler);
+    auto shadow_descriptor = createUniformBindings(context, sampler);
     auto forward_descriptor = createUniformBindings(context, sampler);
     GraphicsRenderPass renderPass(context);
     renderPass.init();
 
-//    GraphicsPipeline pipeline(context, std::move(renderPass));
-//    pipeline.descriptorSet = &descriptor;
-//    for (auto& swapChainImage: context.swapChainImageViews) {
-//        pipeline.targetImageViews.push_back(*swapChainImage);
-//    }
-//    pipeline.init();
+    // Build graphics pipelines
     auto shaders = GraphicsShaders(context, "shaders/basic.vert", "shaders/basic.frag");
     GraphicsPipelineBuilder builder = GraphicsPipelineBuilder(context, shaders, renderPass);
-    builder.targetImageViews = {};
     for (auto& targetSwapchainImageView: context.swapChainImageViews) {
         builder.targetImageViews.push_back(*targetSwapchainImageView);
     }
@@ -168,13 +146,13 @@ int main() {
     auto modelPipeline = ModelBufferGraphicsPipeline(builder.buildGraphicsPipeline(), 16);
     modelPipeline.descriptorSet = &forward_descriptor;
     auto pipeline = ForwardRenderedGraphicsPipeline(modelPipeline);
-    auto shadowModelPipeline = ModelBufferGraphicsPipeline(createShadowPipeline(context, &descriptor), modelPipeline.modelBuffer);
-    shadowModelPipeline.descriptorSet = &descriptor;
+    auto shadowModelPipeline = ModelBufferGraphicsPipeline(createShadowPipeline(context, &shadow_descriptor), modelPipeline.modelBuffer);
+    shadowModelPipeline.descriptorSet = &shadow_descriptor;
     auto shadow_pipeline = ShadowGraphicsPipeline(shadowModelPipeline);
     pipeline.descriptorSet = &forward_descriptor;
-    shadow_pipeline.descriptorSet = &descriptor;
-    GraphicsCommandBuffer commandBuffer(context);
+    shadow_pipeline.descriptorSet = &shadow_descriptor;
 
+    GraphicsCommandBuffer commandBuffer(context);
     commandBuffer.pipelines.push_back(&shadow_pipeline);
     commandBuffer.pipelines.push_back(&pipeline);
 
@@ -200,6 +178,7 @@ int main() {
 
     auto initial_ubo = initialBuffer();
 
+    // Create dependency barrier between graphics pipelines
     vk::ImageMemoryBarrier imageMemoryBarrier {};
     auto depthImage = shadow_pipeline.getPipeline().ownedImages[0].imageAllocation.image;
     imageMemoryBarrier.setImage(depthImage);
@@ -216,7 +195,7 @@ int main() {
     commandBuffer.dependencies.push_back(dependency);
 
     commandBuffer.bindings.push_back({
-        &descriptor,
+        &shadow_descriptor,
         &shadow_pipeline.getPipeline().getPipelineLayout(),
     });
     commandBuffer.bindings.push_back({
@@ -224,8 +203,8 @@ int main() {
          &pipeline.getPipeline().getPipelineLayout(),
     });
 //    commandBuffer.layout = layout;
-//    commandBuffer.descriptorSet = &descriptor;
-//    commandBuffer.bindDescriptorSet(descriptor, commandBuffer.pipelines[0].getPipelineLayout(), 0);
+//    commandBuffer.descriptorSet = &shadow_descriptor;
+//    commandBuffer.bindDescriptorSet(shadow_descriptor, commandBuffer.pipelines[0].getPipelineLayout(), 0);
 
     glfwShowWindow(context.window);
     auto last_time = glfwGetTime();
@@ -233,10 +212,20 @@ int main() {
     auto position = glm::zero<glm::vec3>();
     position.z = -5.f;
     auto rotation = glm::zero<glm::vec3>();
+    auto backpack_rotation = 0.0f;
+    auto t = 0.0f;
     while (!glfwWindowShouldClose(context.window)) {
         glfwPollEvents();
         commandBuffer.beginSwapchainRender();
         auto delta = glfwGetTime() - last_time;
+        t += delta;
+        backpack_rotation += delta * 1.0f;
+        auto mix_factor = std::fabs(std::sin(t));
+        modelPipeline.modelBuffer->updateBuffer({
+            glm::rotate(glm::identity<glm::mat4>(), backpack_rotation, glm::vec3(0,1,0)),
+            glm::smoothstep(glm::vec4(1.0, 0.0, 0.0, 0), glm::vec4(0.0, 1.0, 1.0, 0), glm::vec4(mix_factor))
+            },0);
+
 
         pipeline.ubo.lightProjView = shadow_pipeline.lightUBO.proj * shadow_pipeline.lightUBO.view;
         if (glfwGetKey(context.window, GLFW_KEY_W)) {

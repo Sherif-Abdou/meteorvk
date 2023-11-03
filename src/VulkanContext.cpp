@@ -173,12 +173,13 @@ VulkanContext::QueueFamilyIndices VulkanContext::findQueueFamilies(vk::raii::Phy
     std::vector<vk::QueueFamilyProperties> queueFamilies = device.getQueueFamilyProperties();
     int i = 0;
     for (const auto& queueFamily : queueFamilies) {
-        if (queueFamily.queueFlags & vk::QueueFlagBits::eGraphics) {
+        if (queueFamily.queueFlags & (vk::QueueFlagBits::eGraphics ^ vk::QueueFlagBits::eCompute)) {
             VkBool32 presentSupport = device.getSurfaceSupportKHR(i, *surface);
             if (presentSupport) {
                 indices.presentFamily = i;
             }
             indices.graphicsFamily = i;
+            indices.computeFamily = i;
         }
         if (indices.isComplete()) break;
         i++;
@@ -192,7 +193,7 @@ void VulkanContext::createLogicalDevice() {
 
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value(), indices.computeFamily.value()};
 
     float queuePriority = 1.0f;
     for (uint32_t queueFamily : uniqueQueueFamilies) {
@@ -223,6 +224,7 @@ void VulkanContext::createLogicalDevice() {
     device = physicalDevice.createDevice(createInfo);
     graphicsQueue = device.getQueue(indices.graphicsFamily.value(), 0);
     presentQueue = device.getQueue(indices.presentFamily.value(), 0);
+    computeQueue = device.getQueue(indices.computeFamily.value(), 0);
 }
 
 void VulkanContext::createSurface() {

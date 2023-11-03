@@ -11,7 +11,7 @@ void DescriptorSet::createDescriptorLayout() {
     createInfo.setBindings(bindings);
 
     for (auto& binding: bindings) {
-        if (binding.descriptorType == vk::DescriptorType::eUniformBufferDynamic) {
+        if (binding.descriptorType == vk::DescriptorType::eUniformBufferDynamic || binding.descriptorType == vk::DescriptorType::eStorageBufferDynamic) {
             dynamic_offsets.push_back(0);
         }
     }
@@ -28,12 +28,16 @@ void DescriptorSet::createDescriptorPool() {
     samplerSize.setType(vk::DescriptorType::eCombinedImageSampler);
     samplerSize.setDescriptorCount(MAX_SAMPLERS);
 
+    vk::DescriptorPoolSize storageBufferSize {};
+    storageBufferSize.setType(vk::DescriptorType::eStorageBuffer);
+    storageBufferSize.setDescriptorCount(MAX_STORAGE_BUFFERS);
+
     vk::DescriptorPoolSize dynamicUniformBufferSize {};
     dynamicUniformBufferSize.setType(vk::DescriptorType::eUniformBufferDynamic);
     dynamicUniformBufferSize.setDescriptorCount(2);
 
     vk::DescriptorPoolCreateInfo createInfo {};
-    auto sizes = std::vector<vk::DescriptorPoolSize> {uniformBufferSize, samplerSize, dynamicUniformBufferSize};
+    auto sizes = std::vector<vk::DescriptorPoolSize> {uniformBufferSize, samplerSize, dynamicUniformBufferSize, storageBufferSize};
     createInfo.setPoolSizes(sizes);
     createInfo.setMaxSets(FRAMES_IN_FLIGHT);
 

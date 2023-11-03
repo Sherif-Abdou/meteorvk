@@ -34,6 +34,7 @@ public:
     DescriptorSet(VulkanContext &context, const std::vector<vk::DescriptorSetLayoutBinding> &bindings);
 
     constexpr static unsigned int MAX_UNIFORM_BUFFERS = 8;
+    constexpr static unsigned int MAX_STORAGE_BUFFERS = 8;
     constexpr static unsigned int MAX_SAMPLERS = 16;
 
     /// Builds the Vulkan Descriptor pool and sets

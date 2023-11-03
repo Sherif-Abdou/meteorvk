@@ -59,6 +59,12 @@ add_executable(vulkan_engine main.cpp
         src/storage/ModelBuffer.h
         src/graphics_pipeline/special_pipelines/ModelBufferGraphicsPipeline.cpp
         src/graphics_pipeline/special_pipelines/ModelBufferGraphicsPipeline.h
+        src/graphics_pipeline/ComputePipeline.cpp
+        src/graphics_pipeline/ComputePipeline.h
+        src/graphics_pipeline/ComputePipelineBuilder.cpp
+        src/graphics_pipeline/ComputePipelineBuilder.h
+        src/graphics_pipeline/ComputeShaders.cpp
+        src/graphics_pipeline/ComputeShaders.h
 )
 if (APPLE)
     target_link_libraries(vulkan_engine "-framework CoreFoundation")
