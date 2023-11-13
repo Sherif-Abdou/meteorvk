@@ -10,6 +10,8 @@
 #include "../storage/UniformBuffer.h"
 #include <vulkan/vulkan.hpp>
 
+#include "../shared_pipeline/PipelineBarrier.h"
+
 /// Command buffer that runs pipelines
 class GraphicsCommandBuffer {
 private:
@@ -42,15 +44,10 @@ public:
     };
 
     /// Helper struct to establish a dependency between pipelines
-    struct Dependency {
-        vk::ImageMemoryBarrier imageBarrier;
-        vk::PipelineStageFlags srcStageMask;
-        vk::PipelineStageFlags dstStageMask;
-    };
     std::vector<DescriptorPipelineBinding> bindings {}; /// Descriptor set to bind for each pipeline
     std::vector<VertexBuffer*> vertexBuffers {}; /// All vertex buffers to render
     std::vector<Renderable*> pipelines {}; /// Pipelines to run in order
-    std::vector<Dependency> dependencies {}; /// Dependency to bind per pipeline
+    std::vector<PipelineBarrier> dependencies {}; /// Dependency to bind per pipeline
 
     explicit GraphicsCommandBuffer(VulkanContext &context);
 

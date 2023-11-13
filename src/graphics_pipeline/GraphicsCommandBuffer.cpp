@@ -58,8 +58,7 @@ void GraphicsCommandBuffer::recordCommandBuffer() {
         if (i - 1 > 0 && i < dependencies.size()) {
 //            commandBuffer[current_frame].pipelineBarrier2(dependencies[i - 1]);
             auto dependency = dependencies[i];
-            commandBuffer[current_frame].pipelineBarrier(dependency.srcStageMask, dependency.dstStageMask, {}, {}, {},
-                                                         dependency.imageBarrier);
+            dependency.applyBarrier(*commandBuffer[current_frame]);
         }
         GraphicsPipeline::RenderArguments arguments{
                 .commandBuffer = commandBuffer[current_frame],

@@ -21,6 +21,7 @@
 #include "src/storage/OBJFile.h"
 #include "src/graphics_pipeline/special_pipelines/ShadowGraphicsPipeline.h"
 #include "src/graphics_pipeline/special_pipelines/ForwardRenderedGraphicsPipeline.h"
+#include "src/shared_pipeline/PipelineBarrierBuilder.h"
 
 VertexBuffer createVertexBuffer(VulkanContext &context, const char *path) {
     VertexBuffer buffer(*context.allocator);
@@ -37,6 +38,8 @@ struct ImageViewPair {
 };
 
 DescriptorSampler createSampler(VulkanContext &context);
+
+void oldMain(VulkanContext &context);
 
 using UBO = ForwardRenderedGraphicsPipeline::UBO;
 
@@ -127,7 +130,19 @@ UBO initialBuffer() {
 int main() {
     VulkanContext context {};
     context.initVulkan();
+    oldMain(context);
 
+    GraphicsRenderPass renderPass(context);
+    renderPass.init();
+
+    auto forwardShaders = GraphicsShaders(context, "shaders/basic.vert", "shaders/basic.frag");
+    GraphicsPipelineBuilder forwardPipelineBuilder = GraphicsPipelineBuilder(context, forwardShaders, renderPass);
+
+
+    return 0;
+}
+
+void oldMain(VulkanContext &context) {
     // Create Descriptors for pipeline stages
     DescriptorSampler sampler = createSampler(context);
     auto shadow_descriptor = createUniformBindings(context, sampler);
@@ -181,18 +196,27 @@ int main() {
     // Create dependency barrier between graphics pipelines
     vk::ImageMemoryBarrier imageMemoryBarrier {};
     auto depthImage = shadow_pipeline.getPipeline().ownedImages[0].imageAllocation.image;
-    imageMemoryBarrier.setImage(depthImage);
-    imageMemoryBarrier.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1));
-    imageMemoryBarrier.setSrcAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite);
-    imageMemoryBarrier.setDstAccessMask(vk::AccessFlagBits::eShaderRead);
-    imageMemoryBarrier.setOldLayout(vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal);
-    imageMemoryBarrier.setNewLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-    GraphicsCommandBuffer::Dependency dependency {};
-    dependency.imageBarrier = imageMemoryBarrier;
-    dependency.srcStageMask = vk::PipelineStageFlagBits::eLateFragmentTests;
-    dependency.dstStageMask = vk::PipelineStageFlagBits::eFragmentShader;
+    auto barrier_builder = PipelineBarrierBuilder();
+    barrier_builder
+        .waitFor(vk::PipelineStageFlagBits2::eLateFragmentTests | vk::PipelineStageFlagBits2::eEarlyFragmentTests)
+        .whichUses(vk::AccessFlagBits2::eDepthStencilAttachmentWrite)
+        .beforeDoing(vk::PipelineStageFlagBits2::eFragmentShader)
+        .whichUses(vk::AccessFlagBits2::eShaderRead)
+        .forImage(depthImage, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1))
+        .withInitialLayout(vk::ImageLayout::eDepthAttachmentOptimal)
+        .withFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+    //
+    // imageMemoryBarrier.setImage(depthImage);
+    // imageMemoryBarrier.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1));
+    // imageMemoryBarrier.setSrcAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite);
+    // imageMemoryBarrier.setDstAccessMask(vk::AccessFlagBits::eShaderRead);
+    // imageMemoryBarrier.setOldLayout(vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal);
+    // imageMemoryBarrier.setNewLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+    // dependency.imageBarrier = imageMemoryBarrier;
+    // dependency.srcStageMask = vk::PipelineStageFlagBits::eLateFragmentTests;
+    // dependency.dstStageMask = vk::PipelineStageFlagBits::eFragmentShader;
 
-    commandBuffer.dependencies.push_back(dependency);
+    commandBuffer.dependencies.push_back(barrier_builder.build());
 
     commandBuffer.bindings.push_back({
         &shadow_descriptor,
@@ -220,7 +244,7 @@ int main() {
         auto delta = glfwGetTime() - last_time;
         t += delta;
         backpack_rotation += delta * 1.0f;
-        auto mix_factor = std::fabs(std::sin(t));
+        auto mix_factor = fabs(sin(t));
         modelPipeline.modelBuffer->updateBuffer({
             glm::rotate(glm::identity<glm::mat4>(), backpack_rotation, glm::vec3(0,1,0)),
             glm::smoothstep(glm::vec4(1.0, 0.0, 0.0, 0), glm::vec4(0.0, 1.0, 1.0, 0), glm::vec4(mix_factor))
@@ -266,5 +290,4 @@ int main() {
     pipeline.getPipeline().destroy();
     commandBuffer.destroy();
     context.cleanup();
-    return 0;
 }

@@ -46,7 +46,7 @@ void VulkanContext::createInstance() {
     createInfo.pApplicationInfo = &appInfo;
     createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 
-    std::vector<const char *> requiredExtensions = getRequiredExtensions();
+    std::vector<const char *> requiredExtensions = getRequiredInstanceExtensions();
 
     auto enableValidationLayers = checkValidationLayerSupport();
 
@@ -63,7 +63,7 @@ void VulkanContext::createInstance() {
     instance = vk::raii::Instance(context, createInfo);
 }
 
-std::vector<const char *> VulkanContext::getRequiredExtensions() {
+std::vector<const char *> VulkanContext::getRequiredInstanceExtensions() {
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions;
 
@@ -81,6 +81,7 @@ std::vector<const char *> VulkanContext::getRequiredExtensions() {
 
     requiredExtensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
     requiredExtensions.emplace_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+//    requiredExtensions.emplace_back(VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
     return requiredExtensions;
 }
 
@@ -205,8 +206,12 @@ void VulkanContext::createLogicalDevice() {
         queueCreateInfos.push_back(queueCreateInfo);
     }
     VkPhysicalDeviceFeatures deviceFeatures{};
+    VkPhysicalDeviceSynchronization2Features deviceFeatures2 {};
+    deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
+    deviceFeatures2.synchronization2 = true;
 
     VkDeviceCreateInfo createInfo{};
+    createInfo.pNext = &deviceFeatures2;
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
@@ -252,10 +257,8 @@ VulkanContext::SwapChainSupportDetails VulkanContext::querySwapChainSupport(vk::
     details.capabilities = device.getSurfaceCapabilitiesKHR(*surface);
 
 
-    uint32_t formatCount;
     details.formats = device.getSurfaceFormatsKHR(*surface);
 
-    uint32_t presentModeCount;
     details.presentModes = device.getSurfacePresentModesKHR(*surface);
 
     return details;

@@ -5,16 +5,16 @@ set(CMAKE_CXX_STANDARD 20)
 
 if (WIN32)
     include_directories("C:\\VulkanSDK\\glfw\\glfw-3.3.8.bin.WIN64\\include")
-    include_directories("C:\\VulkanSDK\\1.3.250.0\\Include")
+    include_directories("C:\\VulkanSDK\\1.3.268.0\\Include")
     include_directories("C:\\VulkanSDK\\glm")
 
     link_directories("C:\\VulkanSDK\\glfw\\glfw-3.3.8.bin.WIN64\\lib-vc2022")
-    link_directories("C:\\VulkanSDK\\1.3.250.0\\Lib")
+    link_directories("C:\\VulkanSDK\\1.3.268.0\\Lib")
 endif (WIN32)
 find_package(Vulkan REQUIRED)
 if (APPLE)
-    include_directories("/Users/sherif/VulkanSDK/1.3.250.1/macOS/include")
-    link_directories("/Users/sherif/VulkanSDK/1.3.250.1/macOS/lib")
+    include_directories("/Users/sherif/VulkanSDK/1.3.268.1/macOS/include")
+    link_directories("/Users/sherif/VulkanSDK/1.3.268.1/macOS/lib")
     include_directories("/opt/homebrew/include")
     link_directories("/opt/homebrew/lib")
 endif(APPLE)
@@ -69,6 +69,10 @@ add_executable(vulkan_engine main.cpp
         src/storage/StorageBuffer.h
         src/compute_pipeline/ComputeCommandBuffer.cpp
         src/compute_pipeline/ComputeCommandBuffer.h
+        src/shared_pipeline/PipelineBarrier.cpp
+        src/shared_pipeline/PipelineBarrier.h
+        src/shared_pipeline/PipelineBarrierBuilder.cpp
+        src/shared_pipeline/PipelineBarrierBuilder.h
 )
 if (APPLE)
     target_link_libraries(vulkan_engine "-framework CoreFoundation")
