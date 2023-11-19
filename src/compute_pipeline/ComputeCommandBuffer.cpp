@@ -35,7 +35,7 @@ void ComputeCommandBuffer::begin() {
 }
 
 void ComputeCommandBuffer::end() {
-    commandBuffer.end();
+    commandBuffer[currentFrame].end();
 }
 
 void ComputeCommandBuffer::submit() {
@@ -50,13 +50,17 @@ void ComputeCommandBuffer::nextFrame() {
     currentFrame = (currentFrame + 1) % 2;
 }
 
+void ComputeCommandBuffer::bindDescriptorSet(DescriptorSet& set, vk::raii::PipelineLayout& layout) {
+    set.bindToCommandBufferCompute(commandBuffer[currentFrame], layout);
+}
+
 uint32_t ComputeCommandBuffer::getCurrentFrame() const {
     return currentFrame;
 }
 
 void ComputeCommandBuffer::createSyncObjects() {
     vk::FenceCreateInfo fenceCreateInfo {};
-    fenceCreateInfo.setFlags(vk::FenceCreateFlagBits::eSignaled);
+    // fenceCreateInfo.setFlags(vk::FenceCreateFlagBits::eSignaled);
 
     vk::SemaphoreCreateInfo semaphoreCreateInfo {};
 
@@ -66,8 +70,11 @@ void ComputeCommandBuffer::createSyncObjects() {
     }
 }
 
-void ComputeCommandBuffer::bindAndDispatch(ComputePipeline &pipeline) {
+void ComputeCommandBuffer::bindAndDispatch(ComputePipeline &pipeline, std::optional<DescriptorSet*> set) {
     pipeline.bind(*commandBuffer[currentFrame]);
+    if (set.has_value()) {
+        this->bindDescriptorSet(**set, pipeline.getPipelineLayout());
+    }
     pipeline.dispatch(*commandBuffer[currentFrame]);
 }
 

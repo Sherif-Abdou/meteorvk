@@ -1,0 +1,17 @@
+#version 450
+
+layout (local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
+
+layout(std140, binding = 0) buffer SSBOIn {
+    vec4[ ] a;
+};
+
+layout(std140, binding = 1) buffer SSBOOut {
+    vec4[ ] b;
+};
+
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+    float radian = index * 3.1415 / 180;
+    b[index] = vec4(sin(radian), cos(radian), tan(radian), index);
+}

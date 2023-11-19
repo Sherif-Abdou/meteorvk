@@ -8,6 +8,8 @@
 #include "../VulkanContext.h"
 #include <vulkan/vulkan_raii.hpp>
 
+#include "../storage/DescriptorSet.h"
+
 class ComputePipeline {
 public:
     explicit ComputePipeline(VulkanContext& context, vk::raii::PipelineLayout &&descriptorLayout, vk::raii::Pipeline &&pipeline);
@@ -15,6 +17,7 @@ public:
 
     void bind(vk::CommandBuffer commandBuffer);
     void dispatch(vk::CommandBuffer commandBuffer);
+    vk::raii::PipelineLayout& getPipelineLayout();
 private:
     vk::raii::PipelineLayout pipelineLayout = nullptr;
     vk::raii::Pipeline pipeline = nullptr;

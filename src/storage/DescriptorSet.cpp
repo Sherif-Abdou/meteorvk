@@ -73,6 +73,11 @@ DescriptorSet::bindToCommandBuffer(vk::raii::CommandBuffer &commandBuffer, vk::r
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipelineLayout, set, descriptorSet[current_frame], dynamic_offsets);
 }
 
+void
+DescriptorSet::bindToCommandBufferCompute(vk::raii::CommandBuffer &commandBuffer, vk::raii::PipelineLayout& pipelineLayout, uint32_t set) {
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, *pipelineLayout, set, descriptorSet[current_frame], dynamic_offsets);
+}
+
 DescriptorSet::DescriptorSet(VulkanContext &context, const std::vector<vk::DescriptorSetLayoutBinding> &bindings)
         : context(context), bindings(bindings) {}
 

@@ -41,6 +41,9 @@ public:
     void buildDescriptor();
     void bindToCommandBuffer(vk::raii::CommandBuffer &, vk::raii::PipelineLayout& pipelineLayout, uint32_t set=0);
 
+    void bindToCommandBufferCompute(vk::raii::CommandBuffer&commandBuffer, vk::raii::PipelineLayout&pipelineLayout,
+                                    uint32_t set=0);
+
     /// Moves to the next frame's DescriptorSet, used for multiple frames in flight
     void nextFrame();
 

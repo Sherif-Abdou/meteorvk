@@ -12,6 +12,14 @@ PipelineBarrierBuilder& PipelineBarrierBuilder::forImage(vk::Image image, vk::Im
     return *this;
 }
 
+PipelineBarrierBuilder& PipelineBarrierBuilder::forBuffer(vk::Buffer buffer, vk::DeviceSize size, vk::DeviceSize offset) {
+    this->buffer = {
+        .buffer = buffer,
+        .size = size,
+        .offset = offset,
+    };
+}
+
 PipelineBarrierBuilder& PipelineBarrierBuilder::waitFor(vk::PipelineStageFlags2 stages) {
     coreBarrier.setSrcStageMask(stages);
     this->dstLastUsed = false;
@@ -43,11 +51,22 @@ PipelineBarrierBuilder& PipelineBarrierBuilder::withFinalLayout(vk::ImageLayout 
     return *this;
 }
 
+PipelineBarrierBuilder& PipelineBarrierBuilder::withSrcQueueFamily(uint32_t index) {
+    this->initialQueueFamilyIndex = index;
+}
+
+PipelineBarrierBuilder& PipelineBarrierBuilder::withDstQueueFamily(uint32_t index) {
+    this->finalQueueFamilyIndex = index;
+}
+
 PipelineBarrier PipelineBarrierBuilder::build() {
     PipelineBarrier barrier {};
     if (this->image.has_value()) {
         auto image_barrier = createImageBarrier();
         barrier.image_memory_barriers.push_back(image_barrier);
+    } else if (this->buffer.has_value()) {
+        auto buffer_barrier = createBufferBarrer();
+        barrier.buffer_memory_barriers.push_back(buffer_barrier);
     }
     barrier.memory_barriers.push_back(coreBarrier);
     return barrier;
@@ -55,14 +74,37 @@ PipelineBarrier PipelineBarrierBuilder::build() {
 
 vk::ImageMemoryBarrier2 PipelineBarrierBuilder::createImageBarrier() {
     vk::ImageMemoryBarrier2 image_memory_barrier2 {};
-    image_memory_barrier2.oldLayout = *this->initialLayout;
-    image_memory_barrier2.newLayout = *this->finalLayout;
+    if (this->initialLayout.has_value() && this->finalLayout.has_value()) {
+        image_memory_barrier2.oldLayout = *this->initialLayout;
+        image_memory_barrier2.newLayout = *this->finalLayout;
+    }
     image_memory_barrier2.setDstAccessMask(coreBarrier.dstAccessMask);
     image_memory_barrier2.setSrcAccessMask(coreBarrier.srcAccessMask);
     image_memory_barrier2.setSrcStageMask(coreBarrier.srcStageMask);
     image_memory_barrier2.setDstStageMask(coreBarrier.dstStageMask);
     image_memory_barrier2.setImage(image->image);
     image_memory_barrier2.setSubresourceRange(image->subresource_layout);
+    if (initialQueueFamilyIndex.has_value() && finalQueueFamilyIndex.has_value()) {
+        image_memory_barrier2.setSrcQueueFamilyIndex(*initialQueueFamilyIndex);
+        image_memory_barrier2.setDstQueueFamilyIndex(*finalQueueFamilyIndex);
+    }
 
     return image_memory_barrier2;
+}
+
+vk::BufferMemoryBarrier2 PipelineBarrierBuilder::createBufferBarrer() {
+    vk::BufferMemoryBarrier2 buffer_memory_barrier2 {};
+    buffer_memory_barrier2.setBuffer(buffer->buffer);
+    buffer_memory_barrier2.setSize(buffer->size);
+    buffer_memory_barrier2.setOffset(buffer->offset);
+    buffer_memory_barrier2.setDstAccessMask(coreBarrier.dstAccessMask);
+    buffer_memory_barrier2.setSrcAccessMask(coreBarrier.srcAccessMask);
+    buffer_memory_barrier2.setSrcStageMask(coreBarrier.srcStageMask);
+    buffer_memory_barrier2.setDstStageMask(coreBarrier.dstStageMask);
+    if (initialQueueFamilyIndex.has_value() && finalQueueFamilyIndex.has_value()) {
+        buffer_memory_barrier2.setSrcQueueFamilyIndex(*initialQueueFamilyIndex);
+        buffer_memory_barrier2.setDstQueueFamilyIndex(*finalQueueFamilyIndex);
+    }
+
+    return buffer_memory_barrier2;
 }

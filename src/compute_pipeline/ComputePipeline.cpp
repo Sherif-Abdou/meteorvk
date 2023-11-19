@@ -13,6 +13,11 @@ void ComputePipeline::dispatch(vk::CommandBuffer commandBuffer) {
     commandBuffer.dispatch(workgroups, 1, 1);
 }
 
+vk::raii::PipelineLayout& ComputePipeline::getPipelineLayout() {
+    return this->pipelineLayout;
+}
+
+
 void ComputePipeline::bind(vk::CommandBuffer commandBuffer) {
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, *pipeline);
 }

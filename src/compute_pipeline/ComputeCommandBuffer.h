@@ -15,10 +15,11 @@ public:
     VulkanContext& context;
     void init();
     void begin();
-    void bindAndDispatch(ComputePipeline& pipeline);
+    void bindAndDispatch(ComputePipeline& pipeline, std::optional<DescriptorSet*> set);
     void end();
     void submit();
     void nextFrame();
+    void bindDescriptorSet(DescriptorSet&, vk::raii::PipelineLayout&);
     uint32_t getCurrentFrame() const;
     vk::Semaphore getCurrentSignalSemaphore();
 private:

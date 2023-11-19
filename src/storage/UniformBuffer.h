@@ -23,6 +23,9 @@ public:
     void updateBuffer(const T&);
     void writeToDescriptor(DescriptorSet& descriptorSet, uint32_t binding = 0);
 
+    void* mapMemory();
+    void unMapMemory();
+
     void destroy();
 };
 
@@ -42,12 +45,22 @@ void UniformBuffer<T>::writeToDescriptor(DescriptorSet& descriptorSet, uint32_t 
     writeDescriptorSet.setDescriptorCount(1);
     writeDescriptorSet.setDstBinding(binding);
     writeDescriptorSet.setDstArrayElement(0);
-    writeDescriptorSet.setDescriptorType(vk::DescriptorType::eUniformBuffer);
+    writeDescriptorSet.setDescriptorType(descriptorType);
     writeDescriptorSet.setDstSet(descriptorSet.getDescriptorSet());
     writeDescriptorSet.setBufferInfo(bufferInfo);
 //    writeDescriptorSet.setDstSet();
 
     context.device.updateDescriptorSets(writeDescriptorSet, {});
+}
+
+template<typename T>
+void* UniformBuffer<T>::mapMemory() {
+    return bufferAllocation.mapMemory();
+}
+
+template<typename T>
+void UniformBuffer<T>::unMapMemory() {
+    bufferAllocation.unmapMemory();
 }
 
 template<typename T>
@@ -62,7 +75,7 @@ void UniformBuffer<T>::allocateBuffer() {
     VkBufferCreateInfo bufferCreateInfo {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
     bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     if (usageFlags == VK_BUFFER_USAGE_STORAGE_BUFFER_BIT) {
-        bufferCreateInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
+        // bufferCreateInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
     }
     bufferCreateInfo.size = sizeof(T);
     bufferCreateInfo.usage = usageFlags;
