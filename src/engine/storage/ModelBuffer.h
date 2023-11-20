@@ -6,8 +6,8 @@
 #define VULKAN_ENGINE_MODELBUFFER_H
 
 #include <glm/glm.hpp>
-#include "../VulkanContext.h"
-#include "DynamicUniformBuffer.h"
+#include "../../core/VulkanContext.h"
+#include "../../core/storage/DynamicUniformBuffer.h"
 
 /// Buffer that stores model specific uniforms, wrapper over a dynamic uniform
 class ModelBuffer {

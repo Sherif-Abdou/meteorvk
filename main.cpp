@@ -11,20 +11,22 @@
 #include <vulkan/vulkan.hpp>
 #include <vma/vk_mem_alloc.h>
 
-#include "src/VulkanContext.h"
-#include "src/compute_pipeline/ComputeCommandBuffer.h"
-#include "src/compute_pipeline/ComputePipelineBuilder.h"
-#include "src/storage/VertexBuffer.h"
-#include "src/graphics_pipeline/GraphicsRenderPass.h"
-#include "src/graphics_pipeline/GraphicsPipeline.h"
-#include "src/graphics_pipeline/GraphicsCommandBuffer.h"
-#include "src/graphics_pipeline/GraphicsPipelineBuilder.h"
-#include "src/storage/DescriptorSampler.h"
-#include "src/storage/OBJFile.h"
-#include "src/graphics_pipeline/special_pipelines/ShadowGraphicsPipeline.h"
-#include "src/graphics_pipeline/special_pipelines/ForwardRenderedGraphicsPipeline.h"
-#include "src/shared_pipeline/PipelineBarrierBuilder.h"
-#include "src/storage/StorageBuffer.h"
+#include "src/core/VulkanContext.h"
+#include "src/core/compute_pipeline/ComputeCommandBuffer.h"
+#include "src/core/compute_pipeline/ComputePipelineBuilder.h"
+#include "src/core/VulkanContext.h"
+#include "src/core/storage/DescriptorSampler.h"
+#include "src/core/storage/VertexBuffer.h"
+#include "src/core/graphics_pipeline/GraphicsRenderPass.h"
+#include "src/core/graphics_pipeline/GraphicsPipeline.h"
+#include "src/core/graphics_pipeline/GraphicsCommandBuffer.h"
+#include "src/core/graphics_pipeline/GraphicsPipelineBuilder.h"
+#include "src/core/storage/DescriptorSampler.h"
+#include "src/core/storage/OBJFile.h"
+#include "src/engine/special_pipelines/ShadowGraphicsPipeline.h"
+#include "src/engine/special_pipelines/ForwardRenderedGraphicsPipeline.h"
+#include "src/core/shared_pipeline/PipelineBarrierBuilder.h"
+#include "src/core/storage/StorageBuffer.h"
 
 VertexBuffer createVertexBuffer(VulkanContext& context, const char* path) {
     VertexBuffer buffer(*context.allocator);
@@ -54,7 +56,7 @@ GraphicsPipeline createShadowPipeline(VulkanContext&context, DescriptorSet* desc
     vk::SubpassDependency dependency{};
     dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
     dependency.dstSubpass = 0;
-    dependency.srcStageMask = vk::PipelineStageFlagBits::eFragmentShader;
+    dependency.dstStageMask = vk::PipelineStageFlagBits::eFragmentShader;
     dependency.dstStageMask = vk::PipelineStageFlagBits::eEarlyFragmentTests;
     dependency.srcAccessMask = {};
     dependency.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;

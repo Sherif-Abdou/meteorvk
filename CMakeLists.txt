@@ -47,18 +47,18 @@ add_executable(vulkan_engine main.cpp
         src/core/graphics_pipeline/GraphicsPipelineBuilder.h
         src/core/storage/DescriptorSampler.cpp
         src/core/storage/DescriptorSampler.h
-        src/core/graphics_pipeline/special_pipelines/ShadowGraphicsPipeline.cpp
-        src/core/graphics_pipeline/special_pipelines/ShadowGraphicsPipeline.h
+        src/engine/special_pipelines/ShadowGraphicsPipeline.cpp
+        src/engine/special_pipelines/ShadowGraphicsPipeline.h
         src/core/interfaces/Renderable.cpp
         src/core/interfaces/Renderable.h
-        src/core/graphics_pipeline/special_pipelines/ForwardRenderedGraphicsPipeline.cpp
-        src/core/graphics_pipeline/special_pipelines/ForwardRenderedGraphicsPipeline.h
+        src/engine/special_pipelines/ForwardRenderedGraphicsPipeline.cpp
+        src/engine/special_pipelines/ForwardRenderedGraphicsPipeline.h
         src/core/storage/DynamicUniformBuffer.cpp
         src/core/storage/DynamicUniformBuffer.h
-        src/core/storage/ModelBuffer.cpp
-        src/core/storage/ModelBuffer.h
-        src/core/graphics_pipeline/special_pipelines/ModelBufferGraphicsPipeline.cpp
-        src/core/graphics_pipeline/special_pipelines/ModelBufferGraphicsPipeline.h
+        src/engine/storage/ModelBuffer.cpp
+        src/engine/storage/ModelBuffer.h
+        src/engine/special_pipelines/ModelBufferGraphicsPipeline.cpp
+        src/engine/special_pipelines/ModelBufferGraphicsPipeline.h
         src/core/compute_pipeline/ComputePipeline.cpp
         src/core/compute_pipeline/ComputePipeline.h
         src/core/compute_pipeline/ComputePipelineBuilder.cpp
@@ -73,6 +73,8 @@ add_executable(vulkan_engine main.cpp
         src/core/shared_pipeline/PipelineBarrier.h
         src/core/shared_pipeline/PipelineBarrierBuilder.cpp
         src/core/shared_pipeline/PipelineBarrierBuilder.h
+        src/engine/material/Material.cpp
+        src/engine/material/Material.h
 )
 if (APPLE)
     target_link_libraries(vulkan_engine "-framework CoreFoundation")

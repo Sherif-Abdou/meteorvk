@@ -19,10 +19,6 @@ ForwardRenderedGraphicsPipeline::ForwardRenderedGraphicsPipeline(ModelBufferGrap
     ubo.proj = glm::perspective(glm::radians(90.0), 1920.0 / 1080.0, 0.1, 100.0);
     ubo.view = glm::translate(glm::identity<glm::mat4>(), glm::vec3(0.0));
     ubo.view = glm::translate(ubo.view, glm::vec3(0, 0, -4));
-    ubo.model = glm::identity<glm::mat4>();
-    pipeline.modelBuffer->updateBuffer({
-        ubo.model
-    }, 0);
 }
 
 void ForwardRenderedGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {

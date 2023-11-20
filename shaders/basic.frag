@@ -11,7 +11,6 @@ layout(location = 4) in vec3 light_space_position;
 layout(binding = 0) uniform UBO {
     mat4 proj;
     mat4 view;
-    mat4 model;
     mat4 lightProjView;
 };
 

@@ -11,9 +11,9 @@
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
-#include "../GraphicsPipeline.h"
-#include "../../interfaces/Renderable.h"
-#include "../../storage/UniformBuffer.h"
+#include "../../core/graphics_pipeline/GraphicsPipeline.h"
+#include "../../core/interfaces/Renderable.h"
+#include "../../core/storage/UniformBuffer.h"
 #include "ModelBufferGraphicsPipeline.h"
 
 /// Graphics pipelines that stores render specific uniforms
@@ -25,12 +25,10 @@ public:
     struct UBO {
         glm::mat4 proj;
         glm::mat4 view;
-        glm::mat4 model;
         glm::mat4 lightProjView;
     };
 
     UBO ubo {
-        glm::identity<glm::mat4>(),
         glm::identity<glm::mat4>(),
         glm::identity<glm::mat4>(),
         glm::zero<glm::mat4>(),

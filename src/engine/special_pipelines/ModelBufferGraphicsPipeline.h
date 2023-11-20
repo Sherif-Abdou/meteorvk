@@ -6,9 +6,9 @@
 #define VULKAN_ENGINE_MODELBUFFERGRAPHICSPIPELINE_H
 
 
-#include "../../interfaces/Renderable.h"
-#include "../GraphicsPipeline.h"
-#include "../../storage/ModelBuffer.h"
+#include "../../core/interfaces/Renderable.h"
+#include "../../core/graphics_pipeline/GraphicsPipeline.h"
+#include "../storage/ModelBuffer.h"
 
 /// Graphics pipeline that adjusts the model buffer per vertexbuffer
 /// Modelbuffer indices must be in the same order as the vertexbuffers

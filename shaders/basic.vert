@@ -14,7 +14,6 @@ layout(location = 4) out vec3 lightSpacePosition;
 layout(binding = 0) uniform UBO {
     mat4 proj;
     mat4 view;
-    mat4 ignore;
     mat4 lightViewProj;
 };
 
