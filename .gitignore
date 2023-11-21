@@ -6,3 +6,5 @@ build
 .vscode
 *.xcworkspace/
 .cache/
+models/
+textures/

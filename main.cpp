@@ -26,7 +26,9 @@
 #include "src/engine/special_pipelines/ShadowGraphicsPipeline.h"
 #include "src/engine/special_pipelines/ForwardRenderedGraphicsPipeline.h"
 #include "src/core/shared_pipeline/PipelineBarrierBuilder.h"
+#include "src/core/shared_pipeline/TransferQueue.h"
 #include "src/core/storage/StorageBuffer.h"
+#include "src/engine/storage/ImageTextureLoader.h"
 
 VertexBuffer createVertexBuffer(VulkanContext& context, const char* path) {
     VertexBuffer buffer(*context.allocator);
@@ -86,7 +88,7 @@ GraphicsPipeline createShadowPipeline(VulkanContext&context, DescriptorSet* desc
     return std::move(pipeline);
 }
 
-DescriptorSet createUniformBindings(VulkanContext&context, DescriptorSampler&descriptorSampler) {
+DescriptorSet createUniformBindings(VulkanContext&context, DescriptorSampler&descriptorSampler, DescriptorSampler& descriptor_sampler2) {
     vk::DescriptorSetLayoutBinding bufferBinding{};
     bufferBinding.setBinding(0);
     bufferBinding.setDescriptorCount(1);
@@ -107,7 +109,14 @@ DescriptorSet createUniformBindings(VulkanContext&context, DescriptorSampler&des
     dynamicBufferBinding.setDescriptorType(vk::DescriptorType::eUniformBufferDynamic);
     dynamicBufferBinding.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
 
-    DescriptorSet descriptorSet(context, {bufferBinding, imageBinding, dynamicBufferBinding});
+    vk::DescriptorSetLayoutBinding imageBinding2{};
+    imageBinding2.setBinding(3);
+    imageBinding2.setDescriptorCount(1);
+    imageBinding2.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
+    imageBinding2.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
+    imageBinding2.setImmutableSamplers(*descriptor_sampler2.getSampler());
+
+    DescriptorSet descriptorSet(context, {bufferBinding, imageBinding, dynamicBufferBinding, imageBinding2});
     descriptorSet.buildDescriptor();
 
     return descriptorSet;
@@ -132,11 +141,36 @@ UBO initialBuffer() {
     };
 }
 
+struct TextureResult {
+    DescriptorSampler sampler;
+    vk::raii::ImageView view;
+};
+
+TextureResult load_texture_from_file(VulkanContext& context, VulkanAllocator::VulkanImageAllocation& red_image) {
+    auto loader = ImageTextureLoader(context);
+    red_image = loader.loadImageFromFile("./textures/1001_albedo.jpg");
+    vk::ImageViewCreateInfo image_view_create_info {};
+    image_view_create_info.components = vk::ComponentMapping();
+    image_view_create_info.format = vk::Format::eR8G8B8A8Srgb;
+    image_view_create_info.subresourceRange = vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1);
+    image_view_create_info.image = red_image.image;
+    image_view_create_info.viewType = vk::ImageViewType::e2D;
+    vk::raii::ImageView view = context.device.createImageView(image_view_create_info);
+
+    DescriptorSampler sampler(context);
+    sampler.targetImageView = *view;
+    sampler.targetImageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    sampler.buildSampler();
+
+    return { std::move(sampler), std::move(view) };
+}
+
 int main() {
     VulkanContext context{};
     context.initVulkan();
     const auto use_old = true;
     if (use_old) {
+
         oldMain(context);
     }
     else {
@@ -197,9 +231,13 @@ int main() {
 
 void oldMain(VulkanContext&context) {
     // Create Descriptors for pipeline stages
+    VulkanAllocator::VulkanImageAllocation red_image;
+    auto red_sampler = load_texture_from_file(context, red_image);
+    red_sampler.sampler.targetImageView = *red_sampler.view;
+
     DescriptorSampler sampler = createSampler(context);
-    auto shadow_descriptor = createUniformBindings(context, sampler);
-    auto forward_descriptor = createUniformBindings(context, sampler);
+    auto shadow_descriptor = createUniformBindings(context, sampler, red_sampler.sampler);
+    auto forward_descriptor = createUniformBindings(context, sampler, red_sampler.sampler);
     GraphicsRenderPass renderPass(context);
     renderPass.init();
 
@@ -229,6 +267,7 @@ void oldMain(VulkanContext&context) {
     sampler.updateSampler(forward_descriptor, 1);
 
 
+
     commandBuffer.init();
     auto vertexbuffer1 = createVertexBuffer(context, "./models/super_backpack.obj");
     vertexbuffer1.init();
@@ -244,7 +283,7 @@ void oldMain(VulkanContext&context) {
                                                 glm::translate(
                                                     glm::scale(glm::identity<glm::mat4>(), glm::vec3(2.3, 0.3, 2.3)),
                                                     glm::vec3(0, -8, 0)),
-                                                glm::vec4(127.0f, 255.0f, 212.0f, 0.0f) / glm::vec4(256.f),
+                                                glm::vec4(127.0f, 255.0f, 212.0f, 256.0f) / glm::vec4(256.f),
                                             }, 1);
 
     // Create dependency barrier between graphics pipelines
@@ -291,8 +330,7 @@ void oldMain(VulkanContext&context) {
         modelPipeline.modelBuffer->updateBuffer({
                                                     glm::rotate(glm::identity<glm::mat4>(), backpack_rotation,
                                                                 glm::vec3(0, 1, 0)),
-                                                    glm::smoothstep(glm::vec4(1.0, 0.0, 0.0, 0),
-                                                                    glm::vec4(0.0, 1.0, 1.0, 0), glm::vec4(mix_factor))
+                                                                glm::vec4(0.0)
                                                 }, 0);
 
 
@@ -325,12 +363,15 @@ void oldMain(VulkanContext&context) {
                                            position);
 
         sampler.updateSampler(forward_descriptor, 1);
+        red_sampler.sampler.updateSampler(forward_descriptor, 3);
+        red_sampler.sampler.updateSampler(shadow_descriptor, 3);
         last_time = glfwGetTime();
         commandBuffer.finishSwapchainRender();
     }
 
 
     context.device.waitIdle();
+    red_image.destroy();
     modelPipeline.modelBuffer->destroy();
     shadow_pipeline.getPipeline().destroy();
     pipeline.getPipeline().destroy();

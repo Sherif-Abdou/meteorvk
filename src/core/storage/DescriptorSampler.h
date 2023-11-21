@@ -19,6 +19,7 @@ public:
     const vk::raii::Sampler &getSampler() const;
 
     vk::ImageView targetImageView;
+    vk::ImageLayout targetImageLayout = vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal;
     void buildSampler();
     void updateSampler(DescriptorSet& descriptorSet, unsigned int binding);
 };

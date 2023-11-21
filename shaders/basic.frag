@@ -16,10 +16,12 @@ layout(binding = 0) uniform UBO {
 
 layout(binding = 2) uniform DynamicUBO {
     mat4 _model;
-    vec4 albedo;
+    vec4 _albedo;
 };
 
 layout(binding = 1) uniform sampler2D depthSampler;
+
+layout(binding = 3) uniform sampler2D textureSampler;
 
 vec4 lightPosition = vec4(5, 5, 0, 1);
 
@@ -50,6 +52,8 @@ void main() {
     lightPosition = view * lightPosition;
     lightPosition /= lightPosition.w;
     float diffuse = max(dot(normalize(normal) , normalize(lightPosition.xyz-position)), 0);
+
+    vec4 albedo = _albedo.a == 0.0 ? texture(textureSampler, uv) : _albedo;
 
     color = vec4(diffuse * (1-shadow) * kD * albedo.rgb + kA * albedo.rgb, 1.0);
 }

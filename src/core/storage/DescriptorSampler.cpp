@@ -25,7 +25,7 @@ void DescriptorSampler::updateSampler(DescriptorSet& descriptorSet, unsigned int
     writeDescriptorSet.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
 
     vk::DescriptorImageInfo descriptorImageInfo {};
-    descriptorImageInfo.setImageLayout(vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal);
+    descriptorImageInfo.setImageLayout(targetImageLayout);
     descriptorImageInfo.setImageView(targetImageView);
     descriptorImageInfo.setSampler(*sampler);
 

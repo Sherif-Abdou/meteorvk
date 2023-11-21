@@ -75,6 +75,11 @@ add_executable(vulkan_engine main.cpp
         src/core/shared_pipeline/PipelineBarrierBuilder.h
         src/engine/material/Material.cpp
         src/engine/material/Material.h
+        src/engine/storage/ImageTextureLoader.cpp
+        src/engine/storage/ImageTextureLoader.h
+        stbi/stbi_image.h
+        src/core/shared_pipeline/TransferQueue.cpp
+        src/core/shared_pipeline/TransferQueue.h
 )
 if (APPLE)
     target_link_libraries(vulkan_engine "-framework CoreFoundation")
