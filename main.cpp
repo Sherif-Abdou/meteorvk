@@ -5,10 +5,10 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define VMA_IMPLEMENTATION
-#include <glfw3.h>
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
-#include <vulkan.hpp>
+#include <vulkan/vulkan.hpp>
 #include <vma/vk_mem_alloc.h>
 
 #include "src/core/VulkanContext.h"
