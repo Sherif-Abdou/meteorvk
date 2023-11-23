@@ -3,22 +3,15 @@ project(vulkan_engine)
 
 set(CMAKE_CXX_STANDARD 20)
 
-if (WIN32)
-    include_directories("C:\\VulkanSDK\\glfw\\glfw-3.3.8.bin.WIN64\\include")
-    include_directories("C:\\VulkanSDK\\1.3.250.0\\Include")
-    include_directories("C:\\VulkanSDK\\glm")
-
-    link_directories("C:\\VulkanSDK\\glfw\\glfw-3.3.8.bin.WIN64\\lib-vc2022")
-    link_directories("C:\\VulkanSDK\\1.3.268.0\\Lib")
-endif (WIN32)
-find_package(Vulkan REQUIRED)
-if (APPLE)
-    include_directories("/Users/sherif/VulkanSDK/1.3.268.1/macOS/include")
-    link_directories("/Users/sherif/VulkanSDK/1.3.268.1/macOS/lib")
-    include_directories("/opt/homebrew/include")
-    link_directories("/opt/homebrew/lib")
-endif(APPLE)
-
+find_library(VULKAN_LIBRARY REQUIRED NAMES vulkan vulkan-1)
+find_path(VULKAN_HEADERS REQUIRED NAMES vulkan)
+find_path(VMA_HEADERS REQUIRED NAMES vma)
+find_path(GLM_HEADERS REQUIRED NAMES glm)
+find_library(SHADER_C_LIBRARY REQUIRED NAMES shaderc_shared)
+find_path(SHADER_C_HEADERS REQUIRED NAMES shaderc)
+find_library(GLFW_LIBRARY REQUIRED NAMES glfw glfw3)
+find_path(GLFW_HEADERS REQUIRED NAMES "GLFW")
+variable_watch(VULKAN_HEADERS)
 
 add_executable(vulkan_engine main.cpp
         src/core/VulkanContext.h
@@ -81,15 +74,13 @@ add_executable(vulkan_engine main.cpp
         src/core/shared_pipeline/TransferQueue.cpp
         src/core/shared_pipeline/TransferQueue.h
 )
+# Apple MoltenVK Requirements
 if (APPLE)
     target_link_libraries(vulkan_engine "-framework CoreFoundation")
     target_link_libraries(vulkan_engine "-framework CoreGraphics")
     target_link_libraries(vulkan_engine "-framework IOKit")
     target_link_libraries(vulkan_engine "-framework Cocoa")
-    target_link_libraries(vulkan_engine vulkan glfw shaderc_shared)
-    target_include_directories(vulkan_engine PUBLIC ${VULKAN_INCLUDE_DIRS})
 endif (APPLE)
-
-if (WIN32)
-    target_link_libraries(vulkan_engine shaderc_shared vulkan-1 glfw3)
-endif (WIN32)
+#    target_link_libraries(vulkan_engine vulkan glfw shaderc_shared)
+target_link_libraries(vulkan_engine ${VULKAN_LIBRARY} ${SHADER_C_LIBRARY} ${GLFW_LIBRARY})
+target_include_directories(vulkan_engine PUBLIC ${VULKAN_HEADERS} ${SHADER_C_HEADERS} ${GLFW_HEADERS} ${VMA_HEADERS} ${GLM_HEADERS})

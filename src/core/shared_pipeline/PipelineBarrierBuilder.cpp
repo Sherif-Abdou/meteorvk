@@ -18,6 +18,7 @@ PipelineBarrierBuilder& PipelineBarrierBuilder::forBuffer(vk::Buffer buffer, vk:
         .offset = offset,
         .size = size,
     };
+    return *this;
 }
 
 PipelineBarrierBuilder& PipelineBarrierBuilder::waitFor(vk::PipelineStageFlags2 stages) {
@@ -53,10 +54,12 @@ PipelineBarrierBuilder& PipelineBarrierBuilder::withFinalLayout(vk::ImageLayout 
 
 PipelineBarrierBuilder& PipelineBarrierBuilder::withSrcQueueFamily(uint32_t index) {
     this->initialQueueFamilyIndex = index;
+    return *this;
 }
 
 PipelineBarrierBuilder& PipelineBarrierBuilder::withDstQueueFamily(uint32_t index) {
     this->finalQueueFamilyIndex = index;
+    return *this;
 }
 
 PipelineBarrier PipelineBarrierBuilder::build() {
