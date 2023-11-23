@@ -63,7 +63,7 @@ void GraphicsPipeline::prepareRender(Renderable::RenderArguments &renderArgument
     renderArguments.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline);
     for (auto& buffer: renderArguments.vertexBuffers) {
         if (buffer == nullptr) continue;
-        buffer->updateVertexBuffer();
+        // buffer->updateVertexBuffer();
         buffer->attachToCommandBuffer(renderArguments.commandBuffer);
     }
 

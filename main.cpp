@@ -31,7 +31,7 @@
 #include "src/engine/storage/ImageTextureLoader.h"
 
 VertexBuffer createVertexBuffer(VulkanContext& context, const char* path) {
-    VertexBuffer buffer(*context.allocator);
+    VertexBuffer buffer(context, true);
     OBJFile file = OBJFile::fromFilePath(path);
     auto raw = file.createVulkanBuffer();
     buffer.vertices = std::move(raw);
@@ -277,14 +277,17 @@ void oldMain(VulkanContext&context) {
     commandBuffer.vertexBuffers.push_back(&vertexbuffer2);
     modelPipeline.modelBuffer->updateBuffer({
                                                 glm::identity<glm::mat4>(),
-                                                glm::vec4(0.8f, 0.1f, 0.26f, 0.0f)
+                                                Material(glm::vec4(0.8f, 0.1f, 0.26f, 0.0f))
                                             }, 0);
     modelPipeline.modelBuffer->updateBuffer({
                                                 glm::translate(
                                                     glm::scale(glm::identity<glm::mat4>(), glm::vec3(2.3, 0.3, 2.3)),
                                                     glm::vec3(0, -8, 0)),
-                                                glm::vec4(127.0f, 255.0f, 212.0f, 256.0f) / glm::vec4(256.f),
+                                                Material(glm::vec4(127.0f, 255.0f, 212.0f, 256.0f) / glm::vec4(256.f))
                                             }, 1);
+
+    vertexbuffer1.updateVertexBuffer();
+    vertexbuffer2.updateVertexBuffer();
 
     // Create dependency barrier between graphics pipelines
     auto depthImage = shadow_pipeline.getPipeline().ownedImages[0].imageAllocation.image;
@@ -330,7 +333,7 @@ void oldMain(VulkanContext&context) {
         modelPipeline.modelBuffer->updateBuffer({
                                                     glm::rotate(glm::identity<glm::mat4>(), backpack_rotation,
                                                                 glm::vec3(0, 1, 0)),
-                                                                glm::vec4(0.0)
+                                                                Material {glm::vec4(0.0)}
                                                 }, 0);
 
 

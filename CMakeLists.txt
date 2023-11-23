@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 if (WIN32)
     include_directories("C:\\VulkanSDK\\glfw\\glfw-3.3.8.bin.WIN64\\include")
-    include_directories("C:\\VulkanSDK\\1.3.268.0\\Include")
+    include_directories("C:\\VulkanSDK\\1.3.250.0\\Include")
     include_directories("C:\\VulkanSDK\\glm")
 
     link_directories("C:\\VulkanSDK\\glfw\\glfw-3.3.8.bin.WIN64\\lib-vc2022")
@@ -89,3 +89,7 @@ if (APPLE)
     target_link_libraries(vulkan_engine vulkan glfw shaderc_shared)
     target_include_directories(vulkan_engine PUBLIC ${VULKAN_INCLUDE_DIRS})
 endif (APPLE)
+
+if (WIN32)
+    target_link_libraries(vulkan_engine shaderc_shared vulkan-1 glfw3)
+endif (WIN32)

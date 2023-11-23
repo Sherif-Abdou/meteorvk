@@ -14,9 +14,21 @@ layout(binding = 0) uniform UBO {
     mat4 lightProjView;
 };
 
+struct AtlasRect {
+    float x1;
+    float x2;
+    float y1;
+    float y2;
+};
+
+struct Material {
+    vec4 albedo;
+    AtlasRect bounds;
+};
+
 layout(binding = 2) uniform DynamicUBO {
     mat4 _model;
-    vec4 _albedo;
+    Material material;
 };
 
 layout(binding = 1) uniform sampler2D depthSampler;
@@ -48,12 +60,14 @@ float calculateShadow() {
 
 void main() {
     float shadow = calculateShadow();
+    vec2 adjustedUV = uv / vec2(material.bounds.x2 - material.bounds.x1, material.bounds.y2 - material.bounds.y1);
+    adjustedUV += vec2(material.bounds.x1, material.bounds.y1);
 
     lightPosition = view * lightPosition;
     lightPosition /= lightPosition.w;
     float diffuse = max(dot(normalize(normal) , normalize(lightPosition.xyz-position)), 0);
 
-    vec4 albedo = _albedo.a == 0.0 ? texture(textureSampler, uv) : _albedo;
+    vec4 albedo = material.albedo.a == 0.0 ? texture(textureSampler, adjustedUV) : material.albedo;
 
     color = vec4(diffuse * (1-shadow) * kD * albedo.rgb + kA * albedo.rgb, 1.0);
 }

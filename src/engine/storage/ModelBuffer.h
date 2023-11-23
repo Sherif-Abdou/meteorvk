@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include "../../core/VulkanContext.h"
 #include "../../core/storage/DynamicUniformBuffer.h"
+#include "../material/Material.h"
 
 /// Buffer that stores model specific uniforms, wrapper over a dynamic uniform
 class ModelBuffer {
@@ -15,7 +16,7 @@ public:
     /// TODO: Abstract this into a generic
     struct PerModelBuffer {
         glm::mat4 model;
-        glm::vec4 albedo;
+        Material material;
     };
 private:
     VulkanContext& context;

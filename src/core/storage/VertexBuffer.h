@@ -9,9 +9,9 @@
 
 class VertexBuffer {
 public:
-    VulkanAllocator& allocator;
+    VulkanContext& context;
 
-    explicit VertexBuffer(VulkanAllocator &allocator);
+    explicit VertexBuffer(VulkanContext &context, bool staging_buffer = false);
 
     std::vector<Vertex> vertices {};
     unsigned long mask = 0;
@@ -31,6 +31,11 @@ public:
 private:
     void initializeVertexBuffer();
     VulkanAllocator::VulkanBufferAllocation vertexBuffer;
+    VulkanAllocator::VulkanBufferAllocation stagingBuffer;
+
+    void loadStagingBuffer();
+
+    bool use_staging_buffer = false;
 };
 
 

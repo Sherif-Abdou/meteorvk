@@ -15,8 +15,8 @@ PipelineBarrierBuilder& PipelineBarrierBuilder::forImage(vk::Image image, vk::Im
 PipelineBarrierBuilder& PipelineBarrierBuilder::forBuffer(vk::Buffer buffer, vk::DeviceSize size, vk::DeviceSize offset) {
     this->buffer = {
         .buffer = buffer,
-        .size = size,
         .offset = offset,
+        .size = size,
     };
 }
 

@@ -186,7 +186,7 @@ void GraphicsPipelineBuilder::addColorImage(vk::Format format) {
     imageCreateInfo.setSamples(vk::SampleCountFlagBits::e1);
     imageCreateInfo.setSharingMode(vk::SharingMode::eExclusive);
     imageCreateInfo.setTiling(vk::ImageTiling::eOptimal);
-    imageCreateInfo.setUsage(vk::ImageUsageFlagBits::eColorAttachment);
+    imageCreateInfo.setUsage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
     VkImageCreateInfo rawImageCreateInfo = imageCreateInfo;
     context.allocator->allocateImage(&rawImageCreateInfo, VMA_MEMORY_USAGE_AUTO, &colorImage);
