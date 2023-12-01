@@ -73,6 +73,8 @@ add_executable(vulkan_engine main.cpp
         stbi/stbi_image.h
         src/core/shared_pipeline/TransferQueue.cpp
         src/core/shared_pipeline/TransferQueue.h
+        src/engine/special_pipelines/SSAOGraphicsPipeline.cpp
+        src/engine/special_pipelines/SSAOGraphicsPipeline.h
 )
 # Apple MoltenVK Requirements
 if (APPLE)

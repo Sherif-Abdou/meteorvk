@@ -62,7 +62,7 @@ GraphicsRenderPass::Subpass GraphicsRenderPass::createSubpass() {
 }
 
 void GraphicsRenderPass::createAttachments() {
-    if (useColor) {
+    if (useColor && !custom_color) {
         colorDescription.setFormat(context.swapChainImageFormat)
             .setInitialLayout(vk::ImageLayout::eUndefined)
             .setFinalLayout(vk::ImageLayout::ePresentSrcKHR)
@@ -104,4 +104,17 @@ void GraphicsRenderPass::init(vk::SubpassDependency dependency) {
     subpass = createSubpass();
     subpass.dependency = dependency;
     createRenderPass();
+}
+
+void GraphicsRenderPass::useCustomColor(vk::Format format, vk::ImageLayout finalLayout) {
+    custom_color = true;
+
+    colorDescription
+        .setInitialLayout(vk::ImageLayout::eUndefined)
+        .setFinalLayout(finalLayout)
+        .setFormat(format)
+        .setLoadOp(vk::AttachmentLoadOp::eClear)
+        .setStoreOp(vk::AttachmentStoreOp::eStore)
+        .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+        .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
 }

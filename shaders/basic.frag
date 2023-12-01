@@ -35,17 +35,20 @@ layout(binding = 1) uniform sampler2D depthSampler;
 
 layout(binding = 3) uniform sampler2D textureSampler;
 
-vec4 lightPosition = vec4(5, 5, 0, 1);
+vec4 lightPosition = view * vec4(-5, 5, 2, 1);
 
 //const vec3 albedo = vec3(0.054901960784313725, 0.4549019607843137, 0.5647058823529412);
-const float kA = 0.3f;
+const float kA = 0.5f;
 const float kD = 0.8f;
+
+const vec3 specularColor = vec3(0.7);
 
 float calculateShadow() {
     vec4 lightSpacePosition = vec4(light_space_position, 1.0f);
     lightSpacePosition.xyz /= lightSpacePosition.w;
 
     vec3 screenLocation = lightSpacePosition.xyz * 0.5 + 0.5;
+    screenLocation.y = 1 - screenLocation.y; // Needs to be flipped for some reason?
     float closestLightDepth = texture(depthSampler, screenLocation.xy).r;
     float currentLightDepth = lightSpacePosition.z;
 
@@ -66,8 +69,10 @@ void main() {
     lightPosition = view * lightPosition;
     lightPosition /= lightPosition.w;
     float diffuse = max(dot(normalize(normal) , normalize(lightPosition.xyz-position)), 0);
+    vec3 halfway = normalize(-position + (lightPosition.xyz - position));
+    float specular = pow(max(dot(halfway, normal), 0), 8);
 
     vec4 albedo = material.albedo.a == 0.0 ? texture(textureSampler, adjustedUV) : material.albedo;
 
-    color = vec4(diffuse * (1-shadow) * kD * albedo.rgb + kA * albedo.rgb, 1.0);
+    color = vec4(diffuse * (1-shadow) * kD * albedo.rgb + kA * albedo.rgb + (1-kD) * specular * specularColor, 1.0);
 }

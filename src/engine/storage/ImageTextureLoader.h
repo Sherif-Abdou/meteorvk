@@ -23,6 +23,7 @@ private:
     void loadTransferQueue();
 public:
     VulkanAllocator::VulkanImageAllocation loadImageFromFile(const char* file_path);
+    VulkanAllocator::VulkanImageAllocation createImageFromBuffer(VkFormat, uint32_t width, uint32_t height, void* data, size_t n);
 
 };
 

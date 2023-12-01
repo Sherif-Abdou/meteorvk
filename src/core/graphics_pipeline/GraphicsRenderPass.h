@@ -23,6 +23,7 @@ public:
     void init();
     void init(vk::SubpassDependency dependency);
 
+    void useCustomColor(vk::Format format, vk::ImageLayout finalLayout);
     bool useColor = true;
     bool useDepth = true;
     bool storeDepth = false;
@@ -31,6 +32,7 @@ private:
     vk::raii::RenderPass renderPass = nullptr;
 
 private:
+    bool custom_color = false;
     vk::AttachmentDescription colorDescription {};
     vk::AttachmentDescription depthDescription {};
     Subpass subpass;

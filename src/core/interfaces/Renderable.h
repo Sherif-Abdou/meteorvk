@@ -11,6 +11,8 @@
 
 class Renderable {
 public:
+    virtual ~Renderable() = default;
+
     struct RenderArguments {
         vk::raii::CommandBuffer& commandBuffer;
         uint32_t imageIndex;

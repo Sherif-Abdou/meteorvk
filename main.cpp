@@ -28,6 +28,7 @@
 #include "src/core/shared_pipeline/PipelineBarrierBuilder.h"
 #include "src/core/shared_pipeline/TransferQueue.h"
 #include "src/core/storage/StorageBuffer.h"
+#include "src/engine/special_pipelines/SSAOGraphicsPipeline.h"
 #include "src/engine/storage/ImageTextureLoader.h"
 
 VertexBuffer createVertexBuffer(VulkanContext& context, const char* path) {
@@ -49,6 +50,44 @@ DescriptorSampler createSampler(VulkanContext&context);
 void oldMain(VulkanContext&context);
 
 using UBO = ForwardRenderedGraphicsPipeline::UBO;
+
+SSAOGraphicsPipeline createSSAOPipeline(VulkanContext& context, DescriptorSet* descriptorSet, ModelBuffer* buffer) {
+    GraphicsRenderPass renderPass(context);
+    renderPass.useColor = true;;
+    renderPass.storeDepth = true;
+    renderPass.useCustomColor(vk::Format::eR16Sfloat, vk::ImageLayout::eColorAttachmentOptimal);
+
+    vk::SubpassDependency dependency{};
+    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass = 0;
+    dependency.dstStageMask = vk::PipelineStageFlagBits::eFragmentShader;
+    dependency.dstStageMask = vk::PipelineStageFlagBits::eEarlyFragmentTests;
+    dependency.srcAccessMask = {};
+    dependency.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+
+
+    renderPass.init();
+    auto shaders = GraphicsShaders(context, "shaders/basic.vert", "shaders/basic.frag");
+    auto builder = GraphicsPipelineBuilder(context, shaders, renderPass);
+    builder.setExtent({1024, 1024});
+    builder.addDepthImage();
+    builder.addColorImage(vk::Format::eR16Sfloat);
+
+
+    if (descriptorSet != nullptr) {
+        builder.descriptorSets.push_back(descriptorSet);
+    }
+    auto pipeline = builder.buildGraphicsPipeline();
+    auto modelbufferpipeline = new ModelBufferGraphicsPipeline(std::move(pipeline), buffer);
+
+    modelbufferpipeline->descriptorSet = descriptorSet;
+    modelbufferpipeline->modelBuffer = buffer;
+
+    auto res = SSAOGraphicsPipeline(*modelbufferpipeline);
+    res.descriptor_set = descriptorSet;
+
+    return res;
+}
 
 GraphicsPipeline createShadowPipeline(VulkanContext&context, DescriptorSet* descriptorSet) {
     GraphicsRenderPass renderPass(context);
@@ -75,7 +114,7 @@ GraphicsPipeline createShadowPipeline(VulkanContext&context, DescriptorSet* desc
     renderPass.init();
     auto shaders = GraphicsShaders(context, "shaders/basic.vert", "shaders/shadow.frag");
     auto builder = GraphicsPipelineBuilder(context, shaders, renderPass);
-    builder.setExtent({1024, 1024});
+    builder.setExtent({2048, 2048});
     builder.setPipelineRasterizationStateCreateInfo(pipelineRasterizationStateCreateInfo);
     builder.addDepthImage();
 
@@ -244,7 +283,7 @@ void oldMain(VulkanContext&context) {
     // Build graphics pipelines
     auto shaders = GraphicsShaders(context, "shaders/basic.vert", "shaders/basic.frag");
     GraphicsPipelineBuilder builder = GraphicsPipelineBuilder(context, shaders, renderPass);
-    for (auto&targetSwapchainImageView: context.swapChainImageViews) {
+    for (auto& targetSwapchainImageView: context.swapChainImageViews) {
         builder.targetImageViews.push_back(*targetSwapchainImageView);
     }
     builder.descriptorSets = {&forward_descriptor};
@@ -259,8 +298,12 @@ void oldMain(VulkanContext&context) {
     pipeline.descriptorSet = &forward_descriptor;
     shadow_pipeline.descriptorSet = &shadow_descriptor;
 
+    auto ssao_descriptors = SSAOGraphicsPipeline::createDescriptorSet(&red_sampler.sampler);
+    auto ssao_pipeline = createSSAOPipeline(context, &ssao_descriptors, modelPipeline.modelBuffer);
+
     GraphicsCommandBuffer commandBuffer(context);
     commandBuffer.pipelines.push_back(&shadow_pipeline);
+    commandBuffer.pipelines.push_back(&ssao_pipeline);
     commandBuffer.pipelines.push_back(&pipeline);
 
     sampler.targetImageView = *shadow_pipeline.getPipeline().ownedImages[0].imageView;
@@ -269,7 +312,7 @@ void oldMain(VulkanContext&context) {
 
 
     commandBuffer.init();
-    auto vertexbuffer1 = createVertexBuffer(context, "./models/super_backpack.obj");
+    auto vertexbuffer1 = createVertexBuffer(context, "./models/plane.obj");
     vertexbuffer1.init();
     commandBuffer.vertexBuffers.push_back(&vertexbuffer1);
     auto vertexbuffer2 = createVertexBuffer(context, "./models/floor.obj");
@@ -277,7 +320,7 @@ void oldMain(VulkanContext&context) {
     commandBuffer.vertexBuffers.push_back(&vertexbuffer2);
     modelPipeline.modelBuffer->updateBuffer({
                                                 glm::identity<glm::mat4>(),
-                                                Material(glm::vec4(0.8f, 0.1f, 0.26f, 0.0f))
+                                                Material(glm::vec4(0.8f, 0.1f, 0.26f, 1.0f))
                                             }, 0);
     modelPipeline.modelBuffer->updateBuffer({
                                                 glm::translate(
@@ -308,6 +351,10 @@ void oldMain(VulkanContext&context) {
         &shadow_pipeline.getPipeline().getPipelineLayout(),
     });
     commandBuffer.bindings.push_back({
+        &ssao_descriptors,
+        &ssao_pipeline.getPipeline().getPipelineLayout(),
+    });
+    commandBuffer.bindings.push_back({
         &forward_descriptor,
         &pipeline.getPipeline().getPipelineLayout(),
     });
@@ -321,20 +368,21 @@ void oldMain(VulkanContext&context) {
     auto position = glm::zero<glm::vec3>();
     position.z = -5.f;
     auto rotation = glm::zero<glm::vec3>();
-    auto backpack_rotation = 0.0f;
+    float backpack_rotation = 1.5f * 3.14;
     auto t = 0.0f;
     while (!glfwWindowShouldClose(context.window)) {
         glfwPollEvents();
         commandBuffer.beginSwapchainRender();
         auto delta = glfwGetTime() - last_time;
         t += delta;
-        backpack_rotation += delta * 1.0f;
+        backpack_rotation += delta * 0.3f;
         auto mix_factor = fabs(sin(t));
+        auto model = glm::translate(
+            glm::rotate(glm::scale(glm::mat4(1.0), glm::vec3(2.0)), backpack_rotation, glm::vec3(0.0, 1.0, 0.0)), glm::vec3(0,-1.,0));
         modelPipeline.modelBuffer->updateBuffer({
-                                                    glm::rotate(glm::identity<glm::mat4>(), backpack_rotation,
-                                                                glm::vec3(0, 1, 0)),
-                                                                Material {glm::vec4(0.0)}
-                                                }, 0);
+            model,
+            Material {glm::vec4(0.8, 0.2, 0.4, 1.0)}
+        }, 0);
 
 
         pipeline.ubo.lightProjView = shadow_pipeline.lightUBO.proj * shadow_pipeline.lightUBO.view;
@@ -366,8 +414,10 @@ void oldMain(VulkanContext&context) {
                                            position);
 
         sampler.updateSampler(forward_descriptor, 1);
+        sampler.updateSampler(ssao_descriptors, 1);
         red_sampler.sampler.updateSampler(forward_descriptor, 3);
         red_sampler.sampler.updateSampler(shadow_descriptor, 3);
+        red_sampler.sampler.updateSampler(ssao_descriptors, 3);
         last_time = glfwGetTime();
         commandBuffer.finishSwapchainRender();
     }
