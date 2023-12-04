@@ -1,8 +1,15 @@
 //
-// Created by Sherif Abdou on 9/14/23.
+// Created by Sherif Abdou on 12/4/23.
 //
 
 #include "DescriptorSampler.h"
+
+DescriptorSampler::DescriptorSampler(VulkanContext& context): context(context) {
+}
+
+vk::raii::Sampler& DescriptorSampler::getSampler() {
+    return this->sampler;
+}
 
 void DescriptorSampler::buildSampler() {
     vk::SamplerCreateInfo samplerCreateInfo {};
@@ -16,26 +23,13 @@ void DescriptorSampler::buildSampler() {
     sampler = context.device.createSampler(samplerCreateInfo);
 }
 
-void DescriptorSampler::updateSampler(DescriptorSet& descriptorSet, unsigned int binding) {
+void DescriptorSampler::updateSampler(DescriptorSet& descriptorSet, unsigned int binding, unsigned int index) {
     vk::WriteDescriptorSet writeDescriptorSet {};
     writeDescriptorSet.setDstBinding(binding);
     writeDescriptorSet.setDstSet(descriptorSet.getDescriptorSet());
     writeDescriptorSet.setDescriptorCount(1);
-    writeDescriptorSet.setDstArrayElement(0);
-    writeDescriptorSet.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
-
-    vk::DescriptorImageInfo descriptorImageInfo {};
-    descriptorImageInfo.setImageLayout(targetImageLayout);
-    descriptorImageInfo.setImageView(targetImageView);
-    descriptorImageInfo.setSampler(*sampler);
-
-    writeDescriptorSet.setImageInfo(descriptorImageInfo);
+    writeDescriptorSet.setDstArrayElement(index);
+    writeDescriptorSet.setDescriptorType(vk::DescriptorType::eSampler);
 
     context.device.updateDescriptorSets(writeDescriptorSet, {});
 }
-
-const vk::raii::Sampler &DescriptorSampler::getSampler() const {
-    return sampler;
-}
-
-DescriptorSampler::DescriptorSampler(VulkanContext &context) : context(context) {}

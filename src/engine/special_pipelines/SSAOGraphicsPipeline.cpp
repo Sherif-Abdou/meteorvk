@@ -23,7 +23,7 @@ void SSAOGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArgum
     ubo_buffer.writeToDescriptor(*descriptor_set);
 }
 
-DescriptorSet SSAOGraphicsPipeline::createDescriptorSet(VulkanContext& context, DescriptorSampler* depthSampler) {
+DescriptorSet SSAOGraphicsPipeline::createDescriptorSet(VulkanContext& context, CombinedDescriptorSampler* depthSampler) {
     vk::DescriptorSetLayoutBinding buffer_binding{};
     buffer_binding // Uniform Buffer
         .setBinding(0)
@@ -83,7 +83,7 @@ void SSAOGraphicsPipeline::createNoiseImage() {
 
     noise_image_view = context.device.createImageView(image_view_create_info);
 
-    auto sampler = std::make_unique<DescriptorSampler> (context);
+    auto sampler = std::make_unique<CombinedDescriptorSampler> (context);
     sampler->targetImageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     sampler->targetImageView = *noise_image_view;
 

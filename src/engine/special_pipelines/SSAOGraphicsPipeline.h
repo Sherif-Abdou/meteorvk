@@ -7,7 +7,7 @@
 #include "ModelBufferGraphicsPipeline.h"
 #include "../../core/graphics_pipeline/GraphicsPipeline.h"
 #include "../../core/interfaces/Renderable.h"
-#include "../../core/storage/DescriptorSampler.h"
+#include "../../core/storage/CombinedDescriptorSampler.h"
 
 
 class SSAOGraphicsPipeline: public Renderable {
@@ -18,7 +18,7 @@ public:
     void renderPipeline(Renderable::RenderArguments renderArguments) override;
     void prepareRender(Renderable::RenderArguments renderArguments) override;
 
-    static DescriptorSet createDescriptorSet(VulkanContext& context, DescriptorSampler* depthSampler);
+    static DescriptorSet createDescriptorSet(VulkanContext& context, CombinedDescriptorSampler* depthSampler);
 
     void createNoiseImage();
 
@@ -37,7 +37,7 @@ private:
     ModelBufferGraphicsPipeline& pipeline;
     VulkanAllocator::VulkanImageAllocation noise_image;
     vk::raii::ImageView noise_image_view = nullptr;
-    std::unique_ptr<DescriptorSampler> noise_sampler = nullptr;
+    std::unique_ptr<CombinedDescriptorSampler> noise_sampler = nullptr;
 };
 
 

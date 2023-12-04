@@ -43,7 +43,6 @@ public:
         uint32_t set = 0;
     };
 
-    /// Helper struct to establish a dependency between pipelines
     std::vector<DescriptorPipelineBinding> bindings {}; /// Descriptor set to bind for each pipeline
     std::vector<VertexBuffer*> vertexBuffers {}; /// All vertex buffers to render
     std::vector<Renderable*> pipelines {}; /// Pipelines to run in order

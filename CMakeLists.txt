@@ -38,8 +38,8 @@ add_executable(vulkan_engine main.cpp
         src/core/storage/UniformBuffer.h
         src/core/graphics_pipeline/GraphicsPipelineBuilder.cpp
         src/core/graphics_pipeline/GraphicsPipelineBuilder.h
-        src/core/storage/DescriptorSampler.cpp
-        src/core/storage/DescriptorSampler.h
+        src/core/storage/CombinedDescriptorSampler.cpp
+        src/core/storage/CombinedDescriptorSampler.h
         src/engine/special_pipelines/ShadowGraphicsPipeline.cpp
         src/engine/special_pipelines/ShadowGraphicsPipeline.h
         src/core/interfaces/Renderable.cpp
@@ -75,6 +75,10 @@ add_executable(vulkan_engine main.cpp
         src/core/shared_pipeline/TransferQueue.h
         src/engine/special_pipelines/SSAOGraphicsPipeline.cpp
         src/engine/special_pipelines/SSAOGraphicsPipeline.h
+        src/core/storage/DescriptorSampler.cpp
+        src/core/storage/DescriptorSampler.h
+        src/core/storage/StorageImage.cpp
+        src/core/storage/StorageImage.h
 )
 # Apple MoltenVK Requirements
 if (APPLE)

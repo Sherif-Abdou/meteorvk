@@ -15,13 +15,13 @@
 #include "src/core/compute_pipeline/ComputeCommandBuffer.h"
 #include "src/core/compute_pipeline/ComputePipelineBuilder.h"
 #include "src/core/VulkanContext.h"
-#include "src/core/storage/DescriptorSampler.h"
+#include "src/core/storage/CombinedDescriptorSampler.h"
 #include "src/core/storage/VertexBuffer.h"
 #include "src/core/graphics_pipeline/GraphicsRenderPass.h"
 #include "src/core/graphics_pipeline/GraphicsPipeline.h"
 #include "src/core/graphics_pipeline/GraphicsCommandBuffer.h"
 #include "src/core/graphics_pipeline/GraphicsPipelineBuilder.h"
-#include "src/core/storage/DescriptorSampler.h"
+#include "src/core/storage/CombinedDescriptorSampler.h"
 #include "src/core/storage/OBJFile.h"
 #include "src/engine/special_pipelines/ShadowGraphicsPipeline.h"
 #include "src/engine/special_pipelines/ForwardRenderedGraphicsPipeline.h"
@@ -45,7 +45,7 @@ struct ImageViewPair {
     vk::ImageView imageView;
 };
 
-DescriptorSampler createSampler(VulkanContext&context);
+CombinedDescriptorSampler createSampler(VulkanContext&context);
 
 void oldMain(VulkanContext&context);
 
@@ -127,7 +127,7 @@ GraphicsPipeline createShadowPipeline(VulkanContext&context, DescriptorSet* desc
     return std::move(pipeline);
 }
 
-DescriptorSet createUniformBindings(VulkanContext&context, DescriptorSampler&descriptorSampler, DescriptorSampler& descriptor_sampler2) {
+DescriptorSet createUniformBindings(VulkanContext&context, CombinedDescriptorSampler&descriptorSampler, CombinedDescriptorSampler& descriptor_sampler2) {
     vk::DescriptorSetLayoutBinding bufferBinding{};
     bufferBinding.setBinding(0);
     bufferBinding.setDescriptorCount(1);
@@ -161,8 +161,8 @@ DescriptorSet createUniformBindings(VulkanContext&context, DescriptorSampler&des
     return descriptorSet;
 }
 
-DescriptorSampler createSampler(VulkanContext&context) {
-    auto descriptorSampler = DescriptorSampler(context);
+CombinedDescriptorSampler createSampler(VulkanContext&context) {
+    auto descriptorSampler = CombinedDescriptorSampler(context);
     descriptorSampler.buildSampler();
     return descriptorSampler;
 }
@@ -181,7 +181,7 @@ UBO initialBuffer() {
 }
 
 struct TextureResult {
-    DescriptorSampler sampler;
+    CombinedDescriptorSampler sampler;
     vk::raii::ImageView view;
 };
 
@@ -196,7 +196,7 @@ TextureResult load_texture_from_file(VulkanContext& context, VulkanAllocator::Vu
     image_view_create_info.viewType = vk::ImageViewType::e2D;
     vk::raii::ImageView view = context.device.createImageView(image_view_create_info);
 
-    DescriptorSampler sampler(context);
+    CombinedDescriptorSampler sampler(context);
     sampler.targetImageView = *view;
     sampler.targetImageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     sampler.buildSampler();
@@ -274,7 +274,7 @@ void oldMain(VulkanContext&context) {
     auto red_sampler = load_texture_from_file(context, red_image);
     red_sampler.sampler.targetImageView = *red_sampler.view;
 
-    DescriptorSampler sampler = createSampler(context);
+    CombinedDescriptorSampler sampler = createSampler(context);
     auto shadow_descriptor = createUniformBindings(context, sampler, red_sampler.sampler);
     auto forward_descriptor = createUniformBindings(context, sampler, red_sampler.sampler);
     GraphicsRenderPass renderPass(context);

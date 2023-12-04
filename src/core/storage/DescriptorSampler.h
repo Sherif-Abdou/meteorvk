@@ -1,28 +1,25 @@
 //
-// Created by Sherif Abdou on 9/14/23.
+// Created by Sherif Abdou on 12/4/23.
 //
 
-#ifndef VULKAN_ENGINE_DESCRIPTORSAMPLER_H
-#define VULKAN_ENGINE_DESCRIPTORSAMPLER_H
+#ifndef DESCRIPTORSAMPLER_H
+#define DESCRIPTORSAMPLER_H
 
-#include "../VulkanContext.h"
 #include "DescriptorSet.h"
+#include "../VulkanContext.h"
 
-/// Wrapper around a sampler for a particular imageview
 class DescriptorSampler {
-private:
     VulkanContext& context;
     vk::raii::Sampler sampler = nullptr;
 public:
     explicit DescriptorSampler(VulkanContext &context);
 
-    const vk::raii::Sampler &getSampler() const;
+    vk::raii::Sampler &getSampler();
 
-    vk::ImageView targetImageView;
-    vk::ImageLayout targetImageLayout = vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal;
     void buildSampler();
-    void updateSampler(DescriptorSet& descriptorSet, unsigned int binding);
+    void updateSampler(DescriptorSet& descriptorSet, unsigned int binding, unsigned int index=0);
 };
 
 
-#endif //VULKAN_ENGINE_DESCRIPTORSAMPLER_H
+
+#endif //DESCRIPTORSAMPLER_H
