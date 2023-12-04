@@ -18,7 +18,7 @@ public:
     void renderPipeline(Renderable::RenderArguments renderArguments) override;
     void prepareRender(Renderable::RenderArguments renderArguments) override;
 
-    static void createDescriptorSet(DescriptorSampler* depthSampler);
+    static DescriptorSet createDescriptorSet(VulkanContext& context, DescriptorSampler* depthSampler);
 
     void createNoiseImage();
 

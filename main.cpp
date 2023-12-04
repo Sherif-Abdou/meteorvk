@@ -298,12 +298,12 @@ void oldMain(VulkanContext&context) {
     pipeline.descriptorSet = &forward_descriptor;
     shadow_pipeline.descriptorSet = &shadow_descriptor;
 
-    auto ssao_descriptors = SSAOGraphicsPipeline::createDescriptorSet(&red_sampler.sampler);
-    auto ssao_pipeline = createSSAOPipeline(context, &ssao_descriptors, modelPipeline.modelBuffer);
+    // auto ssao_descriptors = SSAOGraphicsPipeline::createDescriptorSet(&red_sampler.sampler);
+    // auto ssao_pipeline = createSSAOPipeline(context, &ssao_descriptors, modelPipeline.modelBuffer);
 
     GraphicsCommandBuffer commandBuffer(context);
     commandBuffer.pipelines.push_back(&shadow_pipeline);
-    commandBuffer.pipelines.push_back(&ssao_pipeline);
+    // commandBuffer.pipelines.push_back(&ssao_pipeline);
     commandBuffer.pipelines.push_back(&pipeline);
 
     sampler.targetImageView = *shadow_pipeline.getPipeline().ownedImages[0].imageView;
@@ -350,10 +350,10 @@ void oldMain(VulkanContext&context) {
         &shadow_descriptor,
         &shadow_pipeline.getPipeline().getPipelineLayout(),
     });
-    commandBuffer.bindings.push_back({
-        &ssao_descriptors,
-        &ssao_pipeline.getPipeline().getPipelineLayout(),
-    });
+    // commandBuffer.bindings.push_back({
+        // &ssao_descriptors,
+        // &ssao_pipeline.getPipeline().getPipelineLayout(),
+    // });
     commandBuffer.bindings.push_back({
         &forward_descriptor,
         &pipeline.getPipeline().getPipelineLayout(),
@@ -414,10 +414,10 @@ void oldMain(VulkanContext&context) {
                                            position);
 
         sampler.updateSampler(forward_descriptor, 1);
-        sampler.updateSampler(ssao_descriptors, 1);
+        // sampler.updateSampler(ssao_descriptors, 1);
         red_sampler.sampler.updateSampler(forward_descriptor, 3);
         red_sampler.sampler.updateSampler(shadow_descriptor, 3);
-        red_sampler.sampler.updateSampler(ssao_descriptors, 3);
+        // red_sampler.sampler.updateSampler(ssao_descriptors, 3);
         last_time = glfwGetTime();
         commandBuffer.finishSwapchainRender();
     }
