@@ -39,6 +39,8 @@ public:
     DescriptorSet* descriptorSet = nullptr;
     GraphicsPipeline &getPipeline();
 
+    static ForwardRenderedGraphicsPipeline createFromModelPipeline(ModelBufferGraphicsPipeline& pipeline);
+
     void prepareRender(Renderable::RenderArguments renderArguments) override;
 
     virtual ~ForwardRenderedGraphicsPipeline();

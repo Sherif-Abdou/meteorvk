@@ -41,3 +41,18 @@ ModelBufferGraphicsPipeline::ModelBufferGraphicsPipeline(GraphicsPipeline &&grap
                                                          graphicsPipeline(std::move(graphicsPipeline)), modelBuffer(modelBuffer) {
 
 }
+
+ModelBufferGraphicsPipeline
+ModelBufferGraphicsPipeline::createPipelineFromBuilder(GraphicsPipelineBuilder &&builder, ModelBuffer *modelBuffer,
+                                                       DescriptorSet* descriptor) {
+    if (builder.descriptorSets.size() == 0) {
+        builder.descriptorSets = std::vector<DescriptorSet*> {descriptor};
+    }
+    auto pipeline = builder.buildGraphicsPipeline();
+
+    auto final_pipeline = ModelBufferGraphicsPipeline(std::move(pipeline), modelBuffer);
+    final_pipeline.descriptorSet = descriptor;
+
+    return final_pipeline;
+}
+

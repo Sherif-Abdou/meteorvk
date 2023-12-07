@@ -35,6 +35,8 @@ layout(binding = 1) uniform sampler2D depthSampler;
 
 layout(binding = 3) uniform sampler2D textureSampler;
 
+layout(binding = 4) uniform sampler2D occlusionSampler;
+
 vec4 lightPosition = view * vec4(-5, 5, 2, 1);
 
 //const vec3 albedo = vec3(0.054901960784313725, 0.4549019607843137, 0.5647058823529412);
@@ -63,6 +65,8 @@ float calculateShadow() {
 
 void main() {
     float shadow = calculateShadow();
+    vec2 screenUV = gl_FragCoord.xy / vec2(2560, 1440);
+    screenUV.x = 1 - screenUV.y;
     vec2 adjustedUV = uv / vec2(material.bounds.x2 - material.bounds.x1, material.bounds.y2 - material.bounds.y1);
     adjustedUV += vec2(material.bounds.x1, material.bounds.y1);
 
@@ -73,6 +77,8 @@ void main() {
     float specular = pow(max(dot(halfway, normal), 0), 8);
 
     vec4 albedo = material.albedo.a == 0.0 ? texture(textureSampler, adjustedUV) : material.albedo;
+    float occlusion = texture(occlusionSampler, screenUV).r;
 
-    color = vec4(diffuse * (1-shadow) * kD * albedo.rgb + kA * albedo.rgb + (1-kD) * specular * specularColor, 1.0);
+    color = vec4(diffuse * (1-shadow) * kD * albedo.rgb + kA * (occlusion) * albedo.rgb + (1-kD) * specular * specularColor, 1.0);
+    color = vec4(vec3(occlusion), 1.0f);
 }

@@ -27,3 +27,11 @@ void ShadowGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArg
 ShadowGraphicsPipeline::~ShadowGraphicsPipeline() {
     lightUniformBuffer.destroy();
 }
+
+ShadowGraphicsPipeline ShadowGraphicsPipeline::createFromPipeline(ModelBufferGraphicsPipeline &&pipeline) {
+    auto descriptor = pipeline.descriptorSet;
+    auto new_pipeline = ShadowGraphicsPipeline(pipeline);
+    new_pipeline.descriptorSet = descriptor;
+
+    return new_pipeline;
+}

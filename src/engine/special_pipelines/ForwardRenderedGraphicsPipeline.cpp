@@ -30,3 +30,12 @@ void ForwardRenderedGraphicsPipeline::prepareRender(Renderable::RenderArguments 
 ForwardRenderedGraphicsPipeline::~ForwardRenderedGraphicsPipeline() {
     uniformBuffer.destroy();
 }
+
+ForwardRenderedGraphicsPipeline
+ForwardRenderedGraphicsPipeline::createFromModelPipeline(ModelBufferGraphicsPipeline &pipeline) {
+    auto descriptorSet = pipeline.descriptorSet;
+    auto result =  ForwardRenderedGraphicsPipeline(pipeline);
+    result.descriptorSet = descriptorSet;
+
+    return result;
+}

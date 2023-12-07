@@ -9,6 +9,7 @@
 #include "../../core/interfaces/Renderable.h"
 #include "../../core/graphics_pipeline/GraphicsPipeline.h"
 #include "../storage/ModelBuffer.h"
+#include "../../core/graphics_pipeline/GraphicsPipelineBuilder.h"
 
 /// Graphics pipeline that adjusts the model buffer per vertexbuffer
 /// Modelbuffer indices must be in the same order as the vertexbuffers
@@ -21,6 +22,9 @@ public:
 
     explicit ModelBufferGraphicsPipeline(GraphicsPipeline &&graphicsPipeline,
                                          ModelBuffer* modelBuffer);
+
+    static ModelBufferGraphicsPipeline
+    createPipelineFromBuilder(GraphicsPipelineBuilder &&builder, ModelBuffer *modelBuffer, DescriptorSet* descriptor);
 
     GraphicsPipeline & getGraphicsPipeline();
 

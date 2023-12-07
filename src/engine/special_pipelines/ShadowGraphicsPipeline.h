@@ -37,7 +37,9 @@ public:
     UniformBuffer<UBO> lightUniformBuffer;
 
 
-    ShadowGraphicsPipeline(ModelBufferGraphicsPipeline &pipeline);
+    explicit ShadowGraphicsPipeline(ModelBufferGraphicsPipeline &pipeline);
+
+    static ShadowGraphicsPipeline createFromPipeline(ModelBufferGraphicsPipeline&& pipeline);
 
     void renderPipeline(Renderable::RenderArguments renderArguments) override;
 

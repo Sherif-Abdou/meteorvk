@@ -30,6 +30,7 @@
 #include "src/core/storage/StorageBuffer.h"
 #include "src/engine/special_pipelines/SSAOGraphicsPipeline.h"
 #include "src/engine/storage/ImageTextureLoader.h"
+#include "src/engine/special_pipelines/DepthOnlyPipeline.h"
 
 VertexBuffer createVertexBuffer(VulkanContext& context, const char* path) {
     VertexBuffer buffer(context, true);
@@ -53,7 +54,7 @@ using UBO = ForwardRenderedGraphicsPipeline::UBO;
 
 SSAOGraphicsPipeline createSSAOPipeline(VulkanContext& context, DescriptorSet* descriptorSet, ModelBuffer* buffer) {
     GraphicsRenderPass renderPass(context);
-    renderPass.useColor = true;;
+    renderPass.useColor = true;
     renderPass.storeDepth = true;
     renderPass.useCustomColor(vk::Format::eR16Sfloat, vk::ImageLayout::eColorAttachmentOptimal);
 
@@ -67,9 +68,9 @@ SSAOGraphicsPipeline createSSAOPipeline(VulkanContext& context, DescriptorSet* d
 
 
     renderPass.init();
-    auto shaders = GraphicsShaders(context, "shaders/basic.vert", "shaders/basic.frag");
+    auto shaders = GraphicsShaders(context, "shaders/basic.vert", "shaders/ssao.frag");
     auto builder = GraphicsPipelineBuilder(context, shaders, renderPass);
-    builder.setExtent({1024, 1024});
+    builder.setExtent(context.swapChainExtent);
     builder.addDepthImage();
     builder.addColorImage(vk::Format::eR16Sfloat);
 
@@ -127,7 +128,7 @@ GraphicsPipeline createShadowPipeline(VulkanContext&context, DescriptorSet* desc
     return std::move(pipeline);
 }
 
-DescriptorSet createUniformBindings(VulkanContext&context, CombinedDescriptorSampler&descriptorSampler, CombinedDescriptorSampler& descriptor_sampler2) {
+DescriptorSet createUniformBindings(VulkanContext& context) {
     vk::DescriptorSetLayoutBinding bufferBinding{};
     bufferBinding.setBinding(0);
     bufferBinding.setDescriptorCount(1);
@@ -140,7 +141,7 @@ DescriptorSet createUniformBindings(VulkanContext&context, CombinedDescriptorSam
     imageBinding.setDescriptorCount(1);
     imageBinding.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
     imageBinding.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
-    imageBinding.setImmutableSamplers(*descriptorSampler.getSampler());
+//    imageBinding.setImmutableSamplers(*descriptorSampler.getSampler());
 
     vk::DescriptorSetLayoutBinding dynamicBufferBinding{};
     dynamicBufferBinding.setBinding(2);
@@ -153,15 +154,20 @@ DescriptorSet createUniformBindings(VulkanContext&context, CombinedDescriptorSam
     imageBinding2.setDescriptorCount(1);
     imageBinding2.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
     imageBinding2.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
-    imageBinding2.setImmutableSamplers(*descriptor_sampler2.getSampler());
 
-    DescriptorSet descriptorSet(context, {bufferBinding, imageBinding, dynamicBufferBinding, imageBinding2});
+    vk::DescriptorSetLayoutBinding imageBinding3{};
+    imageBinding3.setBinding(4);
+    imageBinding3.setDescriptorCount(1);
+    imageBinding3.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
+    imageBinding3.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
+
+    DescriptorSet descriptorSet(context, {bufferBinding, imageBinding, dynamicBufferBinding, imageBinding2, imageBinding3});
     descriptorSet.buildDescriptor();
 
     return descriptorSet;
 }
 
-CombinedDescriptorSampler createSampler(VulkanContext&context) {
+CombinedDescriptorSampler createSampler(VulkanContext& context) {
     auto descriptorSampler = CombinedDescriptorSampler(context);
     descriptorSampler.buildSampler();
     return descriptorSampler;
@@ -268,6 +274,34 @@ int main() {
     return 0;
 }
 
+DepthOnlyPipeline createDepthOnlyPipeline(VulkanContext& context, ModelBuffer* modelBuffer, DescriptorSet* descriptorSet) {
+    GraphicsRenderPass renderPass(context);
+    renderPass.useColor = false;
+    renderPass.storeDepth = true;
+
+    vk::SubpassDependency dependency{};
+    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass = 0;
+    dependency.dstStageMask = vk::PipelineStageFlagBits::eFragmentShader;
+    dependency.dstStageMask = vk::PipelineStageFlagBits::eEarlyFragmentTests;
+    dependency.srcAccessMask = {};
+    dependency.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+
+
+    auto shaders = GraphicsShaders(context, "shaders/basic.vert", "shaders/shadow.frag");
+    renderPass.init();
+    auto builder = GraphicsPipelineBuilder(context, shaders, renderPass);
+    builder.descriptorSets = {descriptorSet};
+    builder.setExtent(context.swapChainExtent);
+    builder.addDepthImage();
+
+    auto model_buffer_pipeline = new ModelBufferGraphicsPipeline(builder.buildGraphicsPipeline(), modelBuffer);
+    model_buffer_pipeline->descriptorSet = descriptorSet;
+    auto forward_pipeline = new ForwardRenderedGraphicsPipeline(*model_buffer_pipeline);
+    forward_pipeline->descriptorSet = descriptorSet;
+    return DepthOnlyPipeline(*forward_pipeline);
+}
+
 void oldMain(VulkanContext&context) {
     // Create Descriptors for pipeline stages
     VulkanAllocator::VulkanImageAllocation red_image;
@@ -275,8 +309,8 @@ void oldMain(VulkanContext&context) {
     red_sampler.sampler.targetImageView = *red_sampler.view;
 
     CombinedDescriptorSampler sampler = createSampler(context);
-    auto shadow_descriptor = createUniformBindings(context, sampler, red_sampler.sampler);
-    auto forward_descriptor = createUniformBindings(context, sampler, red_sampler.sampler);
+    auto shadow_descriptor = createUniformBindings(context);
+    auto forward_descriptor = createUniformBindings(context);
     GraphicsRenderPass renderPass(context);
     renderPass.init();
 
@@ -298,12 +332,24 @@ void oldMain(VulkanContext&context) {
     pipeline.descriptorSet = &forward_descriptor;
     shadow_pipeline.descriptorSet = &shadow_descriptor;
 
-    // auto ssao_descriptors = SSAOGraphicsPipeline::createDescriptorSet(&red_sampler.sampler);
-    // auto ssao_pipeline = createSSAOPipeline(context, &ssao_descriptors, modelPipeline.modelBuffer);
+    auto depth_descriptors = createUniformBindings(context);
+    auto depth_pipeline = createDepthOnlyPipeline(context, modelPipeline.modelBuffer, &depth_descriptors);
+
+    auto ssao_descriptors = createUniformBindings(context);
+    auto ssao_pipeline = createSSAOPipeline(context, &ssao_descriptors, modelPipeline.modelBuffer);
+
+    auto depth_sampler = CombinedDescriptorSampler(context);
+    depth_sampler.targetImageView = depth_pipeline.getDepthImageView();
+    depth_sampler.targetImageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    depth_sampler.buildSampler();
+
+    ssao_pipeline.depth_sampler = &depth_sampler;
+
 
     GraphicsCommandBuffer commandBuffer(context);
     commandBuffer.pipelines.push_back(&shadow_pipeline);
-    // commandBuffer.pipelines.push_back(&ssao_pipeline);
+    commandBuffer.pipelines.push_back(&depth_pipeline);
+    commandBuffer.pipelines.push_back(&ssao_pipeline);
     commandBuffer.pipelines.push_back(&pipeline);
 
     sampler.targetImageView = *shadow_pipeline.getPipeline().ownedImages[0].imageView;
@@ -333,27 +379,63 @@ void oldMain(VulkanContext&context) {
     vertexbuffer2.updateVertexBuffer();
 
     // Create dependency barrier between graphics pipelines
-    auto depthImage = shadow_pipeline.getPipeline().ownedImages[0].imageAllocation.image;
-    auto barrier_builder = PipelineBarrierBuilder();
-    barrier_builder
+    auto shadowDepthImage = shadow_pipeline.getPipeline().ownedImages[0].imageAllocation.image;
+    auto depthImage = depth_pipeline.getDepthImage();
+    auto occlusionImage = ssao_pipeline.getOcclusionImage();
+    auto shadow_image_barrier = PipelineBarrierBuilder();
+    shadow_image_barrier
+            .waitFor(vk::PipelineStageFlagBits2::eLateFragmentTests | vk::PipelineStageFlagBits2::eEarlyFragmentTests)
+            .whichUses(vk::AccessFlagBits2::eDepthStencilAttachmentWrite)
+            .beforeDoing(vk::PipelineStageFlagBits2::eFragmentShader)
+            .whichUses(vk::AccessFlagBits2::eShaderRead)
+            .forImage(shadowDepthImage, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1))
+            .withInitialLayout(vk::ImageLayout::eDepthAttachmentOptimal)
+            .withFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+    auto depth_image_barrier = PipelineBarrierBuilder();
+    depth_image_barrier
             .waitFor(vk::PipelineStageFlagBits2::eLateFragmentTests | vk::PipelineStageFlagBits2::eEarlyFragmentTests)
             .whichUses(vk::AccessFlagBits2::eDepthStencilAttachmentWrite)
             .beforeDoing(vk::PipelineStageFlagBits2::eFragmentShader)
             .whichUses(vk::AccessFlagBits2::eShaderRead)
             .forImage(depthImage, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1))
-            .withInitialLayout(vk::ImageLayout::eDepthAttachmentOptimal)
+            .withInitialLayout(vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal)
             .withFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+    auto occlusion_image_barrier = PipelineBarrierBuilder();
+    occlusion_image_barrier
+            .waitFor(vk::PipelineStageFlagBits2::eColorAttachmentOutput)
+            .whichUses(vk::AccessFlagBits2::eColorAttachmentWrite)
+            .beforeDoing(vk::PipelineStageFlagBits2::eFragmentShader)
+            .whichUses(vk::AccessFlagBits2::eShaderRead)
+            .forImage(occlusionImage, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1))
+            .withInitialLayout(vk::ImageLayout::eColorAttachmentOptimal)
+            .withFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+    auto shadow_image_barrier_back = PipelineBarrierBuilder();
+    shadow_image_barrier_back
+        .waitFor(vk::PipelineStageFlagBits2::eFragmentShader)
+        .whichUses(vk::AccessFlagBits2::eShaderRead)
+        .beforeDoing(vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests)
+        .whichUses(vk::AccessFlagBits2::eDepthStencilAttachmentWrite)
+        .forImage(shadowDepthImage, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1))
+        .withInitialLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+        .withFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
-    commandBuffer.dependencies.push_back(barrier_builder.build());
+//    commandBuffer.dependencies[0] = shadow_image_barrier_back.build();
+    commandBuffer.dependencies[3] = occlusion_image_barrier.build();
+//    commandBuffer.dependencies[1] = shadow_image_barrier.build();
+    commandBuffer.dependencies[2] = depth_image_barrier.build();
 
     commandBuffer.bindings.push_back({
         &shadow_descriptor,
         &shadow_pipeline.getPipeline().getPipelineLayout(),
     });
-    // commandBuffer.bindings.push_back({
-        // &ssao_descriptors,
-        // &ssao_pipeline.getPipeline().getPipelineLayout(),
-    // });
+    commandBuffer.bindings.push_back({
+        &depth_descriptors,
+        &depth_pipeline.getPipeline().getPipelineLayout(),
+    });
+    commandBuffer.bindings.push_back({
+        &ssao_descriptors,
+        &ssao_pipeline.getPipeline().getPipelineLayout(),
+    });
     commandBuffer.bindings.push_back({
         &forward_descriptor,
         &pipeline.getPipeline().getPipelineLayout(),
@@ -368,17 +450,22 @@ void oldMain(VulkanContext&context) {
     auto position = glm::zero<glm::vec3>();
     position.z = -5.f;
     auto rotation = glm::zero<glm::vec3>();
-    float backpack_rotation = 1.5f * 3.14;
+    float backpack_rotation = 0;
     auto t = 0.0f;
+
+    CombinedDescriptorSampler occlusionSampler(context);
+    occlusionSampler.targetImageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    occlusionSampler.targetImageView = ssao_pipeline.getOcclusionImageView();
+    occlusionSampler.buildSampler();
+
     while (!glfwWindowShouldClose(context.window)) {
         glfwPollEvents();
         commandBuffer.beginSwapchainRender();
         auto delta = glfwGetTime() - last_time;
         t += delta;
-        backpack_rotation += delta * 0.3f;
-        auto mix_factor = fabs(sin(t));
-        auto model = glm::translate(
-            glm::rotate(glm::scale(glm::mat4(1.0), glm::vec3(2.0)), backpack_rotation, glm::vec3(0.0, 1.0, 0.0)), glm::vec3(0,-1.,0));
+        backpack_rotation += delta * 0.4f;
+        auto rot = glm::rotate(glm::scale(glm::identity<glm::mat4>(), glm::vec3(2)), 3.14f / 4.0f, glm::vec3(0, 1.0f, 0));
+        auto model = glm::translate(rot, glm::vec3(0,0,0));
         modelPipeline.modelBuffer->updateBuffer({
             model,
             Material {glm::vec4(0.8, 0.2, 0.4, 1.0)}
@@ -412,12 +499,16 @@ void oldMain(VulkanContext&context) {
 
         pipeline.ubo.view = glm::translate(glm::rotate(glm::identity<glm::mat4>(), rotation.y, glm::vec3(0, 1, 0)),
                                            position);
+        depth_pipeline.getUBO().ubo.view = pipeline.ubo.view;
+        ssao_pipeline.ubo.view = pipeline.ubo.view;
 
         sampler.updateSampler(forward_descriptor, 1);
-        // sampler.updateSampler(ssao_descriptors, 1);
+//        sampler.updateSampler(ssao_descriptors, 1);
+        sampler.updateSampler(depth_descriptors, 1);
         red_sampler.sampler.updateSampler(forward_descriptor, 3);
+        occlusionSampler.updateSampler(forward_descriptor, 4);
         red_sampler.sampler.updateSampler(shadow_descriptor, 3);
-        // red_sampler.sampler.updateSampler(ssao_descriptors, 3);
+        red_sampler.sampler.updateSampler(ssao_descriptors, 3);
         last_time = glfwGetTime();
         commandBuffer.finishSwapchainRender();
     }
@@ -427,6 +518,7 @@ void oldMain(VulkanContext&context) {
     red_image.destroy();
     modelPipeline.modelBuffer->destroy();
     shadow_pipeline.getPipeline().destroy();
+    ssao_pipeline.destroy();
     pipeline.getPipeline().destroy();
     commandBuffer.destroy();
     context.cleanup();

@@ -52,11 +52,12 @@ void GraphicsCommandBuffer::recordCommandBuffer() {
                 .vertexBuffers = vertexBuffers,
         };
         pipeline->prepareRender(arguments);
+        i++;
     }
 
+    i = 0;
     for (auto &pipeline: pipelines) {
-        if (i - 1 > 0 && i < dependencies.size()) {
-//            commandBuffer[current_frame].pipelineBarrier2(dependencies[i - 1]);
+        if (dependencies.contains(i)) {
             auto dependency = dependencies[i];
             dependency.applyBarrier(*commandBuffer[current_frame]);
         }

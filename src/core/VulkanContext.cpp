@@ -4,8 +4,8 @@
 
 #include "VulkanContext.h"
 
-constexpr int WIDTH = 2560.0f;
-constexpr int HEIGHT = 1440.0f;
+constexpr int WIDTH = 2560.0f / 2;
+constexpr int HEIGHT = 1440.0f / 2;
 
 void VulkanContext::initVulkan() {
     initWindow();
@@ -26,11 +26,11 @@ void VulkanContext::initWindow() {
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-    glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+//    glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
 
-    const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+//    const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
-    window = glfwCreateWindow(mode->width, mode->height, "Vulkan", nullptr, nullptr);
+    window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
 }
 
 void VulkanContext::createInstance() {

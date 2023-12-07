@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "14.1.2" CACHE STRING "Minimum OS X deployment version")
 project(vulkan_engine)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -79,6 +80,8 @@ add_executable(vulkan_engine main.cpp
         src/core/storage/DescriptorSampler.h
         src/core/storage/StorageImage.cpp
         src/core/storage/StorageImage.h
+        src/engine/special_pipelines/DepthOnlyPipeline.cpp
+        src/engine/special_pipelines/DepthOnlyPipeline.h
 )
 # Apple MoltenVK Requirements
 if (APPLE)
