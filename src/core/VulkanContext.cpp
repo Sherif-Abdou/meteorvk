@@ -287,7 +287,7 @@ vk::PresentModeKHR VulkanContext::chooseSwapPresentMode(const std::vector<vk::Pr
             return availablePresentMode;
         }
     }
-    return vk::PresentModeKHR::eFifo;
+    return vk::PresentModeKHR::eImmediate;
 }
 
 vk::Extent2D VulkanContext::chooseSwapExtent(const vk::SurfaceCapabilitiesKHR &capabilities) {

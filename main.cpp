@@ -358,7 +358,7 @@ void oldMain(VulkanContext&context) {
 
 
     commandBuffer.init();
-    auto vertexbuffer1 = createVertexBuffer(context, "./models/plane.obj");
+    auto vertexbuffer1 = createVertexBuffer(context, "./models/super_backpack.obj");
     vertexbuffer1.init();
     commandBuffer.vertexBuffers.push_back(&vertexbuffer1);
     auto vertexbuffer2 = createVertexBuffer(context, "./models/floor.obj");
@@ -464,11 +464,11 @@ void oldMain(VulkanContext&context) {
         auto delta = glfwGetTime() - last_time;
         t += delta;
         backpack_rotation += delta * 0.4f;
-        auto rot = glm::rotate(glm::scale(glm::identity<glm::mat4>(), glm::vec3(2)), 3.14f / 4.0f, glm::vec3(0, 1.0f, 0));
-        auto model = glm::translate(rot, glm::vec3(0,0,0));
+        auto rot = glm::rotate(glm::scale(glm::identity<glm::mat4>(), glm::vec3(1)), backpack_rotation + 3.14f / 4.0f, glm::vec3(0, 1.0f, 0));
+        auto model = glm::translate(rot, glm::vec3(0,-0.0f,0));
         modelPipeline.modelBuffer->updateBuffer({
             model,
-            Material {glm::vec4(0.8, 0.2, 0.4, 1.0)}
+            Material {glm::vec4(0.8, 0.2, 0.4, 0.0)}
         }, 0);
 
 
