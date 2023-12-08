@@ -53,6 +53,10 @@ void oldMain(VulkanContext&context);
 
 using UBO = ForwardRenderedGraphicsPipeline::UBO;
 
+static ModelBufferGraphicsPipeline* ssao_model_pipeline = nullptr;
+static ModelBufferGraphicsPipeline* depth_model_pipeline = nullptr;
+static ForwardRenderedGraphicsPipeline* depth_forward_pipeline = nullptr;
+
 SSAOGraphicsPipeline createSSAOPipeline(VulkanContext& context, DescriptorSet* descriptorSet, ModelBuffer* buffer) {
     GraphicsRenderPass renderPass(context);
     renderPass.useColor = true;
@@ -80,12 +84,12 @@ SSAOGraphicsPipeline createSSAOPipeline(VulkanContext& context, DescriptorSet* d
         builder.descriptorSets.push_back(descriptorSet);
     }
     auto pipeline = builder.buildGraphicsPipeline();
-    auto modelbufferpipeline = new ModelBufferGraphicsPipeline(std::move(pipeline), buffer);
+    ssao_model_pipeline = new ModelBufferGraphicsPipeline(std::move(pipeline), buffer);
 
-    modelbufferpipeline->descriptorSet = descriptorSet;
-    modelbufferpipeline->modelBuffer = buffer;
+    ssao_model_pipeline->descriptorSet = descriptorSet;
+    ssao_model_pipeline->modelBuffer = buffer;
 
-    auto res = SSAOGraphicsPipeline(*modelbufferpipeline);
+    auto res = SSAOGraphicsPipeline(*ssao_model_pipeline);
     res.descriptor_set = descriptorSet;
 
     return res;
@@ -296,11 +300,11 @@ DepthOnlyPipeline createDepthOnlyPipeline(VulkanContext& context, ModelBuffer* m
     builder.setExtent(context.swapChainExtent);
     builder.addDepthImage();
 
-    auto model_buffer_pipeline = new ModelBufferGraphicsPipeline(builder.buildGraphicsPipeline(), modelBuffer);
-    model_buffer_pipeline->descriptorSet = descriptorSet;
-    auto forward_pipeline = new ForwardRenderedGraphicsPipeline(*model_buffer_pipeline);
-    forward_pipeline->descriptorSet = descriptorSet;
-    return DepthOnlyPipeline(*forward_pipeline);
+    depth_model_pipeline = new ModelBufferGraphicsPipeline(builder.buildGraphicsPipeline(), modelBuffer);
+    depth_model_pipeline->descriptorSet = descriptorSet;
+    depth_forward_pipeline = new ForwardRenderedGraphicsPipeline(*depth_model_pipeline);
+    depth_forward_pipeline->descriptorSet = descriptorSet;
+    return DepthOnlyPipeline(*depth_forward_pipeline);
 }
 
 void oldMain(VulkanContext&context) {
@@ -524,5 +528,8 @@ void oldMain(VulkanContext&context) {
     ssao_pipeline.destroy();
     commandBuffer.destroy();
 
+    delete depth_model_pipeline;
+    delete depth_forward_pipeline;
+    delete ssao_model_pipeline;
 //    context.cleanup();
 }
