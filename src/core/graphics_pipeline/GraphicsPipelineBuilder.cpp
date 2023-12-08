@@ -255,11 +255,11 @@ GraphicsPipeline GraphicsPipelineBuilder::buildGraphicsPipeline() {
     pipeline.init();
 
     if (!targetImageViews.empty()) {
-        pipeline.clearValues.push_back(vk::ClearValue(vk::ClearColorValue(1.0f, 1.0f, 1.0f, 1.0f)));
+        pipeline.clearValues.push_back(vk::ClearValue(vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)));
     }
 
     for (auto& colorImageAttachment : colorImageAttachments) {
-        pipeline.clearValues.push_back(vk::ClearValue(vk::ClearColorValue(1.0f, 1.0f, 1.0f, 1.0f)));
+        pipeline.clearValues.push_back(vk::ClearValue(vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)));
         pipeline.ownedImages.push_back(std::move(colorImageAttachment));
     }
 

@@ -5,6 +5,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define VMA_IMPLEMENTATION
+#define VMA_DEBUG_LOG
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -463,12 +464,12 @@ void oldMain(VulkanContext&context) {
         commandBuffer.beginSwapchainRender();
         auto delta = glfwGetTime() - last_time;
         t += delta;
-        backpack_rotation += delta * 0.4f;
+        backpack_rotation += delta * 1.0f;
         auto rot = glm::rotate(glm::scale(glm::identity<glm::mat4>(), glm::vec3(1)), backpack_rotation + 3.14f / 4.0f, glm::vec3(0, 1.0f, 0));
         auto model = glm::translate(rot, glm::vec3(0,-0.0f,0));
         modelPipeline.modelBuffer->updateBuffer({
             model,
-            Material {glm::vec4(0.8, 0.2, 0.4, 0.0)}
+            Material {glm::vec4(1.0, 0.0, 0.0, 0.0)}
         }, 0);
 
 
@@ -517,9 +518,11 @@ void oldMain(VulkanContext&context) {
     context.device.waitIdle();
     red_image.destroy();
     modelPipeline.modelBuffer->destroy();
-    shadow_pipeline.getPipeline().destroy();
+    pipeline.destroy();
+    shadow_pipeline.destroy();
+    depth_pipeline.destroy();
     ssao_pipeline.destroy();
-    pipeline.getPipeline().destroy();
     commandBuffer.destroy();
-    context.cleanup();
+
+//    context.cleanup();
 }

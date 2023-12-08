@@ -25,7 +25,6 @@ void ShadowGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArg
 }
 
 ShadowGraphicsPipeline::~ShadowGraphicsPipeline() {
-    lightUniformBuffer.destroy();
 }
 
 ShadowGraphicsPipeline ShadowGraphicsPipeline::createFromPipeline(ModelBufferGraphicsPipeline &&pipeline) {
@@ -34,4 +33,9 @@ ShadowGraphicsPipeline ShadowGraphicsPipeline::createFromPipeline(ModelBufferGra
     new_pipeline.descriptorSet = descriptor;
 
     return new_pipeline;
+}
+
+void ShadowGraphicsPipeline::destroy() {
+    lightUniformBuffer.destroy();
+    pipeline.destroy();
 }

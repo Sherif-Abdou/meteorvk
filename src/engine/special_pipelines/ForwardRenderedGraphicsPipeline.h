@@ -43,7 +43,7 @@ public:
 
     void prepareRender(Renderable::RenderArguments renderArguments) override;
 
-    virtual ~ForwardRenderedGraphicsPipeline();
+    void destroy();
 private:
     ModelBufferGraphicsPipeline& pipeline;
 };

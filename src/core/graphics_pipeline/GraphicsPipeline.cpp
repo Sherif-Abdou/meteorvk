@@ -83,12 +83,12 @@ void GraphicsPipeline::prepareRender(Renderable::RenderArguments &renderArgument
 }
 
 GraphicsPipeline::~GraphicsPipeline() {
-    for (auto& ownedImage: ownedImages) {
-        ownedImage.imageAllocation.destroy();
-    }
 }
 
 void GraphicsPipeline::destroy() {
+    for (auto& ownedImage: ownedImages) {
+        ownedImage.imageAllocation.destroy();
+    }
 }
 
 vk::raii::PipelineLayout &GraphicsPipeline::getPipelineLayout() {

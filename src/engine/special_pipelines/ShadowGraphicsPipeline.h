@@ -46,6 +46,8 @@ public:
     void prepareRender(Renderable::RenderArguments renderArguments) override;
 
     virtual ~ShadowGraphicsPipeline();
+
+    void destroy();
 };
 
 

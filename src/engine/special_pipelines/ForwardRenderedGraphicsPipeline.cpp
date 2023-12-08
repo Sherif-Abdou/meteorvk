@@ -27,10 +27,6 @@ void ForwardRenderedGraphicsPipeline::prepareRender(Renderable::RenderArguments 
     uniformBuffer.writeToDescriptor(*descriptorSet, 0);
 }
 
-ForwardRenderedGraphicsPipeline::~ForwardRenderedGraphicsPipeline() {
-    uniformBuffer.destroy();
-}
-
 ForwardRenderedGraphicsPipeline
 ForwardRenderedGraphicsPipeline::createFromModelPipeline(ModelBufferGraphicsPipeline &pipeline) {
     auto descriptorSet = pipeline.descriptorSet;
@@ -38,4 +34,9 @@ ForwardRenderedGraphicsPipeline::createFromModelPipeline(ModelBufferGraphicsPipe
     result.descriptorSet = descriptorSet;
 
     return result;
+}
+
+void ForwardRenderedGraphicsPipeline::destroy() {
+    uniformBuffer.destroy();
+    pipeline.destroy();
 }

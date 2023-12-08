@@ -8,6 +8,9 @@
 #include <vma/vk_mem_alloc.h>
 #include "../VulkanContext.h"
 
+static int allocationCount;
+static int destructionCount;
+
 class VulkanAllocator {
 public:
     void init();
@@ -31,6 +34,7 @@ public:
 
         void destroy() {
             vmaDestroyBuffer(*allocator, buffer, allocation);
+            destructionCount += 1;
         };
     };
     struct VulkanImageAllocation {
@@ -51,6 +55,7 @@ public:
 
         void destroy() {
             vmaDestroyImage(*allocator, image, allocation);
+            destructionCount += 1;
         }
     };
     void allocateBuffer(VkBufferCreateInfo*, VmaMemoryUsage, VulkanBufferAllocation*);

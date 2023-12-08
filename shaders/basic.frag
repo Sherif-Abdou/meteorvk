@@ -37,7 +37,7 @@ layout(binding = 3) uniform sampler2D textureSampler;
 
 layout(binding = 4) uniform sampler2D occlusionSampler;
 
-vec4 lightPosition = view * vec4(0, 5, 0, 1);
+vec4 lightPosition = view * 1 * vec4(-0, 5, 0, 1);
 
 //const vec3 albedo = vec3(0.054901960784313725, 0.4549019607843137, 0.5647058823529412);
 const float kA = 0.5f;
@@ -73,7 +73,7 @@ float getOcclusion() {
             net += occlusion / (5.0f * 5.0f);
         }
     }
-    return pow(net, 2.0f);
+    return pow(net, 5.0f);
 }
 
 void main() {
@@ -90,13 +90,6 @@ void main() {
     vec4 albedo = material.albedo.a == 0.0 ? texture(textureSampler, adjustedUV) : material.albedo;
     float occlusion = getOcclusion();
     vec2 screenUV = gl_FragCoord.xy / vec2(2560, 1440);
-    if (screenUV.x > 0.5) {
-        occlusion = 1.0f;
-    }
 
     color = vec4(diffuse * (1-shadow) * kD * albedo.rgb + kA * (occlusion) * albedo.rgb + (1-kD) * specular * specularColor, 1.0);
-    if (abs(screenUV.x - 0.5f) < 0.001f) {
-        color = vec4(0.0);
-    }
-//    color = vec4(occlusion);
 }

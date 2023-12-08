@@ -28,6 +28,8 @@ public:
     ForwardRenderedGraphicsPipeline& getUBO();
 
     GraphicsPipeline &getPipeline();
+
+    void destroy();
 };
 
 

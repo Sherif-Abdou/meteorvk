@@ -43,6 +43,7 @@ VulkanAllocator::VulkanImageAllocation ImageTextureLoader::loadImageFromFile(con
     stagingBuffer.unmapMemory();
 
     loadTransferQueue();
+    stbi_image_free(pixels);
 
     return imageAllocation;
 }
@@ -128,6 +129,5 @@ void ImageTextureLoader::loadTransferQueue() {
         );
 
     queue.submit();
-    stbi_image_free(pixels);
     stagingBuffer.destroy();
 }

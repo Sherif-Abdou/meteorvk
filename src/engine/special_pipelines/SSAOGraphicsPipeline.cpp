@@ -76,7 +76,7 @@ GraphicsPipeline& SSAOGraphicsPipeline::getPipeline() {
 void SSAOGraphicsPipeline::destroy() {
     noise_image.destroy();
     ubo_buffer.destroy();
-    pipeline.getGraphicsPipeline().destroy();
+    pipeline.destroy();
 }
 
 void SSAOGraphicsPipeline::createSamples() {

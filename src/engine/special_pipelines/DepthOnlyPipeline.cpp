@@ -52,3 +52,7 @@ GraphicsPipeline &DepthOnlyPipeline::getPipeline() {
 ForwardRenderedGraphicsPipeline &DepthOnlyPipeline::getUBO() {
     return forward_pipeline;
 }
+
+void DepthOnlyPipeline::destroy() {
+    forward_pipeline.destroy();
+}

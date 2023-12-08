@@ -4,12 +4,15 @@
 
 #include "VulkanAllocator.h"
 
+
 void VulkanAllocator::initAllocator() {
     VmaAllocatorCreateInfo createInfo {};
     createInfo.vulkanApiVersion = VK_API_VERSION_1_3;
     createInfo.device = *context->device;
     createInfo.physicalDevice = *context->physicalDevice;
     createInfo.instance = *context->instance;
+    allocationCount = 0;
+    destructionCount = 0;
 
     if (vmaCreateAllocator(&createInfo, &allocator) != VK_SUCCESS) {
         throw std::runtime_error("Couldn't initialize VMA allocator");
@@ -34,6 +37,7 @@ void VulkanAllocator::allocateBuffer(VkBufferCreateInfo* bufferCreateInfo, VmaMe
         throw std::runtime_error("Failed to allocate a buffer");
     }
     allocation->buffer = tmpBuffer;
+    allocationCount += 1;
 }
 
 void VulkanAllocator::init() {
@@ -53,5 +57,6 @@ void VulkanAllocator::allocateImage(VkImageCreateInfo * imageCreateInfo, VmaMemo
         throw std::runtime_error("failed to allocate an image");
     }
     allocation->image = tmpImage;
+    allocationCount += 1;
 }
 

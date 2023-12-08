@@ -56,3 +56,7 @@ ModelBufferGraphicsPipeline::createPipelineFromBuilder(GraphicsPipelineBuilder &
     return final_pipeline;
 }
 
+void ModelBufferGraphicsPipeline::destroy() {
+    getGraphicsPipeline().destroy();
+}
+
