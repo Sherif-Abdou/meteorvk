@@ -154,6 +154,7 @@ void VulkanContext::pickPhysicalDevice() {
     for (const auto& device : devices) {
         if (isDeviceSuitable(device)) {
             physicalDevice = device;
+            return;
         }
     }
 

@@ -9,6 +9,7 @@
 #include "GraphicsPipeline.h"
 #include "../storage/UniformBuffer.h"
 #include <vulkan/vulkan.hpp>
+#include <unordered_map>
 
 #include "../shared_pipeline/PipelineBarrier.h"
 

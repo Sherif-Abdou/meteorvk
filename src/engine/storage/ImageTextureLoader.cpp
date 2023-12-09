@@ -34,8 +34,8 @@ VulkanAllocator::VulkanImageAllocation ImageTextureLoader::loadImageFromFile(con
     image_create_info.imageType = VK_IMAGE_TYPE_2D;
     image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-    context.allocator->allocateImage(&image_create_info, VMA_MEMORY_USAGE_AUTO, &imageAllocation);
-    context.allocator->allocateBuffer(&staging_create_info, VMA_MEMORY_USAGE_CPU_ONLY, &stagingBuffer);
+    context->allocator->allocateImage(&image_create_info, VMA_MEMORY_USAGE_AUTO, &imageAllocation);
+    context->allocator->allocateBuffer(&staging_create_info, VMA_MEMORY_USAGE_CPU_ONLY, &stagingBuffer);
 
     void* mapped = stagingBuffer.mapMemory();
 
@@ -72,8 +72,8 @@ VulkanAllocator::VulkanImageAllocation ImageTextureLoader::createImageFromBuffer
     image_create_info.imageType = VK_IMAGE_TYPE_2D;
     image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-    context.allocator->allocateImage(&image_create_info, VMA_MEMORY_USAGE_AUTO, &imageAllocation);
-    context.allocator->allocateBuffer(&staging_create_info, VMA_MEMORY_USAGE_CPU_ONLY, &stagingBuffer);
+    context->allocator->allocateImage(&image_create_info, VMA_MEMORY_USAGE_AUTO, &imageAllocation);
+    context->allocator->allocateBuffer(&staging_create_info, VMA_MEMORY_USAGE_CPU_ONLY, &stagingBuffer);
 
     void* mapped = stagingBuffer.mapMemory();
 
@@ -85,10 +85,12 @@ VulkanAllocator::VulkanImageAllocation ImageTextureLoader::createImageFromBuffer
     return imageAllocation;
 }
 
-ImageTextureLoader::ImageTextureLoader(VulkanContext &context) : context(context) {}
+ImageTextureLoader::ImageTextureLoader(VulkanContext *context)  {
+    this->context = context;
+}
 
 void ImageTextureLoader::loadTransferQueue() {
-    TransferQueue queue(context);
+    TransferQueue queue(*context);
     queue.begin();
     queue.applyBarrier(
             PipelineBarrierBuilder()

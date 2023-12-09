@@ -3,6 +3,8 @@
 #define GLFW_INCLUDE_VULKAN
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+//#define GLM_FORCE_PLATFORM_UNKNOWN
+//#define GLM_FORCE_COMPILER_UNKNOWN
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define VMA_IMPLEMENTATION
 #define VMA_DEBUG_LOG
@@ -57,8 +59,8 @@ static ModelBufferGraphicsPipeline* ssao_model_pipeline = nullptr;
 static ModelBufferGraphicsPipeline* depth_model_pipeline = nullptr;
 static ForwardRenderedGraphicsPipeline* depth_forward_pipeline = nullptr;
 
-SSAOGraphicsPipeline createSSAOPipeline(VulkanContext& context, DescriptorSet* descriptorSet, ModelBuffer* buffer) {
-    GraphicsRenderPass renderPass(context);
+SSAOGraphicsPipeline* createSSAOPipeline(VulkanContext* context, DescriptorSet* descriptorSet, ModelBuffer* buffer) {
+    GraphicsRenderPass renderPass(*context);
     renderPass.useColor = true;
     renderPass.storeDepth = true;
     renderPass.useCustomColor(vk::Format::eR16Sfloat, vk::ImageLayout::eColorAttachmentOptimal);
@@ -73,9 +75,9 @@ SSAOGraphicsPipeline createSSAOPipeline(VulkanContext& context, DescriptorSet* d
 
 
     renderPass.init();
-    auto shaders = GraphicsShaders(context, "shaders/basic.vert", "shaders/ssao.frag");
-    auto builder = GraphicsPipelineBuilder(context, shaders, renderPass);
-    builder.setExtent(context.swapChainExtent);
+    auto shaders = GraphicsShaders(*context, "shaders/basic.vert", "shaders/ssao.frag");
+    auto builder = GraphicsPipelineBuilder(*context, shaders, renderPass);
+    builder.setExtent(context->swapChainExtent);
     builder.addDepthImage();
     builder.addColorImage(vk::Format::eR16Sfloat);
 
@@ -89,8 +91,10 @@ SSAOGraphicsPipeline createSSAOPipeline(VulkanContext& context, DescriptorSet* d
     ssao_model_pipeline->descriptorSet = descriptorSet;
     ssao_model_pipeline->modelBuffer = buffer;
 
-    auto res = SSAOGraphicsPipeline(*ssao_model_pipeline);
-    res.descriptor_set = descriptorSet;
+    ModelBufferGraphicsPipeline& modelPipeline = *ssao_model_pipeline;
+    SSAOGraphicsPipeline* res = new SSAOGraphicsPipeline (context, ssao_model_pipeline, descriptorSet);
+    res->descriptor_set = descriptorSet;
+    res->init();
 
     return res;
 }
@@ -197,7 +201,7 @@ struct TextureResult {
 };
 
 TextureResult load_texture_from_file(VulkanContext& context, VulkanAllocator::VulkanImageAllocation& red_image) {
-    auto loader = ImageTextureLoader(context);
+    auto loader = ImageTextureLoader(&context);
     red_image = loader.loadImageFromFile("./textures/1001_albedo.jpg");
     vk::ImageViewCreateInfo image_view_create_info {};
     image_view_create_info.components = vk::ComponentMapping();
@@ -341,20 +345,21 @@ void oldMain(VulkanContext&context) {
     auto depth_pipeline = createDepthOnlyPipeline(context, modelPipeline.modelBuffer, &depth_descriptors);
 
     auto ssao_descriptors = createUniformBindings(context);
-    auto ssao_pipeline = createSSAOPipeline(context, &ssao_descriptors, modelPipeline.modelBuffer);
+    auto ssao_pipeline = createSSAOPipeline(&context, &ssao_descriptors, modelPipeline.modelBuffer);
 
     auto depth_sampler = CombinedDescriptorSampler(context);
     depth_sampler.targetImageView = depth_pipeline.getDepthImageView();
     depth_sampler.targetImageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     depth_sampler.buildSampler();
 
-    ssao_pipeline.depth_sampler = &depth_sampler;
+    ssao_pipeline->setDepthSampler(&depth_sampler);
+//    ssao_pipeline->depth_sampler = &depth_sampler;
 
 
     GraphicsCommandBuffer commandBuffer(context);
     commandBuffer.pipelines.push_back(&shadow_pipeline);
     commandBuffer.pipelines.push_back(&depth_pipeline);
-    commandBuffer.pipelines.push_back(&ssao_pipeline);
+    commandBuffer.pipelines.push_back(ssao_pipeline);
     commandBuffer.pipelines.push_back(&pipeline);
 
     sampler.targetImageView = *shadow_pipeline.getPipeline().ownedImages[0].imageView;
@@ -386,7 +391,7 @@ void oldMain(VulkanContext&context) {
     // Create dependency barrier between graphics pipelines
     auto shadowDepthImage = shadow_pipeline.getPipeline().ownedImages[0].imageAllocation.image;
     auto depthImage = depth_pipeline.getDepthImage();
-    auto occlusionImage = ssao_pipeline.getOcclusionImage();
+    auto occlusionImage = ssao_pipeline->getOcclusionImage();
     auto shadow_image_barrier = PipelineBarrierBuilder();
     shadow_image_barrier
             .waitFor(vk::PipelineStageFlagBits2::eLateFragmentTests | vk::PipelineStageFlagBits2::eEarlyFragmentTests)
@@ -439,7 +444,7 @@ void oldMain(VulkanContext&context) {
     });
     commandBuffer.bindings.push_back({
         &ssao_descriptors,
-        &ssao_pipeline.getPipeline().getPipelineLayout(),
+        &ssao_pipeline->getPipeline().getPipelineLayout(),
     });
     commandBuffer.bindings.push_back({
         &forward_descriptor,
@@ -460,7 +465,7 @@ void oldMain(VulkanContext&context) {
 
     CombinedDescriptorSampler occlusionSampler(context);
     occlusionSampler.targetImageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    occlusionSampler.targetImageView = ssao_pipeline.getOcclusionImageView();
+    occlusionSampler.targetImageView = ssao_pipeline->getOcclusionImageView();
     occlusionSampler.buildSampler();
 
     while (!glfwWindowShouldClose(context.window)) {
@@ -473,7 +478,7 @@ void oldMain(VulkanContext&context) {
         auto model = glm::translate(rot, glm::vec3(0,-0.0f,0));
         modelPipeline.modelBuffer->updateBuffer({
             model,
-            Material {glm::vec4(1.0, 0.0, 0.0, 0.0)}
+            Material {glm::vec4(1.0, 0.0, 0.0, 1.0)}
         }, 0);
 
 
@@ -505,7 +510,7 @@ void oldMain(VulkanContext&context) {
         pipeline.ubo.view = glm::translate(glm::rotate(glm::identity<glm::mat4>(), rotation.y, glm::vec3(0, 1, 0)),
                                            position);
         depth_pipeline.getUBO().ubo.view = pipeline.ubo.view;
-        ssao_pipeline.ubo.view = pipeline.ubo.view;
+        ssao_pipeline->ubo->view = pipeline.ubo.view;
 
         sampler.updateSampler(forward_descriptor, 1);
 //        sampler.updateSampler(ssao_descriptors, 1);
@@ -525,11 +530,12 @@ void oldMain(VulkanContext&context) {
     pipeline.destroy();
     shadow_pipeline.destroy();
     depth_pipeline.destroy();
-    ssao_pipeline.destroy();
+    ssao_pipeline->destroy();
     commandBuffer.destroy();
 
     delete depth_model_pipeline;
     delete depth_forward_pipeline;
     delete ssao_model_pipeline;
+    delete ssao_pipeline;
 //    context.cleanup();
 }

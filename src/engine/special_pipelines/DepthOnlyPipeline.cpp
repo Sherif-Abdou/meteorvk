@@ -28,8 +28,8 @@ DepthOnlyPipeline DepthOnlyPipeline::createDepthOnlyPipeline(GraphicsPipelineBui
 }
 
 DepthOnlyPipeline::DepthOnlyPipeline(ForwardRenderedGraphicsPipeline &forwardPipeline) : forward_pipeline(
-        forwardPipeline),
-        context(this->forward_pipeline.getPipeline().context) {
+        forwardPipeline)
+         {
 
 }
 

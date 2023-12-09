@@ -18,6 +18,8 @@ protected:
     VkBufferUsageFlags usageFlags = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 public:
     explicit UniformBuffer(VulkanContext &context) : context(context) {}
+//    UniformBuffer(UniformBuffer&&) = default;
+//    UniformBuffer& operator=(UniformBuffer&&) = default;
 
     void allocateBuffer();
     void updateBuffer(const T&);

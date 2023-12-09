@@ -11,8 +11,7 @@
 
 class DepthOnlyPipeline: public Renderable {
 private:
-    ForwardRenderedGraphicsPipeline forward_pipeline;
-    VulkanContext& context;
+    ForwardRenderedGraphicsPipeline& forward_pipeline;
 public:
     explicit DepthOnlyPipeline(ForwardRenderedGraphicsPipeline &forwardPipeline);
 

@@ -12,7 +12,9 @@
 
 class SSAOGraphicsPipeline: public Renderable {
 public:
-    explicit SSAOGraphicsPipeline(ModelBufferGraphicsPipeline &pipeline);
+    SSAOGraphicsPipeline(VulkanContext* context, ModelBufferGraphicsPipeline *input_pipeline, DescriptorSet* set = nullptr);
+//    SSAOGraphicsPipeline::SSAOGraphicsPipeline(VulkanContext& context, ModelBufferGraphicsPipeline* input_pipeline) {
+//    }
 
     void renderPipeline(Renderable::RenderArguments renderArguments) override;
     void prepareRender(Renderable::RenderArguments renderArguments) override;
@@ -26,27 +28,37 @@ public:
         glm::vec3 samples[64];
     };
 
-    UBO ubo;
-    UniformBuffer<SSAOGraphicsPipeline::UBO> ubo_buffer;
-    DescriptorSet* descriptor_set;
+    std::unique_ptr<UBO> ubo = nullptr;
+    std::unique_ptr<UniformBuffer<SSAOGraphicsPipeline::UBO>> ubo_buffer = nullptr;
+    DescriptorSet* descriptor_set{};
     GraphicsPipeline& getPipeline();
-    CombinedDescriptorSampler* depth_sampler = nullptr;
+    CombinedDescriptorSampler* depth_sampler{};
+
+    CombinedDescriptorSampler *getDepthSampler() const;
+
+    void setDepthSampler(CombinedDescriptorSampler *depthSampler);
 
 
-    VulkanContext& context;
+    VulkanContext* context;
 
     void destroy();
     vk::ImageView getOcclusionImageView();
     vk::Image getOcclusionImage();
+
+    void init();
+
+    ~SSAOGraphicsPipeline() override;
+
 private:
     void createNoiseImage();
     void createSamples();
     ModelBufferGraphicsPipeline& pipeline;
     VulkanAllocator::VulkanImageAllocation noise_image;
     vk::raii::ImageView noise_image_view = nullptr;
-    std::unique_ptr<CombinedDescriptorSampler> noise_sampler = nullptr;
+    std::unique_ptr<CombinedDescriptorSampler> noise_sampler;
 
     float lerp(float a, float b, float f);
+
 };
 
 

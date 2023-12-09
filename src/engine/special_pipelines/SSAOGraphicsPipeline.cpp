@@ -5,19 +5,26 @@
 #include "SSAOGraphicsPipeline.h"
 
 #include <random>
+#include <iostream>
 
 #include "../storage/ImageTextureLoader.h"
 
 #include "glm/ext.hpp"
 
-SSAOGraphicsPipeline::SSAOGraphicsPipeline(ModelBufferGraphicsPipeline& pipeline): pipeline(pipeline), context(pipeline.getGraphicsPipeline().context), ubo_buffer(pipeline.getGraphicsPipeline().context) {
-    ubo_buffer.allocateBuffer();
+
+SSAOGraphicsPipeline::SSAOGraphicsPipeline(VulkanContext* context, ModelBufferGraphicsPipeline *input_pipeline, DescriptorSet* set): context(context), pipeline(*input_pipeline), descriptor_set(set) {
+    ubo = std::make_unique<UBO>();
+    ubo_buffer = std::make_unique<UniformBuffer<UBO>>(*context);
+};
+
+void SSAOGraphicsPipeline::init() {
+    ubo_buffer->allocateBuffer();
     createNoiseImage();
     createSamples();
 
-    ubo.proj = glm::perspective(glm::radians(90.0), 2560.0 / 1440.0, 0.1, 100.0);
-    ubo.view = glm::translate(glm::identity<glm::mat4>(), glm::vec3(0.0));
-    ubo.view = glm::translate(ubo.view, glm::vec3(0, 0, -4));
+    ubo->proj = glm::perspective(glm::radians(90.0), 2560.0 / 1440.0, 0.1, 100.0);
+    ubo->view = glm::translate(glm::identity<glm::mat4>(), glm::vec3(0.0));
+    ubo->view = glm::translate(ubo->view, glm::vec3(0, 0, -4));
 }
 
 void SSAOGraphicsPipeline::renderPipeline(Renderable::RenderArguments renderArguments) {
@@ -26,11 +33,15 @@ void SSAOGraphicsPipeline::renderPipeline(Renderable::RenderArguments renderArgu
 
 void SSAOGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {
     pipeline.prepareRender(renderArguments);
-    ubo_buffer.updateBuffer(ubo);
-    ubo_buffer.writeToDescriptor(*descriptor_set);
-    noise_sampler->updateSampler(*descriptor_set, 4);
+    ubo_buffer->updateBuffer(*ubo);
+    assert(this->descriptor_set != nullptr);
+    DescriptorSet& ref = *descriptor_set;
+    ubo_buffer->writeToDescriptor(ref);
+    noise_sampler->updateSampler(ref, 4);
     if (depth_sampler != nullptr) {
-        depth_sampler->updateSampler(*descriptor_set, 3);
+        depth_sampler->updateSampler(ref, 3);
+    } else {
+        std::cerr << "Missing depth sampler \n";
     }
 }
 
@@ -50,18 +61,18 @@ void SSAOGraphicsPipeline::createNoiseImage() {
     }
 
     ImageTextureLoader imageLoader(context);
-    noise_image = imageLoader.createImageFromBuffer(VK_FORMAT_R16G16B16A16_SFLOAT, 4, 4, ssaoNoise.data(), sizeof(ssaoNoise[0]) * ssaoNoise.size());
+    noise_image = imageLoader.createImageFromBuffer(VK_FORMAT_R32G32B32A32_SFLOAT, 4, 4, ssaoNoise.data(), sizeof(ssaoNoise[0]) * ssaoNoise.size());
 
     vk::ImageViewCreateInfo image_view_create_info {};
     image_view_create_info.setComponents(vk::ComponentMapping());
-    image_view_create_info.setFormat(vk::Format::eR16G16B16A16Sfloat);
+    image_view_create_info.setFormat(vk::Format::eR32G32B32A32Sfloat);
     image_view_create_info.setImage(noise_image.image);
     image_view_create_info.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
     image_view_create_info.setViewType(vk::ImageViewType::e2D);
 
-    noise_image_view = context.device.createImageView(image_view_create_info);
+    noise_image_view = context->device.createImageView(image_view_create_info);
 
-    auto sampler = std::make_unique<CombinedDescriptorSampler> (context);
+    auto sampler = std::make_unique<CombinedDescriptorSampler> (*context);
     sampler->targetImageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     sampler->targetImageView = *noise_image_view;
     sampler->buildSampler();
@@ -75,7 +86,7 @@ GraphicsPipeline& SSAOGraphicsPipeline::getPipeline() {
 
 void SSAOGraphicsPipeline::destroy() {
     noise_image.destroy();
-    ubo_buffer.destroy();
+    ubo_buffer->destroy();
     pipeline.destroy();
 }
 
@@ -94,7 +105,7 @@ void SSAOGraphicsPipeline::createSamples() {
         float scale = (float)i / 64.0;
         scale   = lerp(0.1f, 1.0f, scale * scale);
         sample *= scale;
-        ubo.samples[i] = sample;
+        ubo->samples[i] = sample;
     }
 }
 
@@ -108,5 +119,17 @@ vk::ImageView SSAOGraphicsPipeline::getOcclusionImageView() {
 
 vk::Image SSAOGraphicsPipeline::getOcclusionImage() {
     return getPipeline().ownedImages[0].imageAllocation.image;
+}
+
+SSAOGraphicsPipeline::~SSAOGraphicsPipeline() {
+
+}
+
+CombinedDescriptorSampler *SSAOGraphicsPipeline::getDepthSampler() const {
+    return depth_sampler;
+}
+
+void SSAOGraphicsPipeline::setDepthSampler(CombinedDescriptorSampler *depthSampler) {
+    depth_sampler = depthSampler;
 }
 

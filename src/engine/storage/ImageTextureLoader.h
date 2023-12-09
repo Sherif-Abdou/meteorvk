@@ -13,9 +13,9 @@ private:
 
     VulkanAllocator::VulkanBufferAllocation stagingBuffer;
     VulkanAllocator::VulkanImageAllocation imageAllocation;
-    VulkanContext& context;
+    VulkanContext* context;
 public:
-    explicit ImageTextureLoader(VulkanContext &context);
+    ImageTextureLoader(VulkanContext *context);
 
 private:
     void* pixels;

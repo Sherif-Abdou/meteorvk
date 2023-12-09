@@ -64,16 +64,17 @@ float calculateShadow() {
 }
 
 float getOcclusion() {
-    vec2 screenUV = gl_FragCoord.xy / vec2(2560, 1440);
+    ivec2 size = textureSize(occlusionSampler, 0);
+    vec2 screenUV = gl_FragCoord.xy / vec2(size.x, size.y);
     float net = 0.0f;
     for (int i = -2; i <= 2; i++) {
         for (int j = -2; j <= 2; j++) {
-            vec2 adjusted = screenUV + (vec2(i, j) / vec2(2560, 1440));
+            vec2 adjusted = screenUV + (vec2(i, j) / vec2(size.x, size.y));
             float occlusion = texture(occlusionSampler, adjusted).r;
             net += occlusion / (5.0f * 5.0f);
         }
     }
-    return pow(net, 5.0f);
+    return pow(net, 2.0f);
 }
 
 void main() {

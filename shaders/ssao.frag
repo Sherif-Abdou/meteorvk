@@ -12,8 +12,8 @@ layout(binding = 0) uniform UBO {
 layout(binding = 3) uniform sampler2D depthSampler;
 layout(binding = 4) uniform sampler2D noiseSampler;
 
-const vec2 screenSize = vec2(2560,1440);
-const vec2 noiseScale = screenSize / vec2(4.0, 4.0);
+vec2 screenSize = vec2(1, 1);
+vec2 noiseScale = screenSize / vec2(4.0, 4.0);
 const float radius = 0.5f;
 const float bias = 0.005f;
 const int kernelSize = 64;
@@ -35,6 +35,9 @@ vec3 getPositionDirect(vec2 uv) {
 }
 
 void main() {
+    ivec2 raw_size = textureSize(depthSampler, 0);
+    screenSize = vec2(raw_size.x, raw_size.y);
+    noiseScale = screenSize / vec2(4.0, 4.0);
     vec2 screenXY = gl_FragCoord.xy;
     vec2 uv = gl_FragCoord.xy / screenSize;
     vec3 position = getPosition(screenXY);
