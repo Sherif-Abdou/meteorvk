@@ -12,7 +12,7 @@
 
 class ComputePipeline {
 public:
-    explicit ComputePipeline(VulkanContext& context, vk::raii::PipelineLayout &&descriptorLayout, vk::raii::Pipeline &&pipeline);
+    explicit ComputePipeline(VulkanContext* context, vk::raii::PipelineLayout &&descriptorLayout, vk::raii::Pipeline &&pipeline);
     uint32_t workgroups = 1;
 
     void bind(vk::CommandBuffer commandBuffer);
@@ -21,7 +21,7 @@ public:
 private:
     vk::raii::PipelineLayout pipelineLayout = nullptr;
     vk::raii::Pipeline pipeline = nullptr;
-    VulkanContext& context;
+    VulkanContext* context;
 };
 
 

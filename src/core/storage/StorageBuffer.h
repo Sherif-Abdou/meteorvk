@@ -11,7 +11,7 @@
 template <typename T>
 class StorageBuffer: public UniformBuffer<T> {
 public:
-    explicit StorageBuffer(VulkanContext &context) : UniformBuffer<T>(context) {
+    explicit StorageBuffer(VulkanContext *context) : UniformBuffer<T>(context) {
         this->descriptorType = vk::DescriptorType::eStorageBuffer;
         this->usageFlags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
     }

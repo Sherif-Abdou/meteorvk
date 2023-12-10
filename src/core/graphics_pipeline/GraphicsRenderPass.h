@@ -10,13 +10,13 @@
 /// Wrappper over VkRenderPass
 class GraphicsRenderPass {
 public:
-    VulkanContext& context;
+    VulkanContext* context;
     struct Subpass {
         vk::SubpassDescription description;
         vk::SubpassDependency dependency;
     };
 
-    explicit GraphicsRenderPass(VulkanContext &context);
+    explicit GraphicsRenderPass(VulkanContext *context);
 
     vk::raii::RenderPass & getRenderPass();
 

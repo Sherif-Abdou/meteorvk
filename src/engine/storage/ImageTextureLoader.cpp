@@ -90,7 +90,7 @@ ImageTextureLoader::ImageTextureLoader(VulkanContext *context)  {
 }
 
 void ImageTextureLoader::loadTransferQueue() {
-    TransferQueue queue(*context);
+    TransferQueue queue(context);
     queue.begin();
     queue.applyBarrier(
             PipelineBarrierBuilder()

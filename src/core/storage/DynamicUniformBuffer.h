@@ -12,16 +12,16 @@
 /// Handles buffer storage and generating a dynamic offset
 template<typename T>
 class DynamicUniformBuffer {
-    VulkanContext& context;
+    VulkanContext* context;
     VulkanAllocator::VulkanBufferAllocation bufferAllocation;
     unsigned int buffer_count = 0;
     size_t dynamicAlignment = 0;
 
 public:
-    explicit DynamicUniformBuffer(VulkanContext &context) : context(context) {}
+    explicit DynamicUniformBuffer(VulkanContext *context) : context(context) {}
 
     void allocateBuffer(unsigned int buffer_count) {
-        auto device_properties = this->context.physicalDevice.getProperties();
+        auto device_properties = this->context->physicalDevice.getProperties();
         size_t minUboAlignment = device_properties.limits.minUniformBufferOffsetAlignment;
         dynamicAlignment = sizeof(T);
         if (minUboAlignment > 0) {
@@ -35,7 +35,7 @@ public:
         bufferCreateInfo.size = buffer_count * dynamicAlignment;
         bufferCreateInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
-        this->context.allocator->allocateBuffer(&bufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, &this->bufferAllocation);
+        this->context->allocator->allocateBuffer(&bufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, &this->bufferAllocation);
         this->buffer_count = buffer_count;
     }
 
@@ -62,7 +62,7 @@ public:
         writeDescriptorSet.setBufferInfo(bufferInfo);
 //    writeDescriptorSet.setDstSet();
 
-        context.device.updateDescriptorSets(writeDescriptorSet, {});
+        context->device.updateDescriptorSets(writeDescriptorSet, {});
     }
 
     /// Gets the dynamic offset to use to a particular index in the dynamic buffer

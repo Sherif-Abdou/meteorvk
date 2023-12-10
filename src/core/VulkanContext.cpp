@@ -61,6 +61,7 @@ void VulkanContext::createInstance() {
         createInfo.ppEnabledLayerNames = validationLayers.data();
     } else {
         createInfo.enabledLayerCount = 0;
+        createInfo.ppEnabledLayerNames = nullptr;
     }
 
     createInfo.enabledExtensionCount = (uint32_t) requiredExtensions.size();
@@ -93,6 +94,9 @@ std::vector<const char *> VulkanContext::getRequiredInstanceExtensions() {
 }
 
 bool VulkanContext::checkValidationLayerSupport() {
+    if (validationLayers.size() == 0) {
+        return false;
+    }
     unsigned int layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
@@ -231,6 +235,7 @@ void VulkanContext::createLogicalDevice() {
         createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
         createInfo.ppEnabledLayerNames = validationLayers.data();
     } else {
+        createInfo.ppEnabledLayerNames = nullptr;
         createInfo.enabledLayerCount = 0;
     }
 

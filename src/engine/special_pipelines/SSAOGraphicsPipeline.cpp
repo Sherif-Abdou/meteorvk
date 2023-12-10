@@ -14,7 +14,7 @@
 
 SSAOGraphicsPipeline::SSAOGraphicsPipeline(VulkanContext* context, ModelBufferGraphicsPipeline *input_pipeline, DescriptorSet* set): context(context), pipeline(*input_pipeline), descriptor_set(set) {
     ubo = std::make_unique<UBO>();
-    ubo_buffer = std::make_unique<UniformBuffer<UBO>>(*context);
+    ubo_buffer = std::make_unique<UniformBuffer<UBO>>(context);
 };
 
 void SSAOGraphicsPipeline::init() {
@@ -72,7 +72,7 @@ void SSAOGraphicsPipeline::createNoiseImage() {
 
     noise_image_view = context->device.createImageView(image_view_create_info);
 
-    auto sampler = std::make_unique<CombinedDescriptorSampler> (*context);
+    auto sampler = std::make_unique<CombinedDescriptorSampler> (context);
     sampler->targetImageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     sampler->targetImageView = *noise_image_view;
     sampler->buildSampler();

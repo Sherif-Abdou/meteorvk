@@ -6,11 +6,11 @@
 
 void GraphicsCommandBuffer::createCommandPool() {
     vk::CommandPoolCreateInfo commandPoolCreateInfo{};
-    auto graphicsIndex = context.findQueueFamilies(context.physicalDevice).graphicsFamily.value();
+    auto graphicsIndex = context->findQueueFamilies(context->physicalDevice).graphicsFamily.value();
     commandPoolCreateInfo.setQueueFamilyIndex(graphicsIndex);
     commandPoolCreateInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
 
-    pool = context.device.createCommandPool(commandPoolCreateInfo);
+    pool = context->device.createCommandPool(commandPoolCreateInfo);
 }
 
 void GraphicsCommandBuffer::createCommandBuffer() {
@@ -19,7 +19,7 @@ void GraphicsCommandBuffer::createCommandBuffer() {
     allocateInfo.setLevel(vk::CommandBufferLevel::ePrimary);
     allocateInfo.setCommandBufferCount(FRAMES_IN_FLIGHT);
 
-    auto array = context.device.allocateCommandBuffers(allocateInfo);
+    auto array = context->device.allocateCommandBuffers(allocateInfo);
     for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++) {
         commandBuffer[i] = std::move(array[i]);
     }
@@ -30,9 +30,9 @@ void GraphicsCommandBuffer::createSyncObjects() {
     vk::FenceCreateInfo fenceCreateInfo{};
     fenceCreateInfo.setFlags(vk::FenceCreateFlagBits::eSignaled);
     for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++) {
-        imageAvailableSemaphore[i] = context.device.createSemaphore(semaphoreCreateInfo);
-        renderFinishedSemaphore[i] = context.device.createSemaphore(semaphoreCreateInfo);
-        inFlightFence[i] = context.device.createFence(fenceCreateInfo);
+        imageAvailableSemaphore[i] = context->device.createSemaphore(semaphoreCreateInfo);
+        renderFinishedSemaphore[i] = context->device.createSemaphore(semaphoreCreateInfo);
+        inFlightFence[i] = context->device.createFence(fenceCreateInfo);
     }
 
 }
@@ -95,24 +95,24 @@ void GraphicsCommandBuffer::submitCommandBuffer() {
     submitInfo.setSignalSemaphores(*renderFinishedSemaphore[current_frame]);
     submitInfo.setWaitDstStageMask(waitStage);
 
-    context.graphicsQueue.submit(submitInfo, *inFlightFence[current_frame]);
+    context->graphicsQueue.submit(submitInfo, *inFlightFence[current_frame]);
 }
 
 void GraphicsCommandBuffer::waitForFence() {
-    auto result = context.device.waitForFences(*inFlightFence[current_frame], true, UINT32_MAX);
+    auto result = context->device.waitForFences(*inFlightFence[current_frame], true, UINT32_MAX);
     if (result != vk::Result::eSuccess) {
         throw std::runtime_error("Fence failure");
     }
-    context.device.resetFences(*inFlightFence[current_frame]);
+    context->device.resetFences(*inFlightFence[current_frame]);
 }
 
 void GraphicsCommandBuffer::sendToSwapchain() {
     vk::PresentInfoKHR presentInfo{};
     presentInfo.setWaitSemaphores(*renderFinishedSemaphore[current_frame]);
-    presentInfo.setSwapchains(*context.swapChain);
+    presentInfo.setSwapchains(*context->swapChain);
     presentInfo.setImageIndices(swapChainImageIndex);
 
-    auto result = context.presentQueue.presentKHR(presentInfo);
+    auto result = context->presentQueue.presentKHR(presentInfo);
     if (result != vk::Result::eSuccess) {
         throw std::runtime_error("Fence failure");
     }
@@ -124,7 +124,7 @@ void GraphicsCommandBuffer::sendToSwapchain() {
 }
 
 void GraphicsCommandBuffer::fetchSwapchain() {
-    auto [result, index] = context.swapChain.acquireNextImage(UINT32_MAX, *imageAvailableSemaphore[current_frame],
+    auto [result, index] = context->swapChain.acquireNextImage(UINT32_MAX, *imageAvailableSemaphore[current_frame],
                                                               nullptr);
     if (result != vk::Result::eSuccess) {
         throw std::runtime_error("Fence failure");
@@ -149,7 +149,7 @@ void GraphicsCommandBuffer::beginSwapchainRender() {
     beginCommandBuffer();
 }
 
-GraphicsCommandBuffer::GraphicsCommandBuffer(VulkanContext &context) : context(context) {}
+GraphicsCommandBuffer::GraphicsCommandBuffer(VulkanContext *context) : context(context) {}
 
 void GraphicsCommandBuffer::destroy() {
     for (auto &buffer: vertexBuffers) {

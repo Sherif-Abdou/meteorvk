@@ -4,7 +4,7 @@
 
 #include "ComputePipeline.h"
 
-ComputePipeline::ComputePipeline(VulkanContext &context, vk::raii::PipelineLayout &&pipelineLayout,
+ComputePipeline::ComputePipeline(VulkanContext *context, vk::raii::PipelineLayout &&pipelineLayout,
                                  vk::raii::Pipeline &&pipeline) : context(context),
                                                                   pipelineLayout(std::move(pipelineLayout)),
                                                                   pipeline(std::move(pipeline)) {}

@@ -11,13 +11,13 @@
 
 template<typename T>
 class UniformBuffer {
-    VulkanContext& context;
+    VulkanContext* context;
     VulkanAllocator::VulkanBufferAllocation bufferAllocation;
 protected:
     vk::DescriptorType descriptorType = vk::DescriptorType::eUniformBuffer;
     VkBufferUsageFlags usageFlags = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 public:
-    explicit UniformBuffer(VulkanContext &context) : context(context) {}
+    explicit UniformBuffer(VulkanContext *context) : context(context) {}
 //    UniformBuffer(UniformBuffer&&) = default;
 //    UniformBuffer& operator=(UniformBuffer&&) = default;
 
@@ -52,7 +52,7 @@ void UniformBuffer<T>::writeToDescriptor(DescriptorSet& descriptorSet, uint32_t 
     writeDescriptorSet.setBufferInfo(bufferInfo);
 //    writeDescriptorSet.setDstSet();
 
-    context.device.updateDescriptorSets(writeDescriptorSet, {});
+    context->device.updateDescriptorSets(writeDescriptorSet, {});
 }
 
 template<typename T>
@@ -82,7 +82,7 @@ void UniformBuffer<T>::allocateBuffer() {
     bufferCreateInfo.size = sizeof(T);
     bufferCreateInfo.usage = usageFlags;
 
-    context.allocator->allocateBuffer(&bufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, &bufferAllocation);
+    context->allocator->allocateBuffer(&bufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, &bufferAllocation);
 }
 
 

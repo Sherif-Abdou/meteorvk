@@ -9,9 +9,9 @@
 #include "../VulkanContext.h"
 
 class StorageImage {
-    VulkanContext& context;
+    VulkanContext* context;
 public:
-    explicit StorageImage(VulkanContext& context): context(context) {};
+    explicit StorageImage(VulkanContext* context): context(context) {};
 
     void updateDescriptor(DescriptorSet& descriptor, unsigned int binding, unsigned int index=0);
 

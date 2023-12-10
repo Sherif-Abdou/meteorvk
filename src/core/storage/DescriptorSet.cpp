@@ -4,7 +4,7 @@
 
 #include "DescriptorSet.h"
 
-DescriptorSet::DescriptorSet(VulkanContext &context) : context(context) {}
+DescriptorSet::DescriptorSet(VulkanContext *context) : context(context) {}
 
 void DescriptorSet::createDescriptorLayout() {
     vk::DescriptorSetLayoutCreateInfo createInfo {};
@@ -16,7 +16,7 @@ void DescriptorSet::createDescriptorLayout() {
         }
     }
 
-    this->descriptorSetLayout = context.device.createDescriptorSetLayout(createInfo).release();
+    this->descriptorSetLayout = context->device.createDescriptorSetLayout(createInfo).release();
 }
 
 void DescriptorSet::createDescriptorPool() {
@@ -41,7 +41,7 @@ void DescriptorSet::createDescriptorPool() {
     createInfo.setPoolSizes(sizes);
     createInfo.setMaxSets(FRAMES_IN_FLIGHT);
 
-    descriptorPool = context.device.createDescriptorPool(createInfo).release();
+    descriptorPool = context->device.createDescriptorPool(createInfo).release();
 }
 
 void DescriptorSet::createDescriptorSet() {
@@ -52,7 +52,7 @@ void DescriptorSet::createDescriptorSet() {
     allocateInfo.setDescriptorPool(descriptorPool);
     allocateInfo.setSetLayouts(list);
 
-    descriptorSet = (*context.device).allocateDescriptorSets(allocateInfo);
+    descriptorSet = (*context->device).allocateDescriptorSets(allocateInfo);
 }
 
 vk::DescriptorSet DescriptorSet::getDescriptorSet() {
@@ -78,12 +78,12 @@ DescriptorSet::bindToCommandBufferCompute(vk::raii::CommandBuffer &commandBuffer
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, *pipelineLayout, set, descriptorSet[current_frame], dynamic_offsets);
 }
 
-DescriptorSet::DescriptorSet(VulkanContext &context, const std::vector<vk::DescriptorSetLayoutBinding> &bindings)
+DescriptorSet::DescriptorSet(VulkanContext *context, const std::vector<vk::DescriptorSetLayoutBinding> &bindings)
         : context(context), bindings(bindings) {}
 
 DescriptorSet::~DescriptorSet() {
-    (*context.device).destroy(descriptorSetLayout);
-    (*context.device).destroy(descriptorPool);
+    (*context->device).destroy(descriptorSetLayout);
+    (*context->device).destroy(descriptorPool);
 }
 
 void DescriptorSet::nextFrame() {

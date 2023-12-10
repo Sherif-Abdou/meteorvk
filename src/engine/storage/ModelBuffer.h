@@ -19,12 +19,12 @@ public:
         Material material;
     };
 private:
-    VulkanContext& context;
+    VulkanContext* context;
     unsigned int size;
     unsigned int current_index;
     DynamicUniformBuffer<PerModelBuffer> buffer;
 public:
-    ModelBuffer(VulkanContext &context, unsigned int size);
+    ModelBuffer(VulkanContext *context, unsigned int size);
 
     unsigned int getSize() const;
 

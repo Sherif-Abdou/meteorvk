@@ -11,7 +11,7 @@
 
 class ComputePipelineBuilder {
 public:
-    explicit ComputePipelineBuilder(VulkanContext &context);
+    explicit ComputePipelineBuilder(VulkanContext *context);
     std::optional<vk::DescriptorSetLayout> descriptor;
 
     const std::optional<vk::DescriptorSetLayout> &getDescriptor() const;
@@ -26,7 +26,7 @@ public:
 
     uint32_t workgroups = 1;
 private:
-    VulkanContext& context;
+    VulkanContext* context;
     vk::raii::Pipeline computePipeline = nullptr;
     vk::raii::PipelineLayout layout = nullptr;
     void createPipelineLayout();

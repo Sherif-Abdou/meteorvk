@@ -10,13 +10,13 @@
 
 class TransferQueue {
 private:
-    VulkanContext& context;
+    VulkanContext* context;
     vk::raii::CommandPool pool = nullptr;
     vk::raii::CommandBuffer command_buffer = nullptr;
     bool ran = false;
     void init();
 public:
-    explicit TransferQueue(VulkanContext& context): context(context) {
+    explicit TransferQueue(VulkanContext* context): context(context) {
         init();
     };
 

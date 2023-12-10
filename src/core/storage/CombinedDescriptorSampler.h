@@ -11,10 +11,10 @@
 /// Wrapper around a sampler for a particular imageview
 class CombinedDescriptorSampler {
 private:
-    VulkanContext& context;
+    VulkanContext* context;
     vk::raii::Sampler sampler = nullptr;
 public:
-    explicit CombinedDescriptorSampler(VulkanContext &context);
+    explicit CombinedDescriptorSampler(VulkanContext *context);
 
     const vk::raii::Sampler &getSampler() const;
 

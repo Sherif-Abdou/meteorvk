@@ -12,7 +12,7 @@ class DescriptorSet {
 private:
     static constexpr unsigned int FRAMES_IN_FLIGHT = 2;
     unsigned int current_frame = 0;
-    VulkanContext& context;
+    VulkanContext* context;
     std::vector<vk::DescriptorSetLayoutBinding> bindings;
     std::vector<vk::DescriptorSet> descriptorSet {};
     vk::DescriptorSetLayout descriptorSetLayout = nullptr;
@@ -26,12 +26,12 @@ public:
 
     [[nodiscard]] vk::DescriptorSetLayout getDescriptorSetLayout();
 
-    explicit DescriptorSet(VulkanContext &context);
+    explicit DescriptorSet(VulkanContext *context);
     DescriptorSet(DescriptorSet&&) = default;
 
     std::vector<unsigned int> dynamic_offsets = {};
 
-    DescriptorSet(VulkanContext &context, const std::vector<vk::DescriptorSetLayoutBinding> &bindings);
+    DescriptorSet(VulkanContext *context, const std::vector<vk::DescriptorSetLayoutBinding> &bindings);
 
     constexpr static unsigned int MAX_UNIFORM_BUFFERS = 8;
     constexpr static unsigned int MAX_STORAGE_BUFFERS = 8;

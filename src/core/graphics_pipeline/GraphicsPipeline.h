@@ -20,12 +20,12 @@ public:
         vk::raii::ImageView imageView;
     };
 
-    VulkanContext& context;
+    VulkanContext* context;
     GraphicsRenderPass renderPass;
 
     std::vector<vk::raii::Framebuffer> targetFramebuffers {};
 
-    explicit GraphicsPipeline(VulkanContext &context, GraphicsRenderPass&& renderPass);
+    explicit GraphicsPipeline(VulkanContext *context, GraphicsRenderPass&& renderPass);
     GraphicsPipeline(GraphicsPipeline&&) = default;
 
     void init();

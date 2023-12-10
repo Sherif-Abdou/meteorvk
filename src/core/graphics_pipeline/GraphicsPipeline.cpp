@@ -13,10 +13,10 @@ void GraphicsPipeline::init() {
 void GraphicsPipeline::createSyncObjects() {
     vk::SemaphoreCreateInfo semaphoreCreateInfo {};
     vk::FenceCreateInfo fenceCreateInfo {};
-    pipelineSemaphore = context.device.createSemaphore(semaphoreCreateInfo);
-    pipelineFence = context.device.createFence(fenceCreateInfo);
+    pipelineSemaphore = context->device.createSemaphore(semaphoreCreateInfo);
+    pipelineFence = context->device.createFence(fenceCreateInfo);
 }
-GraphicsPipeline::GraphicsPipeline(VulkanContext &context, GraphicsRenderPass&& renderPass)
+GraphicsPipeline::GraphicsPipeline(VulkanContext *context, GraphicsRenderPass&& renderPass)
         : context(context), renderPass(std::move(renderPass)) {}
 
 vk::raii::Semaphore & GraphicsPipeline::getPipelineSemaphore() {

@@ -13,7 +13,7 @@ void CombinedDescriptorSampler::buildSampler() {
     samplerCreateInfo.setMinFilter(vk::Filter::eNearest);
     samplerCreateInfo.setMipmapMode(vk::SamplerMipmapMode::eNearest);
 
-    sampler = context.device.createSampler(samplerCreateInfo);
+    sampler = context->device.createSampler(samplerCreateInfo);
 }
 
 void CombinedDescriptorSampler::updateSampler(DescriptorSet& descriptorSet, unsigned int binding) {
@@ -31,11 +31,11 @@ void CombinedDescriptorSampler::updateSampler(DescriptorSet& descriptorSet, unsi
 
     writeDescriptorSet.setImageInfo(descriptorImageInfo);
 
-    context.device.updateDescriptorSets(writeDescriptorSet, {});
+    context->device.updateDescriptorSets(writeDescriptorSet, {});
 }
 
 const vk::raii::Sampler &CombinedDescriptorSampler::getSampler() const {
     return sampler;
 }
 
-CombinedDescriptorSampler::CombinedDescriptorSampler(VulkanContext &context) : context(context) {}
+CombinedDescriptorSampler::CombinedDescriptorSampler(VulkanContext *context) : context(context) {}

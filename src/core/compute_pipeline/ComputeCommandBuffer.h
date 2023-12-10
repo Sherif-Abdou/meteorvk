@@ -11,8 +11,8 @@
 class ComputeCommandBuffer {
 public:
     static constexpr uint32_t FRAMES_IN_FLIGHT = 2;
-    explicit ComputeCommandBuffer(VulkanContext &context);
-    VulkanContext& context;
+    explicit ComputeCommandBuffer(VulkanContext *context);
+    VulkanContext* context;
     void init();
     void begin();
     void bindAndDispatch(ComputePipeline& pipeline, std::optional<DescriptorSet*> set);

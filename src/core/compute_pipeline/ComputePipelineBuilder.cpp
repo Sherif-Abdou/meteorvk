@@ -4,7 +4,7 @@
 
 #include "ComputePipelineBuilder.h"
 
-ComputePipelineBuilder::ComputePipelineBuilder(VulkanContext &context) : context(context) {}
+ComputePipelineBuilder::ComputePipelineBuilder(VulkanContext *context) : context(context) {}
 
 void ComputePipelineBuilder::createPipelineLayout() {
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
@@ -12,7 +12,7 @@ void ComputePipelineBuilder::createPipelineLayout() {
         pipelineLayoutCreateInfo.setSetLayouts(this->descriptor.value());
     }
 
-    this->layout = context.device.createPipelineLayout(pipelineLayoutCreateInfo);
+    this->layout = context->device.createPipelineLayout(pipelineLayoutCreateInfo);
 }
 
 void ComputePipelineBuilder::createPipeline() {
@@ -20,7 +20,7 @@ void ComputePipelineBuilder::createPipeline() {
     createInfo.setLayout(*this->layout);
     createInfo.setStage(this->shader_stage);
 
-    this->computePipeline = context.device.createComputePipeline(nullptr, createInfo);
+    this->computePipeline = context->device.createComputePipeline(nullptr, createInfo);
 }
 
 const std::optional<vk::DescriptorSetLayout> &ComputePipelineBuilder::getDescriptor() const {

@@ -15,7 +15,7 @@ class GraphicsPipelineBuilder {
 private:
     using ImagePair = GraphicsPipeline::ImagePair;
 public:
-    GraphicsPipelineBuilder(VulkanContext &context, GraphicsShaders &shaders, GraphicsRenderPass &renderPass);
+    GraphicsPipelineBuilder(VulkanContext *context, GraphicsShaders &shaders, GraphicsRenderPass &renderPass);
 
     void setViewport(const vk::Viewport &viewport);
 
@@ -55,7 +55,7 @@ public:
 
     GraphicsPipeline buildGraphicsPipeline();
 private:
-    VulkanContext& context;
+    VulkanContext* context;
     GraphicsShaders& shaders;
     GraphicsRenderPass& renderPass;
     vk::raii::PipelineLayout pipelineLayout = nullptr;
@@ -70,7 +70,7 @@ private:
     vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
     vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo {};
     vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
-    vk::Extent2D extent = context.swapChainExtent;
+    vk::Extent2D extent = context->swapChainExtent;
 public:
     const vk::Extent2D &getExtent() const;
 

@@ -18,7 +18,7 @@ class GraphicsCommandBuffer {
 private:
     uint32_t current_frame = 0;
     constexpr static uint32_t FRAMES_IN_FLIGHT = 2;
-    VulkanContext& context;
+    VulkanContext* context;
     vk::raii::CommandPool pool = nullptr;
     std::array<vk::raii::CommandBuffer, FRAMES_IN_FLIGHT> commandBuffer = {nullptr, nullptr};
     std::array<vk::raii::Semaphore, FRAMES_IN_FLIGHT> imageAvailableSemaphore = {nullptr, nullptr};
@@ -49,7 +49,7 @@ public:
     std::vector<Renderable*> pipelines {}; /// Pipelines to run in order
     std::unordered_map<uint32_t, PipelineBarrier> dependencies {}; /// Dependency to bind per pipeline
 
-    explicit GraphicsCommandBuffer(VulkanContext &context);
+    explicit GraphicsCommandBuffer(VulkanContext *context);
 
     void init();
     void renderToSwapchain();

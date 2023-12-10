@@ -18,5 +18,5 @@ void StorageImage::updateDescriptor(DescriptorSet& descriptor, unsigned binding,
 
     writeDescriptorSet.setImageInfo(descriptorImageInfo);
 
-    context.device.updateDescriptorSets(writeDescriptorSet, {});
+    context->device.updateDescriptorSets(writeDescriptorSet, {});
 }

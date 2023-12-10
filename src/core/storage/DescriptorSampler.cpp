@@ -4,7 +4,7 @@
 
 #include "DescriptorSampler.h"
 
-DescriptorSampler::DescriptorSampler(VulkanContext& context): context(context) {
+DescriptorSampler::DescriptorSampler(VulkanContext* context): context(context) {
 }
 
 vk::raii::Sampler& DescriptorSampler::getSampler() {
@@ -20,7 +20,7 @@ void DescriptorSampler::buildSampler() {
     samplerCreateInfo.setMinFilter(vk::Filter::eNearest);
     samplerCreateInfo.setMipmapMode(vk::SamplerMipmapMode::eNearest);
 
-    sampler = context.device.createSampler(samplerCreateInfo);
+    sampler = context->device.createSampler(samplerCreateInfo);
 }
 
 void DescriptorSampler::updateSampler(DescriptorSet& descriptorSet, unsigned int binding, unsigned int index) {
@@ -31,5 +31,5 @@ void DescriptorSampler::updateSampler(DescriptorSet& descriptorSet, unsigned int
     writeDescriptorSet.setDstArrayElement(index);
     writeDescriptorSet.setDescriptorType(vk::DescriptorType::eSampler);
 
-    context.device.updateDescriptorSets(writeDescriptorSet, {});
+    context->device.updateDescriptorSets(writeDescriptorSet, {});
 }

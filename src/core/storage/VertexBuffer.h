@@ -9,9 +9,9 @@
 
 class VertexBuffer {
 public:
-    VulkanContext& context;
+    VulkanContext* context;
 
-    explicit VertexBuffer(VulkanContext &context, bool staging_buffer = false);
+    explicit VertexBuffer(VulkanContext *context, bool staging_buffer = false);
 
     std::vector<Vertex> vertices {};
     unsigned long mask = 0;

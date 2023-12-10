@@ -9,10 +9,10 @@
 #include "../VulkanContext.h"
 
 class DescriptorSampler {
-    VulkanContext& context;
+    VulkanContext* context;
     vk::raii::Sampler sampler = nullptr;
 public:
-    explicit DescriptorSampler(VulkanContext &context);
+    explicit DescriptorSampler(VulkanContext *context);
 
     vk::raii::Sampler &getSampler();
 

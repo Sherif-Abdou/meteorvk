@@ -4,13 +4,13 @@
 
 #include "ComputeCommandBuffer.h"
 
-ComputeCommandBuffer::ComputeCommandBuffer(VulkanContext &context) : context(context) {}
+ComputeCommandBuffer::ComputeCommandBuffer(VulkanContext *context) : context(context) {}
 
 void ComputeCommandBuffer::createCommandPool() {
     vk::CommandPoolCreateInfo createInfo {};
-    createInfo.setQueueFamilyIndex(context.findQueueFamilies(context.physicalDevice).computeFamily.value());
+    createInfo.setQueueFamilyIndex(context->findQueueFamilies(context->physicalDevice).computeFamily.value());
 
-    commandPool = context.device.createCommandPool(createInfo);
+    commandPool = context->device.createCommandPool(createInfo);
 }
 
 void ComputeCommandBuffer::createCommandBuffer() {
@@ -19,7 +19,7 @@ void ComputeCommandBuffer::createCommandBuffer() {
     allocateInfo.setCommandBufferCount(1);
     allocateInfo.setLevel(vk::CommandBufferLevel::ePrimary);
 
-    commandBuffer = context.device.allocateCommandBuffers(allocateInfo);
+    commandBuffer = context->device.allocateCommandBuffers(allocateInfo);
 }
 
 void ComputeCommandBuffer::init() {
@@ -43,7 +43,7 @@ void ComputeCommandBuffer::submit() {
     submitInfo.setCommandBuffers(*commandBuffer[currentFrame]);
     submitInfo.setSignalSemaphores(*signalSemaphores[currentFrame]);
 
-    context.computeQueue.submit(submitInfo, *inFlightFences[currentFrame]);
+    context->computeQueue.submit(submitInfo, *inFlightFences[currentFrame]);
 }
 
 void ComputeCommandBuffer::nextFrame() {
@@ -65,8 +65,8 @@ void ComputeCommandBuffer::createSyncObjects() {
     vk::SemaphoreCreateInfo semaphoreCreateInfo {};
 
     for (int i = 0; i < FRAMES_IN_FLIGHT; i++) {
-        inFlightFences.push_back(context.device.createFence(fenceCreateInfo));
-        signalSemaphores.push_back(context.device.createSemaphore(semaphoreCreateInfo));
+        inFlightFences.push_back(context->device.createFence(fenceCreateInfo));
+        signalSemaphores.push_back(context->device.createSemaphore(semaphoreCreateInfo));
     }
 }
 

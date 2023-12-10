@@ -23,7 +23,7 @@ void GraphicsRenderPass::createRenderPass() {
     createInfo.setDependencies(dependencies);
     createInfo.setAttachments(attachments);
 
-    renderPass = context.device.createRenderPass(createInfo);
+    renderPass = context->device.createRenderPass(createInfo);
 }
 
 GraphicsRenderPass::Subpass GraphicsRenderPass::createSubpass() {
@@ -63,10 +63,10 @@ GraphicsRenderPass::Subpass GraphicsRenderPass::createSubpass() {
 
 void GraphicsRenderPass::createAttachments() {
     if (useColor && !custom_color) {
-        colorDescription.setFormat(context.swapChainImageFormat)
+        colorDescription.setFormat(context->swapChainImageFormat)
             .setInitialLayout(vk::ImageLayout::eUndefined)
             .setFinalLayout(vk::ImageLayout::ePresentSrcKHR)
-            .setFormat(context.swapChainImageFormat)
+            .setFormat(context->swapChainImageFormat)
             .setLoadOp(vk::AttachmentLoadOp::eClear)
             .setStoreOp(vk::AttachmentStoreOp::eStore)
             .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
@@ -89,9 +89,9 @@ vk::raii::RenderPass & GraphicsRenderPass::getRenderPass() {
     return renderPass;
 }
 
-GraphicsRenderPass::GraphicsRenderPass(VulkanContext &context) : context(context) {
+GraphicsRenderPass::GraphicsRenderPass(VulkanContext *context) : context(context) {
     if (colorFormat == vk::Format::eUndefined) {
-        colorFormat = context.swapChainImageFormat;
+        colorFormat = context->swapChainImageFormat;
     }
 }
 

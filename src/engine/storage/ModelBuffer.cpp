@@ -8,7 +8,7 @@ unsigned int ModelBuffer::getSize() const {
     return size;
 }
 
-ModelBuffer::ModelBuffer(VulkanContext &context, unsigned int size) : context(context), size(size), buffer(DynamicUniformBuffer<PerModelBuffer>(context)) {
+ModelBuffer::ModelBuffer(VulkanContext *context, unsigned int size) : context(context), size(size), buffer(DynamicUniformBuffer<PerModelBuffer>(context)) {
     buffer.allocateBuffer(size);
 }
 

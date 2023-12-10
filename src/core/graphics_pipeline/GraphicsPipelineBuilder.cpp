@@ -88,10 +88,10 @@ void GraphicsPipelineBuilder::createPipelineLayout() {
     }
     layoutCreateInfo.setSetLayouts(descriptorSetLayouts);
 
-    this->pipelineLayout = context.device.createPipelineLayout(layoutCreateInfo);
+    this->pipelineLayout = context->device.createPipelineLayout(layoutCreateInfo);
 }
 
-GraphicsPipelineBuilder::GraphicsPipelineBuilder(VulkanContext &context, GraphicsShaders &shaders,
+GraphicsPipelineBuilder::GraphicsPipelineBuilder(VulkanContext *context, GraphicsShaders &shaders,
                                                  GraphicsRenderPass &renderPass) : context(context), shaders(shaders),
                                                                                    renderPass(renderPass) {
     initializeDefaults();
@@ -157,7 +157,7 @@ void GraphicsPipelineBuilder::addDepthImage() {
     imageCreateInfo.setUsage(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
 
     VkImageCreateInfo rawImageCreateInfo = imageCreateInfo;
-    context.allocator->allocateImage(&rawImageCreateInfo, VMA_MEMORY_USAGE_AUTO, &depthImage);
+    context->allocator->allocateImage(&rawImageCreateInfo, VMA_MEMORY_USAGE_AUTO, &depthImage);
 
     vk::ImageViewCreateInfo imageViewCreateInfo {};
     imageViewCreateInfo.setFormat(vk::Format::eD32Sfloat);
@@ -165,7 +165,7 @@ void GraphicsPipelineBuilder::addDepthImage() {
     imageViewCreateInfo.setViewType(vk::ImageViewType::e2D);
     imageViewCreateInfo.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1));
 
-    depthImageView = context.device.createImageView(imageViewCreateInfo);
+    depthImageView = context->device.createImageView(imageViewCreateInfo);
 
     auto depthImagePair = ImagePair {depthImage, std::move(depthImageView)};
 
@@ -189,7 +189,7 @@ void GraphicsPipelineBuilder::addColorImage(vk::Format format) {
     imageCreateInfo.setUsage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
     VkImageCreateInfo rawImageCreateInfo = imageCreateInfo;
-    context.allocator->allocateImage(&rawImageCreateInfo, VMA_MEMORY_USAGE_AUTO, &colorImage);
+    context->allocator->allocateImage(&rawImageCreateInfo, VMA_MEMORY_USAGE_AUTO, &colorImage);
 
     vk::ImageViewCreateInfo imageViewCreateInfo {};
     imageViewCreateInfo.setFormat(format);
@@ -197,7 +197,7 @@ void GraphicsPipelineBuilder::addColorImage(vk::Format format) {
     imageViewCreateInfo.setViewType(vk::ImageViewType::e2D);
     imageViewCreateInfo.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
 
-    colorImageView = context.device.createImageView(imageViewCreateInfo);
+    colorImageView = context->device.createImageView(imageViewCreateInfo);
 
     auto colorImagePair = ImagePair {colorImage, std::move(colorImageView)};
 
@@ -225,7 +225,7 @@ GraphicsPipeline GraphicsPipelineBuilder::buildGraphicsPipeline() {
             createInfo.setAttachments(attachments);
             createInfo.setLayers(1);
 
-            framebuffers.push_back(context.device.createFramebuffer(createInfo));
+            framebuffers.push_back(context->device.createFramebuffer(createInfo));
         }
     } else { // Create one framebuffer for the off screen render
         vk::FramebufferCreateInfo createInfo {};
@@ -243,13 +243,13 @@ GraphicsPipeline GraphicsPipelineBuilder::buildGraphicsPipeline() {
         createInfo.setAttachments(attachments);
         createInfo.setLayers(1);
 
-        framebuffers.push_back(context.device.createFramebuffer(createInfo));
+        framebuffers.push_back(context->device.createFramebuffer(createInfo));
     }
     auto pipeline = GraphicsPipeline(context, std::move(renderPass));
     pipeline.extent = this->extent;
     pipeline.targetFramebuffers = std::move(framebuffers);
     pipeline.pipelineLayout = std::move(pipelineLayout);
-    auto actual_pipeline = context.device.createGraphicsPipeline(nullptr, pipelineCreateInfo);
+    auto actual_pipeline = context->device.createGraphicsPipeline(nullptr, pipelineCreateInfo);
     pipeline.setPipeline(std::move(actual_pipeline));
 
     pipeline.init();

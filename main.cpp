@@ -3,6 +3,7 @@
 #define GLFW_INCLUDE_VULKAN
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_FORCE_SILENT_WARNINGS
 //#define GLM_FORCE_PLATFORM_UNKNOWN
 //#define GLM_FORCE_COMPILER_UNKNOWN
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
@@ -35,7 +36,7 @@
 #include "src/engine/storage/ImageTextureLoader.h"
 #include "src/engine/special_pipelines/DepthOnlyPipeline.h"
 
-VertexBuffer createVertexBuffer(VulkanContext& context, const char* path) {
+VertexBuffer createVertexBuffer(VulkanContext* context, const char* path) {
     VertexBuffer buffer(context, true);
     OBJFile file = OBJFile::fromFilePath(path);
     auto raw = file.createVulkanBuffer();
@@ -49,9 +50,9 @@ struct ImageViewPair {
     vk::ImageView imageView;
 };
 
-CombinedDescriptorSampler createSampler(VulkanContext&context);
+CombinedDescriptorSampler createSampler(VulkanContext& context);
 
-void oldMain(VulkanContext&context);
+void oldMain(VulkanContext* context);
 
 using UBO = ForwardRenderedGraphicsPipeline::UBO;
 
@@ -60,7 +61,7 @@ static ModelBufferGraphicsPipeline* depth_model_pipeline = nullptr;
 static ForwardRenderedGraphicsPipeline* depth_forward_pipeline = nullptr;
 
 SSAOGraphicsPipeline* createSSAOPipeline(VulkanContext* context, DescriptorSet* descriptorSet, ModelBuffer* buffer) {
-    GraphicsRenderPass renderPass(*context);
+    GraphicsRenderPass renderPass(context);
     renderPass.useColor = true;
     renderPass.storeDepth = true;
     renderPass.useCustomColor(vk::Format::eR16Sfloat, vk::ImageLayout::eColorAttachmentOptimal);
@@ -75,8 +76,8 @@ SSAOGraphicsPipeline* createSSAOPipeline(VulkanContext* context, DescriptorSet* 
 
 
     renderPass.init();
-    auto shaders = GraphicsShaders(*context, "shaders/basic.vert", "shaders/ssao.frag");
-    auto builder = GraphicsPipelineBuilder(*context, shaders, renderPass);
+    auto shaders = GraphicsShaders(context, "shaders/basic.vert", "shaders/ssao.frag");
+    auto builder = GraphicsPipelineBuilder(context, shaders, renderPass);
     builder.setExtent(context->swapChainExtent);
     builder.addDepthImage();
     builder.addColorImage(vk::Format::eR16Sfloat);
@@ -99,7 +100,7 @@ SSAOGraphicsPipeline* createSSAOPipeline(VulkanContext* context, DescriptorSet* 
     return res;
 }
 
-GraphicsPipeline createShadowPipeline(VulkanContext&context, DescriptorSet* descriptorSet) {
+GraphicsPipeline createShadowPipeline(VulkanContext* context, DescriptorSet* descriptorSet) {
     GraphicsRenderPass renderPass(context);
     renderPass.useColor = false;
     renderPass.storeDepth = true;
@@ -137,7 +138,7 @@ GraphicsPipeline createShadowPipeline(VulkanContext&context, DescriptorSet* desc
     return std::move(pipeline);
 }
 
-DescriptorSet createUniformBindings(VulkanContext& context) {
+DescriptorSet createUniformBindings(VulkanContext* context) {
     vk::DescriptorSetLayoutBinding bufferBinding{};
     bufferBinding.setBinding(0);
     bufferBinding.setDescriptorCount(1);
@@ -176,7 +177,7 @@ DescriptorSet createUniformBindings(VulkanContext& context) {
     return descriptorSet;
 }
 
-CombinedDescriptorSampler createSampler(VulkanContext& context) {
+CombinedDescriptorSampler createSampler(VulkanContext* context) {
     auto descriptorSampler = CombinedDescriptorSampler(context);
     descriptorSampler.buildSampler();
     return descriptorSampler;
@@ -200,8 +201,8 @@ struct TextureResult {
     vk::raii::ImageView view;
 };
 
-TextureResult load_texture_from_file(VulkanContext& context, VulkanAllocator::VulkanImageAllocation& red_image) {
-    auto loader = ImageTextureLoader(&context);
+TextureResult load_texture_from_file(VulkanContext* context, VulkanAllocator::VulkanImageAllocation& red_image) {
+    auto loader = ImageTextureLoader(context);
     red_image = loader.loadImageFromFile("./textures/1001_albedo.jpg");
     vk::ImageViewCreateInfo image_view_create_info {};
     image_view_create_info.components = vk::ComponentMapping();
@@ -209,7 +210,7 @@ TextureResult load_texture_from_file(VulkanContext& context, VulkanAllocator::Vu
     image_view_create_info.subresourceRange = vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1);
     image_view_create_info.image = red_image.image;
     image_view_create_info.viewType = vk::ImageViewType::e2D;
-    vk::raii::ImageView view = context.device.createImageView(image_view_create_info);
+    vk::raii::ImageView view = context->device.createImageView(image_view_create_info);
 
     CombinedDescriptorSampler sampler(context);
     sampler.targetImageView = *view;
@@ -225,7 +226,7 @@ int main() {
     const auto use_old = true;
     if (use_old) {
 
-        oldMain(context);
+        oldMain(&context);
     }
     else {
         auto sb1_binding = vk::DescriptorSetLayoutBinding()
@@ -244,15 +245,15 @@ int main() {
             glm::vec4 a[256];
         };
 
-        auto compute_pipeline_builder = ComputePipelineBuilder(context);
+        auto compute_pipeline_builder = ComputePipelineBuilder(&context);
         auto shaders = ComputeShaders(context, "shaders/basic.comp");
 
-        auto storage1 = StorageBuffer<A>(context);
-        auto storage2 = StorageBuffer<A>(context);
+        auto storage1 = StorageBuffer<A>(&context);
+        auto storage2 = StorageBuffer<A>(&context);
         storage1.allocateBuffer();
         storage2.allocateBuffer();
 
-        auto descriptor = DescriptorSet(context, {sb1_binding, sb2_binding});
+        auto descriptor = DescriptorSet(&context, {sb1_binding, sb2_binding});
         descriptor.buildDescriptor();
 
         storage1.writeToDescriptor(descriptor, 0);
@@ -263,7 +264,7 @@ int main() {
         compute_pipeline_builder.workgroups = 16;
         auto pipeline = compute_pipeline_builder.build();
 
-        auto compute_command = ComputeCommandBuffer(context);
+        auto compute_command = ComputeCommandBuffer(&context);
         compute_command.init();
         compute_command.begin();
         compute_command.bindAndDispatch(pipeline, &descriptor);
@@ -283,7 +284,7 @@ int main() {
     return 0;
 }
 
-DepthOnlyPipeline createDepthOnlyPipeline(VulkanContext& context, ModelBuffer* modelBuffer, DescriptorSet* descriptorSet) {
+DepthOnlyPipeline createDepthOnlyPipeline(VulkanContext* context, ModelBuffer* modelBuffer, DescriptorSet* descriptorSet) {
     GraphicsRenderPass renderPass(context);
     renderPass.useColor = false;
     renderPass.storeDepth = true;
@@ -301,7 +302,7 @@ DepthOnlyPipeline createDepthOnlyPipeline(VulkanContext& context, ModelBuffer* m
     renderPass.init();
     auto builder = GraphicsPipelineBuilder(context, shaders, renderPass);
     builder.descriptorSets = {descriptorSet};
-    builder.setExtent(context.swapChainExtent);
+    builder.setExtent(context->swapChainExtent);
     builder.addDepthImage();
 
     depth_model_pipeline = new ModelBufferGraphicsPipeline(builder.buildGraphicsPipeline(), modelBuffer);
@@ -311,7 +312,7 @@ DepthOnlyPipeline createDepthOnlyPipeline(VulkanContext& context, ModelBuffer* m
     return DepthOnlyPipeline(*depth_forward_pipeline);
 }
 
-void oldMain(VulkanContext&context) {
+void oldMain(VulkanContext* context) {
     // Create Descriptors for pipeline stages
     VulkanAllocator::VulkanImageAllocation red_image;
     auto red_sampler = load_texture_from_file(context, red_image);
@@ -326,7 +327,7 @@ void oldMain(VulkanContext&context) {
     // Build graphics pipelines
     auto shaders = GraphicsShaders(context, "shaders/basic.vert", "shaders/basic.frag");
     GraphicsPipelineBuilder builder = GraphicsPipelineBuilder(context, shaders, renderPass);
-    for (auto& targetSwapchainImageView: context.swapChainImageViews) {
+    for (auto& targetSwapchainImageView: context->swapChainImageViews) {
         builder.targetImageViews.push_back(*targetSwapchainImageView);
     }
     builder.descriptorSets = {&forward_descriptor};
@@ -345,7 +346,7 @@ void oldMain(VulkanContext&context) {
     auto depth_pipeline = createDepthOnlyPipeline(context, modelPipeline.modelBuffer, &depth_descriptors);
 
     auto ssao_descriptors = createUniformBindings(context);
-    auto ssao_pipeline = createSSAOPipeline(&context, &ssao_descriptors, modelPipeline.modelBuffer);
+    auto ssao_pipeline = createSSAOPipeline(context, &ssao_descriptors, modelPipeline.modelBuffer);
 
     auto depth_sampler = CombinedDescriptorSampler(context);
     depth_sampler.targetImageView = depth_pipeline.getDepthImageView();
@@ -454,7 +455,7 @@ void oldMain(VulkanContext&context) {
     //    commandBuffer.descriptorSet = &shadow_descriptor;
     //    commandBuffer.bindDescriptorSet(shadow_descriptor, commandBuffer.pipelines[0].getPipelineLayout(), 0);
 
-    glfwShowWindow(context.window);
+    glfwShowWindow(context->window);
     auto last_time = glfwGetTime();
     float speed = 0.4;
     auto position = glm::zero<glm::vec3>();
@@ -468,7 +469,7 @@ void oldMain(VulkanContext&context) {
     occlusionSampler.targetImageView = ssao_pipeline->getOcclusionImageView();
     occlusionSampler.buildSampler();
 
-    while (!glfwWindowShouldClose(context.window)) {
+    while (!glfwWindowShouldClose(context->window)) {
         glfwPollEvents();
         commandBuffer.beginSwapchainRender();
         auto delta = glfwGetTime() - last_time;
@@ -483,27 +484,27 @@ void oldMain(VulkanContext&context) {
 
 
         pipeline.ubo.lightProjView = shadow_pipeline.lightUBO.proj * shadow_pipeline.lightUBO.view;
-        if (glfwGetKey(context.window, GLFW_KEY_W)) {
+        if (glfwGetKey(context->window, GLFW_KEY_W)) {
             position += glm::vec3(0, 0, speed * delta);
         }
 
-        if (glfwGetKey(context.window, GLFW_KEY_S)) {
+        if (glfwGetKey(context->window, GLFW_KEY_S)) {
             position += glm::vec3(0, 0, -speed * delta);
         }
 
-        if (glfwGetKey(context.window, GLFW_KEY_D)) {
+        if (glfwGetKey(context->window, GLFW_KEY_D)) {
             position += glm::vec3(-speed * delta, 0, 0);
         }
 
-        if (glfwGetKey(context.window, GLFW_KEY_A)) {
+        if (glfwGetKey(context->window, GLFW_KEY_A)) {
             position += glm::vec3(speed * delta, 0, 0);
         }
 
-        if (glfwGetKey(context.window, GLFW_KEY_Q)) {
+        if (glfwGetKey(context->window, GLFW_KEY_Q)) {
             rotation += glm::vec3(0, -1.0f * (float)delta, 0);
         }
 
-        if (glfwGetKey(context.window, GLFW_KEY_E)) {
+        if (glfwGetKey(context->window, GLFW_KEY_E)) {
             rotation += glm::vec3(0, 1.0f * (float)delta, 0);
         }
 
@@ -524,7 +525,7 @@ void oldMain(VulkanContext&context) {
     }
 
 
-    context.device.waitIdle();
+    context->device.waitIdle();
     red_image.destroy();
     modelPipeline.modelBuffer->destroy();
     pipeline.destroy();

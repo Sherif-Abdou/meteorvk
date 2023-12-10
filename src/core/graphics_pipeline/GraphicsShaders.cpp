@@ -36,12 +36,12 @@ std::vector<vk::PipelineShaderStageCreateInfo> GraphicsShaders::getShaderStage()
     auto vertexShaderModuleCreateInfo = vk::ShaderModuleCreateInfo();
     auto vertexShader = compileShader(vertexShaderPath, shaderc_glsl_vertex_shader);
     vertexShaderModuleCreateInfo.setCode(vertexShader);
-    vertexShaderModule = context.device.createShaderModule(vertexShaderModuleCreateInfo);
+    vertexShaderModule = context->device.createShaderModule(vertexShaderModuleCreateInfo);
 
     auto fragmentShaderModuleCreateInfo = vk::ShaderModuleCreateInfo();
     auto fragmentShader = compileShader(fragmentShaderPath, shaderc_glsl_fragment_shader);
     fragmentShaderModuleCreateInfo.setCode(fragmentShader);
-    fragmentShaderModule = context.device.createShaderModule(fragmentShaderModuleCreateInfo);
+    fragmentShaderModule = context->device.createShaderModule(fragmentShaderModuleCreateInfo);
 
     auto vertexShaderStage = vk::PipelineShaderStageCreateInfo();
     vertexShaderStage.setModule(*vertexShaderModule);
@@ -56,7 +56,7 @@ std::vector<vk::PipelineShaderStageCreateInfo> GraphicsShaders::getShaderStage()
     return {vertexShaderStage, fragmentShaderStage};
 }
 
-GraphicsShaders::GraphicsShaders(VulkanContext &context, const std::string &vertexShaderPath,
+GraphicsShaders::GraphicsShaders(VulkanContext *context, const std::string &vertexShaderPath,
                                  const std::string &fragmentShaderPath) : context(context),
                                                                           vertexShaderPath(vertexShaderPath),
                                                                           fragmentShaderPath(fragmentShaderPath) {}

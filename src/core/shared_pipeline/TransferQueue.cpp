@@ -6,16 +6,16 @@
 
 void TransferQueue::init() {
     vk::CommandPoolCreateInfo command_pool_create_info {};
-    command_pool_create_info.setQueueFamilyIndex(*context.findQueueFamilies(context.physicalDevice).graphicsFamily);
+    command_pool_create_info.setQueueFamilyIndex(*context->findQueueFamilies(context->physicalDevice).graphicsFamily);
 
-    pool = context.device.createCommandPool(command_pool_create_info);
+    pool = context->device.createCommandPool(command_pool_create_info);
 
     vk::CommandBufferAllocateInfo command_buffer_allocate_info {};
     command_buffer_allocate_info.setCommandPool(*pool);
     command_buffer_allocate_info.setLevel(vk::CommandBufferLevel::ePrimary);
     command_buffer_allocate_info.setCommandBufferCount(1);
 
-    command_buffer = std::move(context.device.allocateCommandBuffers(command_buffer_allocate_info)[0]);
+    command_buffer = std::move(context->device.allocateCommandBuffers(command_buffer_allocate_info)[0]);
 }
 
 void TransferQueue::begin() {
@@ -44,9 +44,9 @@ void TransferQueue::submit() {
 
     vk::SubmitInfo submit_info {};
     submit_info.setCommandBuffers(*command_buffer);
-    context.graphicsQueue.submit(submit_info, nullptr);
+    context->graphicsQueue.submit(submit_info, nullptr);
 
     ran = true;
 
-    context.device.waitIdle();
+    context->device.waitIdle();
 }

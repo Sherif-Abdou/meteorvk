@@ -29,11 +29,11 @@ void VertexBuffer::initializeVertexBuffer() {
     }
     coreBuffer.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     if (!use_staging_buffer) {
-        context.allocator->allocateBuffer(&coreBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, &vertexBuffer);
+        context->allocator->allocateBuffer(&coreBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, &vertexBuffer);
     } else {
-        context.allocator->allocateBuffer(&coreBuffer, VMA_MEMORY_USAGE_GPU_ONLY, &vertexBuffer);
+        context->allocator->allocateBuffer(&coreBuffer, VMA_MEMORY_USAGE_GPU_ONLY, &vertexBuffer);
         coreBuffer.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-        context.allocator->allocateBuffer(&coreBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, &stagingBuffer);
+        context->allocator->allocateBuffer(&coreBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, &stagingBuffer);
     }
 }
 
@@ -64,7 +64,7 @@ void VertexBuffer::destroy() {
     }
 }
 
-VertexBuffer::VertexBuffer(VulkanContext &context, bool staging_buffer) : context(context), use_staging_buffer(staging_buffer) {}
+VertexBuffer::VertexBuffer(VulkanContext *context, bool staging_buffer) : context(context), use_staging_buffer(staging_buffer) {}
 
 void VertexBuffer::draw(vk::raii::CommandBuffer &buffer) {
     attachToCommandBuffer(buffer);
