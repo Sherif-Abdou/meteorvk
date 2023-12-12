@@ -5,21 +5,21 @@
 #include "ShadowGraphicsPipeline.h"
 
 void ShadowGraphicsPipeline::renderPipeline(GraphicsPipeline::RenderArguments renderArguments) {
-    pipeline.renderPipeline(renderArguments);
+    pipeline->renderPipeline(renderArguments);
 }
 
-ShadowGraphicsPipeline::ShadowGraphicsPipeline(ModelBufferGraphicsPipeline &pipeline) : pipeline(pipeline),
-                                                                              lightUniformBuffer(this->pipeline.getGraphicsPipeline().context) {
+ShadowGraphicsPipeline::ShadowGraphicsPipeline(std::unique_ptr<ModelBufferGraphicsPipeline> pipeline) : pipeline(std::move(pipeline)),
+                                                                              lightUniformBuffer(this->pipeline->getGraphicsPipeline().context) {
     lightUniformBuffer.allocateBuffer();
     lightUniformBuffer.updateBuffer(lightUBO);
 }
 
 GraphicsPipeline &ShadowGraphicsPipeline::getPipeline() {
-    return pipeline.getGraphicsPipeline();
+    return pipeline->getGraphicsPipeline();
 }
 
 void ShadowGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {
-    pipeline.prepareRender(renderArguments);
+    pipeline->prepareRender(renderArguments);
     lightUniformBuffer.updateBuffer(lightUBO);
     lightUniformBuffer.writeToDescriptor(*descriptorSet, binding);
 }
@@ -27,15 +27,7 @@ void ShadowGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArg
 ShadowGraphicsPipeline::~ShadowGraphicsPipeline() {
 }
 
-ShadowGraphicsPipeline ShadowGraphicsPipeline::createFromPipeline(ModelBufferGraphicsPipeline &&pipeline) {
-    auto descriptor = pipeline.descriptorSet;
-    auto new_pipeline = ShadowGraphicsPipeline(pipeline);
-    new_pipeline.descriptorSet = descriptor;
-
-    return new_pipeline;
-}
-
 void ShadowGraphicsPipeline::destroy() {
     lightUniformBuffer.destroy();
-    pipeline.destroy();
+    pipeline->destroy();
 }

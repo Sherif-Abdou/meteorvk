@@ -19,7 +19,7 @@
 /// Graphics pipelines that stores render specific uniforms
 class ForwardRenderedGraphicsPipeline: public Renderable {
 public:
-    explicit ForwardRenderedGraphicsPipeline(ModelBufferGraphicsPipeline &pipeline);
+    explicit ForwardRenderedGraphicsPipeline(std::unique_ptr<ModelBufferGraphicsPipeline> pipeline);
 
     void renderPipeline(Renderable::RenderArguments renderArguments) override;
     struct UBO {
@@ -39,13 +39,13 @@ public:
     DescriptorSet* descriptorSet = nullptr;
     GraphicsPipeline &getPipeline();
 
-    static ForwardRenderedGraphicsPipeline createFromModelPipeline(ModelBufferGraphicsPipeline& pipeline);
+    static ForwardRenderedGraphicsPipeline createFromModelPipeline(std::unique_ptr<ModelBufferGraphicsPipeline> pipeline);
 
     void prepareRender(Renderable::RenderArguments renderArguments) override;
 
     void destroy();
 private:
-    ModelBufferGraphicsPipeline& pipeline;
+    std::unique_ptr<ModelBufferGraphicsPipeline> pipeline;
 };
 
 

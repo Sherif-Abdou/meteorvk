@@ -21,11 +21,11 @@ public:
     };
 
     VulkanContext* context;
-    GraphicsRenderPass renderPass;
+    std::unique_ptr<GraphicsRenderPass> renderPass;
 
     std::vector<vk::raii::Framebuffer> targetFramebuffers {};
 
-    explicit GraphicsPipeline(VulkanContext *context, GraphicsRenderPass&& renderPass);
+    explicit GraphicsPipeline(VulkanContext *context, std::unique_ptr<GraphicsRenderPass> renderPass);
     GraphicsPipeline(GraphicsPipeline&&) = default;
 
     void init();

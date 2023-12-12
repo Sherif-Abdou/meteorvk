@@ -12,7 +12,7 @@
 #include "glm/ext.hpp"
 
 
-SSAOGraphicsPipeline::SSAOGraphicsPipeline(VulkanContext* context, ModelBufferGraphicsPipeline *input_pipeline, DescriptorSet* set): context(context), pipeline(*input_pipeline), descriptor_set(set) {
+SSAOGraphicsPipeline::SSAOGraphicsPipeline(VulkanContext* context, std::unique_ptr<ModelBufferGraphicsPipeline> input_pipeline, DescriptorSet* set): context(context), pipeline(std::move(input_pipeline)), descriptor_set(set) {
     ubo = std::make_unique<UBO>();
     ubo_buffer = std::make_unique<UniformBuffer<UBO>>(context);
 };
@@ -28,11 +28,11 @@ void SSAOGraphicsPipeline::init() {
 }
 
 void SSAOGraphicsPipeline::renderPipeline(Renderable::RenderArguments renderArguments) {
-    pipeline.renderPipeline(renderArguments);
+    pipeline->renderPipeline(renderArguments);
 }
 
 void SSAOGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {
-    pipeline.prepareRender(renderArguments);
+    pipeline->prepareRender(renderArguments);
     ubo_buffer->updateBuffer(*ubo);
     assert(this->descriptor_set != nullptr);
     DescriptorSet& ref = *descriptor_set;
@@ -81,13 +81,13 @@ void SSAOGraphicsPipeline::createNoiseImage() {
 }
 
 GraphicsPipeline& SSAOGraphicsPipeline::getPipeline() {
-    return pipeline.getGraphicsPipeline();
+    return pipeline->getGraphicsPipeline();
 }
 
 void SSAOGraphicsPipeline::destroy() {
     noise_image.destroy();
     ubo_buffer->destroy();
-    pipeline.destroy();
+    pipeline->destroy();
 }
 
 void SSAOGraphicsPipeline::createSamples() {

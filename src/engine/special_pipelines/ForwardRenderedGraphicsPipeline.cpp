@@ -5,15 +5,15 @@
 #include "ForwardRenderedGraphicsPipeline.h"
 
 void ForwardRenderedGraphicsPipeline::renderPipeline(Renderable::RenderArguments renderArguments) {
-    pipeline.renderPipeline(renderArguments);
+    pipeline->renderPipeline(renderArguments);
 }
 
 GraphicsPipeline &ForwardRenderedGraphicsPipeline::getPipeline() {
-    return pipeline.getGraphicsPipeline();
+    return pipeline->getGraphicsPipeline();
 }
 
-ForwardRenderedGraphicsPipeline::ForwardRenderedGraphicsPipeline(ModelBufferGraphicsPipeline &pipeline) : pipeline(
-        pipeline), uniformBuffer(pipeline.getGraphicsPipeline().context) {
+ForwardRenderedGraphicsPipeline::ForwardRenderedGraphicsPipeline(std::unique_ptr<ModelBufferGraphicsPipeline> pipeline) : pipeline(
+        std::move(pipeline)), uniformBuffer(pipeline->getGraphicsPipeline().context) {
     uniformBuffer.allocateBuffer();
 
     ubo.proj = glm::perspective(glm::radians(90.0), 1920.0 / 1080.0, 0.1, 100.0);
@@ -22,15 +22,15 @@ ForwardRenderedGraphicsPipeline::ForwardRenderedGraphicsPipeline(ModelBufferGrap
 }
 
 void ForwardRenderedGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {
-    pipeline.prepareRender(renderArguments);
+    pipeline->prepareRender(renderArguments);
     uniformBuffer.updateBuffer(ubo);
     uniformBuffer.writeToDescriptor(*descriptorSet, 0);
 }
 
 ForwardRenderedGraphicsPipeline
-ForwardRenderedGraphicsPipeline::createFromModelPipeline(ModelBufferGraphicsPipeline &pipeline) {
-    auto descriptorSet = pipeline.descriptorSet;
-    auto result =  ForwardRenderedGraphicsPipeline(pipeline);
+ForwardRenderedGraphicsPipeline::createFromModelPipeline(std::unique_ptr<ModelBufferGraphicsPipeline> pipeline) {
+    auto descriptorSet = pipeline->descriptorSet;
+    auto result = ForwardRenderedGraphicsPipeline(std::move(pipeline));
     result.descriptorSet = descriptorSet;
 
     return result;
@@ -38,5 +38,5 @@ ForwardRenderedGraphicsPipeline::createFromModelPipeline(ModelBufferGraphicsPipe
 
 void ForwardRenderedGraphicsPipeline::destroy() {
     uniformBuffer.destroy();
-    pipeline.destroy();
+    pipeline->destroy();
 }

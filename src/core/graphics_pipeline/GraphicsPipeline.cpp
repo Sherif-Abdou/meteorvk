@@ -16,7 +16,7 @@ void GraphicsPipeline::createSyncObjects() {
     pipelineSemaphore = context->device.createSemaphore(semaphoreCreateInfo);
     pipelineFence = context->device.createFence(fenceCreateInfo);
 }
-GraphicsPipeline::GraphicsPipeline(VulkanContext *context, GraphicsRenderPass&& renderPass)
+GraphicsPipeline::GraphicsPipeline(VulkanContext *context, std::unique_ptr<GraphicsRenderPass> renderPass)
         : context(context), renderPass(std::move(renderPass)) {}
 
 vk::raii::Semaphore & GraphicsPipeline::getPipelineSemaphore() {
@@ -52,7 +52,7 @@ void GraphicsPipeline::prepareRender(Renderable::RenderArguments &renderArgument
 
 
     beginInfo.setFramebuffer(*targetFramebuffers[imageIndex]);
-    beginInfo.setRenderPass(*renderPass.getRenderPass());
+    beginInfo.setRenderPass(*renderPass->getRenderPass());
     beginInfo.setClearValues(clearValues);
     auto rect = vk::Rect2D {};
     rect.setOffset({0, 0});

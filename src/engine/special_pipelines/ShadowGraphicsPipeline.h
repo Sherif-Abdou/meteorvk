@@ -17,7 +17,7 @@
 /// Graphics pipeline meant for generating a shadow map
 class ShadowGraphicsPipeline: public Renderable {
 private:
-    ModelBufferGraphicsPipeline& pipeline;
+    std::unique_ptr<ModelBufferGraphicsPipeline> pipeline;
 public:
     GraphicsPipeline &getPipeline();
     DescriptorSet* descriptorSet = nullptr;
@@ -37,9 +37,8 @@ public:
     UniformBuffer<UBO> lightUniformBuffer;
 
 
-    explicit ShadowGraphicsPipeline(ModelBufferGraphicsPipeline &pipeline);
+    explicit ShadowGraphicsPipeline(std::unique_ptr<ModelBufferGraphicsPipeline> pipeline);
 
-    static ShadowGraphicsPipeline createFromPipeline(ModelBufferGraphicsPipeline&& pipeline);
 
     void renderPipeline(Renderable::RenderArguments renderArguments) override;
 

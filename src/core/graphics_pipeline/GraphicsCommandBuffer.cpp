@@ -58,8 +58,10 @@ void GraphicsCommandBuffer::recordCommandBuffer() {
     i = 0;
     for (auto &pipeline: pipelines) {
         if (dependencies.contains(i)) {
-            auto dependency = dependencies[i];
-            dependency.applyBarrier(*commandBuffer[current_frame]);
+            auto dependency_list = dependencies[i];
+            for (auto& dependency : dependency_list) {
+                dependency.applyBarrier(*commandBuffer[current_frame]);
+            }
         }
         GraphicsPipeline::RenderArguments arguments{
                 .commandBuffer = commandBuffer[current_frame],

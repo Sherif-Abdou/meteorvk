@@ -15,7 +15,7 @@ class GraphicsPipelineBuilder {
 private:
     using ImagePair = GraphicsPipeline::ImagePair;
 public:
-    GraphicsPipelineBuilder(VulkanContext *context, GraphicsShaders &shaders, GraphicsRenderPass &renderPass);
+    GraphicsPipelineBuilder(VulkanContext *context, std::unique_ptr<GraphicsShaders> shaders, std::unique_ptr<GraphicsRenderPass> renderPass);
 
     void setViewport(const vk::Viewport &viewport);
 
@@ -56,8 +56,8 @@ public:
     GraphicsPipeline buildGraphicsPipeline();
 private:
     VulkanContext* context;
-    GraphicsShaders& shaders;
-    GraphicsRenderPass& renderPass;
+    std::unique_ptr<GraphicsShaders> shaders;
+    std::unique_ptr<GraphicsRenderPass> renderPass;
     vk::raii::PipelineLayout pipelineLayout = nullptr;
 
     vk::Viewport viewport {};

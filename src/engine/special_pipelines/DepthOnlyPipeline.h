@@ -19,7 +19,6 @@ public:
 
     void prepareRender(Renderable::RenderArguments renderArguments) override;
 
-    static DepthOnlyPipeline createDepthOnlyPipeline(GraphicsPipelineBuilder&& builder, ModelBuffer* models, DescriptorSet* descriptor_set);
 
     vk::Image getDepthImage();
     vk::ImageView getDepthImageView();

@@ -47,7 +47,7 @@ public:
     std::vector<DescriptorPipelineBinding> bindings {}; /// Descriptor set to bind for each pipeline
     std::vector<VertexBuffer*> vertexBuffers {}; /// All vertex buffers to render
     std::vector<Renderable*> pipelines {}; /// Pipelines to run in order
-    std::unordered_map<uint32_t, PipelineBarrier> dependencies {}; /// Dependency to bind per pipeline
+    std::unordered_map<uint32_t, std::vector<PipelineBarrier>> dependencies {}; /// Dependency to bind per pipeline
 
     explicit GraphicsCommandBuffer(VulkanContext *context);
 

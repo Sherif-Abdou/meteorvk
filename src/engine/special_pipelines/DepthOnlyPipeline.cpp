@@ -13,20 +13,6 @@ void DepthOnlyPipeline::prepareRender(Renderable::RenderArguments renderArgument
     forward_pipeline.prepareRender(renderArguments);
 }
 
-DepthOnlyPipeline DepthOnlyPipeline::createDepthOnlyPipeline(GraphicsPipelineBuilder &&builder, ModelBuffer *models,
-                                                             DescriptorSet *descriptor_set) {
-    builder.descriptorSets = {descriptor_set};
-    builder.addDepthImage();
-
-    auto model_buffer_pipeline = ModelBufferGraphicsPipeline::createPipelineFromBuilder(std::move(builder), models, descriptor_set);
-    model_buffer_pipeline.descriptorSet = descriptor_set;
-
-    auto forward_pipeline = ForwardRenderedGraphicsPipeline::createFromModelPipeline(model_buffer_pipeline);
-
-    auto res = DepthOnlyPipeline(forward_pipeline);
-    return res;
-}
-
 DepthOnlyPipeline::DepthOnlyPipeline(ForwardRenderedGraphicsPipeline &forwardPipeline) : forward_pipeline(
         forwardPipeline)
          {

@@ -9,7 +9,7 @@
 void GraphicsPipelineBuilder::initializeDefaults() {
     createPipelineLayout();
 
-    stages = shaders.getShaderStage();
+    stages = shaders->getShaderStage();
 
     viewport.x = 0;
     viewport.y = 0;
@@ -65,7 +65,7 @@ void GraphicsPipelineBuilder::attachPipelineParameters(const std::vector<vk::Pip
 
     this->stages = stages;
 
-    pipelineCreateInfo.setRenderPass(*renderPass.getRenderPass());
+    pipelineCreateInfo.setRenderPass(*renderPass->getRenderPass());
     pipelineCreateInfo.setSubpass(subPassIndex);
     pipelineCreateInfo.setLayout(*pipelineLayout);
     pipelineCreateInfo.setPDynamicState(&dynamicStateCreateInfo);
@@ -91,9 +91,9 @@ void GraphicsPipelineBuilder::createPipelineLayout() {
     this->pipelineLayout = context->device.createPipelineLayout(layoutCreateInfo);
 }
 
-GraphicsPipelineBuilder::GraphicsPipelineBuilder(VulkanContext *context, GraphicsShaders &shaders,
-                                                 GraphicsRenderPass &renderPass) : context(context), shaders(shaders),
-                                                                                   renderPass(renderPass) {
+GraphicsPipelineBuilder::GraphicsPipelineBuilder(VulkanContext *context, std::unique_ptr<GraphicsShaders> shaders,
+                                                 std::unique_ptr<GraphicsRenderPass> renderPass) : context(context), shaders(std::move(shaders)),
+                                                                                                   renderPass(std::move(renderPass)) {
     initializeDefaults();
 }
 
@@ -205,7 +205,7 @@ void GraphicsPipelineBuilder::addColorImage(vk::Format format) {
 }
 
 GraphicsPipeline GraphicsPipelineBuilder::buildGraphicsPipeline() {
-    attachPipelineParameters(shaders.getShaderStage());
+    attachPipelineParameters(shaders->getShaderStage());
 
     std::vector<vk::raii::Framebuffer> framebuffers {};
     if (!targetImageViews.empty()) { // Create Framebuffer for each target image view
@@ -219,7 +219,7 @@ GraphicsPipeline GraphicsPipelineBuilder::buildGraphicsPipeline() {
                 attachments.push_back(*depthImageAttachment->imageView);
             }
 
-            createInfo.setRenderPass(*renderPass.getRenderPass());
+            createInfo.setRenderPass(*renderPass->getRenderPass());
             createInfo.setWidth(extent.width);
             createInfo.setHeight(extent.height);
             createInfo.setAttachments(attachments);
@@ -237,7 +237,7 @@ GraphicsPipeline GraphicsPipelineBuilder::buildGraphicsPipeline() {
             attachments.push_back(*depthImageAttachment->imageView);
         }
 
-        createInfo.setRenderPass(*renderPass.getRenderPass());
+        createInfo.setRenderPass(*renderPass->getRenderPass());
         createInfo.setWidth(extent.width);
         createInfo.setHeight(extent.height);
         createInfo.setAttachments(attachments);

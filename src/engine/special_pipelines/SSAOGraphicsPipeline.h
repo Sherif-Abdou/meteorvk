@@ -12,7 +12,7 @@
 
 class SSAOGraphicsPipeline: public Renderable {
 public:
-    SSAOGraphicsPipeline(VulkanContext* context, ModelBufferGraphicsPipeline *input_pipeline, DescriptorSet* set = nullptr);
+    SSAOGraphicsPipeline(VulkanContext* context, std::unique_ptr<ModelBufferGraphicsPipeline> input_pipeline, DescriptorSet* set = nullptr);
 //    SSAOGraphicsPipeline::SSAOGraphicsPipeline(VulkanContext& context, ModelBufferGraphicsPipeline* input_pipeline) {
 //    }
 
@@ -52,7 +52,7 @@ public:
 private:
     void createNoiseImage();
     void createSamples();
-    ModelBufferGraphicsPipeline& pipeline;
+    std::unique_ptr<ModelBufferGraphicsPipeline> pipeline;
     VulkanAllocator::VulkanImageAllocation noise_image;
     vk::raii::ImageView noise_image_view = nullptr;
     std::unique_ptr<CombinedDescriptorSampler> noise_sampler;
