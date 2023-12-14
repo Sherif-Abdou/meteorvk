@@ -1,0 +1,46 @@
+#version 450
+
+layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+struct Vertex {
+    vec3 position;
+    vec3 normal;
+    vec2 uv;
+    vec3 tangent;
+};
+
+layout(binding = 0) uniform UBO {
+    mat4 proj;
+    mat4 view;
+    mat4 _model;
+    uint count;
+};
+
+layout(std140, binding = 1) readonly buffer Vertices {
+    Vertex vertices[];
+};
+
+layout(std140, binding = 2) buffer Output {
+    uint vertex_count;
+    uint instance_count;
+    uint first_vertex;
+    uint first_instance;
+};
+
+layout(binding = 3) uniform PerModelUBO {
+    mat4 model;
+};
+
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+    vec4 adjusted_vertex = proj * view * model * vec4(vertices[index].position, 1.0f);
+    adjusted_vertex /= adjusted_vertex.w;
+    bool isXinRange = (-1.0f <= adjusted_vertex.x && adjusted_vertex.x <= 1.0f);
+    bool isYinRange = (-1.0f <= adjusted_vertex.y && adjusted_vertex.y <= 1.0f);
+    bool isZinRange = (0.0f <= adjusted_vertex.z && adjusted_vertex.z <= 1.0f);
+    bool isVertexVisible = isXinRange && isYinRange && isZinRange;
+
+    if (isVertexVisible) {
+        vertex_count = count;
+    }
+}

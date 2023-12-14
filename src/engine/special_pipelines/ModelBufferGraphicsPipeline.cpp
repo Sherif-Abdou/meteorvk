@@ -3,6 +3,7 @@
 //
 
 #include "ModelBufferGraphicsPipeline.h"
+#include "../../core/interfaces/IndirectCallStruct.h"
 
 GraphicsPipeline & ModelBufferGraphicsPipeline::getGraphicsPipeline() {
     return graphicsPipeline;
@@ -12,6 +13,7 @@ void ModelBufferGraphicsPipeline::renderPipeline(Renderable::RenderArguments ren
     modelBuffer->resetIndex();
     auto vertex_buffers = renderArguments.vertexBuffers;
     graphicsPipeline.prepareRender(renderArguments);
+    VkDeviceSize offset_stride = sizeof (IndirectCallStruct);
     for (uint32_t i = 0; i < vertex_buffers.size(); i++) {
         auto vertex_buffer = vertex_buffers[i];
         modelBuffer->attachOffsetToDescriptor(*descriptorSet, 0);
@@ -20,7 +22,9 @@ void ModelBufferGraphicsPipeline::renderPipeline(Renderable::RenderArguments ren
         graphicsPipeline.renderVertexBuffer({
             renderArguments.commandBuffer,
             renderArguments.imageIndex,
-            {vertex_buffer}
+            {vertex_buffer},
+            indirectBuffer,
+            renderArguments.indirectBufferOffset + i * offset_stride,
         }, vertex_buffer);
         modelBuffer->nextIndex();
     }

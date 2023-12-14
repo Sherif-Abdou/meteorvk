@@ -6,10 +6,12 @@
 #define VULKAN_RENDERER_VERTEXBUFFER_H
 
 #include "Vertex.h"
+#include "../interfaces/IndirectCallStruct.h"
 
 class VertexBuffer {
 public:
     VulkanContext* context;
+    bool canBeStorage = true;
 
     explicit VertexBuffer(VulkanContext *context, bool staging_buffer = false);
 
@@ -19,7 +21,13 @@ public:
     void updateVertexBuffer();
     void attachToCommandBuffer(vk::raii::CommandBuffer &buffer);
     void draw(vk::raii::CommandBuffer &buffer);
+    void draw_indirect(vk::raii::CommandBuffer& command_buffer, VkBuffer& draw_buffer, vk::DeviceSize offset = 0);
+    IndirectCallStruct createBasicIndirectCall();
     void destroy();
+
+    vk::Buffer* getBuffer();
+    vk::DeviceSize getSize();
+    uint32_t getVertexCount();
 
     VertexBuffer(VertexBuffer&&) = default;
 
@@ -32,8 +40,6 @@ private:
     void initializeVertexBuffer();
     VulkanAllocator::VulkanBufferAllocation vertexBuffer;
     VulkanAllocator::VulkanBufferAllocation stagingBuffer;
-
-    void loadStagingBuffer();
 
     bool use_staging_buffer = false;
 };

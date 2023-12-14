@@ -17,13 +17,15 @@ protected:
     vk::DescriptorType descriptorType = vk::DescriptorType::eUniformBuffer;
     VkBufferUsageFlags usageFlags = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 public:
+    uint32_t count = 1;
     explicit UniformBuffer(VulkanContext *context) : context(context) {}
 //    UniformBuffer(UniformBuffer&&) = default;
 //    UniformBuffer& operator=(UniformBuffer&&) = default;
 
     void allocateBuffer();
-    void updateBuffer(const T&);
+    void updateBuffer(const T&, uint32_t index = 0);
     void writeToDescriptor(DescriptorSet& descriptorSet, uint32_t binding = 0);
+    void writePartialToDescriptor(DescriptorSet& descriptorSet, vk::DeviceSize range, vk::DeviceSize offset, uint32_t binding = 0);
 
     void* mapMemory();
     void unMapMemory();
@@ -32,16 +34,13 @@ public:
 };
 
 template<typename T>
-void UniformBuffer<T>::destroy() {
-    bufferAllocation.destroy();
-}
-
-template<typename T>
-void UniformBuffer<T>::writeToDescriptor(DescriptorSet& descriptorSet, uint32_t binding) {
+void
+UniformBuffer<T>::writePartialToDescriptor(DescriptorSet &descriptorSet, vk::DeviceSize range, vk::DeviceSize offset,
+                                           uint32_t binding) {
     vk::WriteDescriptorSet writeDescriptorSet {};
     vk::DescriptorBufferInfo bufferInfo {};
-    bufferInfo.setOffset(0);
-    bufferInfo.setRange(sizeof(T));
+    bufferInfo.setOffset(offset);
+    bufferInfo.setRange(range);
     bufferInfo.setBuffer(bufferAllocation.buffer);
 
     writeDescriptorSet.setDescriptorCount(1);
@@ -56,6 +55,16 @@ void UniformBuffer<T>::writeToDescriptor(DescriptorSet& descriptorSet, uint32_t 
 }
 
 template<typename T>
+void UniformBuffer<T>::destroy() {
+    bufferAllocation.destroy();
+}
+
+template<typename T>
+void UniformBuffer<T>::writeToDescriptor(DescriptorSet& descriptorSet, uint32_t binding) {
+    writePartialToDescriptor(descriptorSet, sizeof (T), 0, binding);
+}
+
+template<typename T>
 void* UniformBuffer<T>::mapMemory() {
     return bufferAllocation.mapMemory();
 }
@@ -66,9 +75,9 @@ void UniformBuffer<T>::unMapMemory() {
 }
 
 template<typename T>
-void UniformBuffer<T>::updateBuffer(const T & data) {
-    void* address = bufferAllocation.mapMemory();
-    memcpy(address, &data, sizeof(T));
+void UniformBuffer<T>::updateBuffer(const T & data, uint32_t index) {
+    T* address = (T*)bufferAllocation.mapMemory();
+    memcpy(address + index, &data, sizeof(T));
     bufferAllocation.unmapMemory();
 }
 
@@ -79,7 +88,7 @@ void UniformBuffer<T>::allocateBuffer() {
     if (usageFlags == VK_BUFFER_USAGE_STORAGE_BUFFER_BIT) {
         // bufferCreateInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
     }
-    bufferCreateInfo.size = sizeof(T);
+    bufferCreateInfo.size = sizeof(T) * count;
     bufferCreateInfo.usage = usageFlags;
 
     context->allocator->allocateBuffer(&bufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, &bufferAllocation);

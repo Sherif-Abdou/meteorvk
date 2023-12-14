@@ -24,6 +24,9 @@ void VertexBuffer::initializeVertexBuffer() {
     VkBufferCreateInfo coreBuffer {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
     coreBuffer.size = sizeof (vertices[0]) * vertices.size();
     coreBuffer.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+    if (canBeStorage) {
+        coreBuffer.usage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    }
     if (use_staging_buffer) {
         coreBuffer.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     }
@@ -71,5 +74,31 @@ void VertexBuffer::draw(vk::raii::CommandBuffer &buffer) {
     buffer.draw(vertices.size(), 1, 0, 0);
 }
 
+IndirectCallStruct VertexBuffer::createBasicIndirectCall() {
+    return {
+        static_cast<uint32_t>(vertices.size()),
+        1,
+        0,
+        0
+    };
+}
+
 VertexBuffer::~VertexBuffer() {
+}
+
+void VertexBuffer::draw_indirect(vk::raii::CommandBuffer &command_buffer, VkBuffer &draw_buffer, uint64_t offset) {
+    attachToCommandBuffer(command_buffer);
+    command_buffer.drawIndirect(draw_buffer, offset, 1, 0);
+}
+
+vk::Buffer *VertexBuffer::getBuffer() {
+    return &vertexBuffer.buffer;
+}
+
+vk::DeviceSize VertexBuffer::getSize() {
+    return sizeof (vertices[0]) * vertices.size();
+}
+
+uint32_t VertexBuffer::getVertexCount() {
+    return vertices.size();
 }

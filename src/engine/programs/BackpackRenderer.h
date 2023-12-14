@@ -11,7 +11,7 @@
 #include "../special_pipelines/DepthOnlyPipeline.h"
 #include "../../core/storage/OBJFile.h"
 
-static constexpr const char *const model_path_1 = "./models/super_backpack.obj";
+static constexpr const char *const model_path_1 = "./models/car.obj";
 
 class BackpackRenderer {
 private:
@@ -19,7 +19,6 @@ private:
     std::unique_ptr<ModelBufferGraphicsPipeline> depth_model_pipeline = nullptr;
     std::unique_ptr<ForwardRenderedGraphicsPipeline> depth_forward_pipeline = nullptr;
 
-    VertexBuffer createVertexBuffer(VulkanContext* context, const char* path);
 
     DepthOnlyPipeline createDepthOnlyPipeline(VulkanContext* context, ModelBuffer* modelBuffer, DescriptorSet* descriptorSet);
     std::unique_ptr<SSAOGraphicsPipeline> createSSAOPipeline(VulkanContext* context, DescriptorSet* descriptorSet, ModelBuffer* buffer);
@@ -38,6 +37,7 @@ private:
     static TextureResult load_texture_from_file(VulkanContext* context, VulkanAllocator::VulkanImageAllocation& red_image);
 public:
     void run(VulkanContext* context);
+    static VertexBuffer createVertexBuffer(VulkanContext* context, const char* path);
 };
 
 

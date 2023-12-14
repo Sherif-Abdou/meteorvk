@@ -170,9 +170,9 @@ void BackpackRenderer::run(VulkanContext *context) {
         commandBuffer.beginSwapchainRender();
         auto delta = glfwGetTime() - last_time;
         t += delta;
-        backpack_rotation += delta * 1.0f;
-        auto rot = glm::rotate(glm::scale(glm::identity<glm::mat4>(), glm::vec3(1)), backpack_rotation + 3.14f / 4.0f, glm::vec3(0, 1.0f, 0));
-        auto model = glm::translate(rot, glm::vec3(0,-0.0f,0));
+//        backpack_rotation += delta * 1.0f;
+        auto rot = glm::rotate(glm::scale(glm::identity<glm::mat4>(), glm::vec3(2)), backpack_rotation + 3.14f / 4.0f, glm::vec3(0, 1.0f, 0));
+        auto model = glm::translate(rot, glm::vec3(0,-1.0f,0));
         modelBuffer->updateBuffer({
                                                         model,
                                                         Material {glm::vec4(1.0, 0.0, 0.0, 1.0)}

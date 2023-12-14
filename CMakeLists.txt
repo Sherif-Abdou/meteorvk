@@ -84,6 +84,10 @@ add_executable(vulkan_engine main.cpp
         src/engine/special_pipelines/DepthOnlyPipeline.h
         src/engine/programs/BackpackRenderer.cpp
         src/engine/programs/BackpackRenderer.h
+        src/core/interfaces/IndirectCallStruct.cpp
+        src/core/interfaces/IndirectCallStruct.h
+        src/engine/special_pipelines/CullingComputePipeline.cpp
+        src/engine/special_pipelines/CullingComputePipeline.h
 )
 # Apple MoltenVK Requirements
 if (APPLE)

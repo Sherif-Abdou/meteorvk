@@ -17,6 +17,8 @@ public:
         vk::raii::CommandBuffer& commandBuffer;
         uint32_t imageIndex;
         std::vector<VertexBuffer*> vertexBuffers;
+        VkBuffer* indirectBuffer = nullptr;
+        VkDeviceSize indirectBufferOffset = 0;
     };
 
     virtual void renderPipeline(Renderable::RenderArguments renderArguments) = 0;
