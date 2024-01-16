@@ -31,7 +31,7 @@ public:
     DescriptorSet* descriptorSet;
     ModelBuffer* modelBuffer = nullptr;
     /// Indirect Buffer to use by rendering pipeline, expects packed calls in order of models in model buffer
-    VkBuffer* indirectBuffer = nullptr;
+    vk::Buffer* indirectBuffer = nullptr;
 
     void renderPipeline(Renderable::RenderArguments renderArguments) override;
 

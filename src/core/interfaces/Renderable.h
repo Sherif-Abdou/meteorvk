@@ -17,7 +17,7 @@ public:
         vk::raii::CommandBuffer& commandBuffer;
         uint32_t imageIndex;
         std::vector<VertexBuffer*> vertexBuffers;
-        VkBuffer* indirectBuffer = nullptr;
+        vk::Buffer* indirectBuffer = nullptr;
         VkDeviceSize indirectBufferOffset = 0;
     };
 

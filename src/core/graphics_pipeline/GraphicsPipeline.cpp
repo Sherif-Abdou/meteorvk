@@ -44,8 +44,9 @@ void GraphicsPipeline::finishRender(
 void GraphicsPipeline::renderVertexBuffer(Renderable::RenderArguments renderArguments, VertexBuffer *vbo) const {
     if (renderArguments.indirectBuffer != nullptr) {
         vbo->draw_indirect(renderArguments.commandBuffer, *renderArguments.indirectBuffer, renderArguments.indirectBufferOffset);
+    } else {
+        vbo->draw(renderArguments.commandBuffer);
     }
-    vbo->draw(renderArguments.commandBuffer);
 }
 
 void GraphicsPipeline::prepareRender(Renderable::RenderArguments &renderArguments) {

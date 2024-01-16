@@ -30,8 +30,15 @@ public:
     void* mapMemory();
     void unMapMemory();
 
+    vk::Buffer* getBuffer();
+
     void destroy();
 };
+
+template<typename T>
+vk::Buffer *UniformBuffer<T>::getBuffer() {
+    return &bufferAllocation.buffer;
+}
 
 template<typename T>
 void

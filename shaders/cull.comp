@@ -8,6 +8,17 @@ struct Vertex {
     vec2 uv;
     vec3 tangent;
 };
+struct AtlasRect {
+    float x1;
+    float x2;
+    float y1;
+    float y2;
+};
+
+struct Material {
+    vec4 albedo;
+    AtlasRect bounds;
+};
 
 layout(binding = 0) uniform UBO {
     mat4 proj;
@@ -29,10 +40,14 @@ layout(std140, binding = 2) buffer Output {
 
 layout(binding = 3) uniform PerModelUBO {
     mat4 model;
+    Material _material;
 };
 
 void main() {
     uint index = gl_GlobalInvocationID.x;
+    if (index > count) {
+        return;
+    }
     vec4 adjusted_vertex = proj * view * model * vec4(vertices[index].position, 1.0f);
     adjusted_vertex /= adjusted_vertex.w;
     bool isXinRange = (-1.0f <= adjusted_vertex.x && adjusted_vertex.x <= 1.0f);

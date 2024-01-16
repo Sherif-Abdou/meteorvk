@@ -8,9 +8,56 @@
 #include "../../core/compute_pipeline/ComputeCommandBuffer.h"
 #include "../../core/storage/StorageBuffer.h"
 #include "../programs/BackpackRenderer.h"
-#include <glm/ext.hpp>
 
 void CullingComputePipeline::generateIndirects() {
+    models->resetIndex();
+    for (uint32_t i = 0; i < vertex_buffers.size(); i++) {
+        auto vertices = vertex_buffers[i];
+        ubo.count = vertices->getVertexCount();
+        ubo_buffer->updateBuffer(ubo);
+        auto buffer_write_info = vk::DescriptorBufferInfo(*vertices->getBuffer(), 0, vertices->getSize());
+        vk::WriteDescriptorSet writeDescriptorSet{};
+        writeDescriptorSet
+                .setDescriptorType(vk::DescriptorType::eStorageBuffer)
+                .setDstArrayElement(0)
+                .setDstBinding(1)
+                .setDstSet(descriptor->getDescriptorSet())
+                .setDescriptorCount(1)
+                .setBufferInfo(buffer_write_info);
+
+
+        auto initial = vertices->createBasicIndirectCall();
+        initial.vertexCount = 0;
+        output_buffer->updateBuffer(initial, i);
+
+        pipeline->workgroups = std::floor(vertices->getVertexCount() / 256.0f);
+        if (pipeline->workgroups == 0) {
+            pipeline->workgroups = 1;
+        }
+
+        auto compute_command = ComputeCommandBuffer(context);
+        compute_command.init();
+        compute_command.begin();
+        models->attachOffsetToDescriptor(*descriptor, 0);
+        models->writeBuffer(*descriptor, 3);
+        models->attachOffsetToDescriptor(*descriptor, 0);
+        models->nextIndex();
+        context->device.updateDescriptorSets(writeDescriptorSet, {});
+        output_buffer->writePartialToDescriptor(*descriptor, sizeof (IndirectCallStruct), sizeof (IndirectCallStruct) * i, 2);
+        ubo_buffer->writeToDescriptor(*descriptor, 0);
+        compute_command.bindAndDispatch(*pipeline, descriptor.get());
+        compute_command.end();
+        compute_command.submit();
+        context->device.waitIdle();
+    }
+
+
+
+}
+
+CullingComputePipeline::CullingComputePipeline(VulkanContext *context) : context(context) {}
+
+void CullingComputePipeline::init() {
     auto uniform_binding = vk::DescriptorSetLayoutBinding()
             .setBinding(0)
             .setDescriptorCount(1)
@@ -34,77 +81,25 @@ void CullingComputePipeline::generateIndirects() {
             .setDescriptorType(vk::DescriptorType::eUniformBufferDynamic)
             .setStageFlags(vk::ShaderStageFlagBits::eCompute);
 
-    struct UBO {
-        glm::mat4 proj = glm::perspective(glm::radians(90.f), 1920.0f/1080.0f, 0.1f, 40.0f);
-        glm::mat4 view = glm::translate(glm::rotate(glm::identity<glm::mat4>(), glm::radians(180.0f), glm::vec3(0,1,0)), glm::vec3(0,-1,0));
-        glm::mat4 model = glm::scale(glm::identity<glm::mat4>(), glm::vec3(100.1));
-        uint32_t count = 0;
-    };
-
 
     auto compute_pipeline_builder = ComputePipelineBuilder(context);
     auto shaders = ComputeShaders(*context, "shaders/cull.comp");
 
-    output_buffer = std::make_unique<StorageBuffer<IndirectCallStruct>>(context);
+    output_buffer = std::make_unique<StorageBuffer<IndirectCallStruct>>(context, true);
     output_buffer->count = vertex_buffers.size();
     output_buffer->allocateBuffer();
-    auto ubo_buffer = UniformBuffer<UBO>(context);
-    ubo_buffer.allocateBuffer();
-    auto ubo = UBO();
+    ubo_buffer = std::make_unique<UniformBuffer<UBO>>(context);
+    ubo_buffer->allocateBuffer();
 
-    auto descriptor = DescriptorSet(context, {uniform_binding, sb1_binding, sb2_binding, dynamic_ubo_binding});
-    descriptor.buildDescriptor();
+    descriptor = std::make_unique<DescriptorSet>(context, std::vector<vk::DescriptorSetLayoutBinding> {uniform_binding, sb1_binding, sb2_binding, dynamic_ubo_binding});
+    descriptor->buildDescriptor();
 
     compute_pipeline_builder.setShader(shaders);
-    compute_pipeline_builder.setDescriptor(descriptor.getDescriptorSetLayout());
-    auto pipeline = compute_pipeline_builder.build();
-
-    for (uint32_t i = 0; i < vertex_buffers.size(); i++) {
-        auto vertices = vertex_buffers[i];
-        ubo.count = vertices->getVertexCount();
-        ubo_buffer.updateBuffer(ubo);
-        auto buffer_write_info = vk::DescriptorBufferInfo(*vertices->getBuffer(), 0, vertices->getSize());
-        vk::WriteDescriptorSet writeDescriptorSet{};
-        writeDescriptorSet
-                .setDescriptorType(vk::DescriptorType::eStorageBuffer)
-                .setDstArrayElement(0)
-                .setDstBinding(1)
-                .setDstSet(descriptor.getDescriptorSet())
-                .setDescriptorCount(1)
-                .setBufferInfo(buffer_write_info);
-
-
-        auto initial = vertices->createBasicIndirectCall();
-        initial.vertexCount = 0;
-        output_buffer->updateBuffer(initial, i);
-
-        pipeline.workgroups = std::floor(vertices->getVertexCount() / 256);
-
-        auto compute_command = ComputeCommandBuffer(context);
-        compute_command.init();
-        compute_command.begin();
-        models->writeBuffer(descriptor, 3);
-        models->attachOffsetToDescriptor(descriptor, i);
-        context->device.updateDescriptorSets(writeDescriptorSet, {});
-        output_buffer->writePartialToDescriptor(descriptor, sizeof (IndirectCallStruct), sizeof (IndirectCallStruct) * i, 2);
-        ubo_buffer.writeToDescriptor(descriptor, 0);
-        compute_command.bindAndDispatch(pipeline, &descriptor);
-        compute_command.end();
-        compute_command.submit();
-        context->device.waitIdle();
-    }
-
-    IndirectCallStruct* raw = (IndirectCallStruct*)output_buffer->mapMemory();
-
-    std::cout << raw[0].vertexCount << "\n";
-    std::cout << raw[1].vertexCount << "\n";
-
-    output_buffer->unMapMemory();
-
-
-    context->device.waitIdle();
-    output_buffer->destroy();
-    ubo_buffer.destroy();
+    compute_pipeline_builder.setDescriptor(descriptor->getDescriptorSetLayout());
+    pipeline = compute_pipeline_builder.build();
 }
 
-CullingComputePipeline::CullingComputePipeline(VulkanContext *context) : context(context) {}
+void CullingComputePipeline::destroy() {
+    ubo_buffer->destroy();
+    output_buffer->destroy();
+}

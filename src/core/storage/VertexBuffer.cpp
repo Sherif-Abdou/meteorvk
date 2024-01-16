@@ -86,7 +86,7 @@ IndirectCallStruct VertexBuffer::createBasicIndirectCall() {
 VertexBuffer::~VertexBuffer() {
 }
 
-void VertexBuffer::draw_indirect(vk::raii::CommandBuffer &command_buffer, VkBuffer &draw_buffer, uint64_t offset) {
+void VertexBuffer::draw_indirect(vk::raii::CommandBuffer &command_buffer, vk::Buffer &draw_buffer, uint64_t offset) {
     attachToCommandBuffer(command_buffer);
     command_buffer.drawIndirect(draw_buffer, offset, 1, 0);
 }

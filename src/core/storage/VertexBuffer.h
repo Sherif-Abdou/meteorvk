@@ -21,7 +21,7 @@ public:
     void updateVertexBuffer();
     void attachToCommandBuffer(vk::raii::CommandBuffer &buffer);
     void draw(vk::raii::CommandBuffer &buffer);
-    void draw_indirect(vk::raii::CommandBuffer& command_buffer, VkBuffer& draw_buffer, vk::DeviceSize offset = 0);
+    void draw_indirect(vk::raii::CommandBuffer& command_buffer, vk::Buffer& draw_buffer, vk::DeviceSize offset = 0);
     IndirectCallStruct createBasicIndirectCall();
     void destroy();
 

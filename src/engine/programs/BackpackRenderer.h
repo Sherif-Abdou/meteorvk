@@ -11,7 +11,7 @@
 #include "../special_pipelines/DepthOnlyPipeline.h"
 #include "../../core/storage/OBJFile.h"
 
-static constexpr const char *const model_path_1 = "./models/car.obj";
+static constexpr const char *const model_path_1 = "./models/plane.obj";
 
 class BackpackRenderer {
 private:

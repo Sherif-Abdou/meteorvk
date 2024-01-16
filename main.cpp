@@ -48,7 +48,7 @@ CombinedDescriptorSampler createSampler(VulkanContext* context) {
 int main() {
     VulkanContext context{};
     context.initVulkan();
-    const auto use_backpack_render = false;
+    const auto use_backpack_render = true;
     if (use_backpack_render) {
 
         auto renderer = BackpackRenderer();
@@ -72,11 +72,13 @@ int main() {
         pipeline.vertex_buffers = {&v1, &v2};
         pipeline.models = buffer;
 
+        pipeline.init();
         pipeline.generateIndirects();
 
         buffer->destroy();
         v1.destroy();
         v2.destroy();
+        pipeline.destroy();
         delete buffer;
     }
     context.cleanup();

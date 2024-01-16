@@ -6,8 +6,14 @@
 #include "../special_pipelines/ShadowGraphicsPipeline.h"
 #include "../../core/graphics_pipeline/GraphicsCommandBuffer.h"
 #include "../../core/shared_pipeline/PipelineBarrierBuilder.h"
+#include "../special_pipelines/CullingComputePipeline.h"
 
 void BackpackRenderer::run(VulkanContext *context) {
+    auto vertexbuffer1 = createVertexBuffer(context, model_path_1);
+    vertexbuffer1.init();
+    auto vertexbuffer2 = createVertexBuffer(context, "./models/floor.obj");
+    vertexbuffer2.init();
+
     // Create Descriptors for pipeline stages
     VulkanAllocator::VulkanImageAllocation red_image;
     auto red_sampler = load_texture_from_file(context, red_image);
@@ -30,6 +36,11 @@ void BackpackRenderer::run(VulkanContext *context) {
     auto modelPipeline = std::make_unique<ModelBufferGraphicsPipeline>(builder.buildGraphicsPipeline(), 16);
     modelPipeline->descriptorSet = &forward_descriptor;
     auto* modelBuffer = modelPipeline->modelBuffer;
+    CullingComputePipeline cullingComputePipeline(context);
+    cullingComputePipeline.models = modelBuffer;
+    cullingComputePipeline.vertex_buffers = {&vertexbuffer1, &vertexbuffer2};
+    cullingComputePipeline.init();
+    modelPipeline->indirectBuffer = cullingComputePipeline.output_buffer->getBuffer();
     auto pipeline = ForwardRenderedGraphicsPipeline(std::move(modelPipeline));
     auto shadowModelPipeline = std::make_unique<ModelBufferGraphicsPipeline>(createShadowPipeline(context, &shadow_descriptor),
                                                            modelBuffer);
@@ -65,11 +76,7 @@ void BackpackRenderer::run(VulkanContext *context) {
 
 
     commandBuffer.init();
-    auto vertexbuffer1 = createVertexBuffer(context, model_path_1);
-    vertexbuffer1.init();
     commandBuffer.vertexBuffers.push_back(&vertexbuffer1);
-    auto vertexbuffer2 = createVertexBuffer(context, "./models/floor.obj");
-    vertexbuffer2.init();
     commandBuffer.vertexBuffers.push_back(&vertexbuffer2);
     modelBuffer->updateBuffer({
                                                     glm::identity<glm::mat4>(),
@@ -125,8 +132,16 @@ void BackpackRenderer::run(VulkanContext *context) {
             .forImage(shadowDepthImage, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1))
             .withInitialLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
             .withFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+    auto cull_indirect_barrier = PipelineBarrierBuilder();
+    cull_indirect_barrier
+        .waitFor(vk::PipelineStageFlagBits2::eComputeShader)
+        .whichUses(vk::AccessFlagBits2::eShaderStorageWrite | vk::AccessFlagBits2::eShaderStorageRead | vk::AccessFlagBits2::eUniformRead)
+        .beforeDoing(vk::PipelineStageFlagBits2::eDrawIndirect)
+        .whichUses(vk::AccessFlagBits2::eIndirectCommandRead)
+        .forBuffer(*cullingComputePipeline.output_buffer->getBuffer(), 2 * sizeof(IndirectCallStruct), 0);
 
-//    commandBuffer.dependencies[0] = shadow_image_barrier_back.build();
+
+    commandBuffer.dependencies[0] = {cull_indirect_barrier.build()};
     commandBuffer.dependencies[3] = {occlusion_image_barrier.build()};
 //    commandBuffer.dependencies[1] = shadow_image_barrier.build();
     commandBuffer.dependencies[2] = {depth_image_barrier.build()};
@@ -164,6 +179,8 @@ void BackpackRenderer::run(VulkanContext *context) {
     occlusionSampler.targetImageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     occlusionSampler.targetImageView = ssao_pipeline->getOcclusionImageView();
     occlusionSampler.buildSampler();
+    cullingComputePipeline.generateIndirects();
+
 
     while (!glfwWindowShouldClose(context->window)) {
         glfwPollEvents();
@@ -204,10 +221,17 @@ void BackpackRenderer::run(VulkanContext *context) {
             rotation += glm::vec3(0, 1.0f * (float)delta, 0);
         }
 
+
         pipeline.ubo.view = glm::translate(glm::rotate(glm::identity<glm::mat4>(), rotation.y, glm::vec3(0, 1, 0)),
                                            position);
+        cullingComputePipeline.ubo.proj = pipeline.ubo.proj;
+        cullingComputePipeline.ubo.view = pipeline.ubo.view;
         depth_pipeline.getUBO().ubo.view = pipeline.ubo.view;
         ssao_pipeline->ubo->view = pipeline.ubo.view;
+
+        if (glfwGetKey(context->window, GLFW_KEY_0)) {
+            cullingComputePipeline.generateIndirects();
+        }
 
         sampler.updateSampler(forward_descriptor, 1);
 //        sampler.updateSampler(ssao_descriptors, 1);
@@ -222,6 +246,7 @@ void BackpackRenderer::run(VulkanContext *context) {
 
 
     context->device.waitIdle();
+    cullingComputePipeline.destroy();
     red_image.destroy();
     modelBuffer->destroy();
     pipeline.destroy();
