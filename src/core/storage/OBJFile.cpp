@@ -55,21 +55,23 @@ std::vector<float> OBJFile::createBuffer() {
     auto buffer = std::vector<float>();
     for (auto& face : faces) {
         auto tangent = calculateTangent(face);
-        for (int i = 0; i < face.vertices.size(); i++) {
-            auto& vertex = face.vertices[i];
-            auto& normal = face.normals[i];
-            auto& tex = face.texCoords[i];
-            buffer.push_back(vertex.x);
-            buffer.push_back(vertex.y);
-            buffer.push_back(vertex.z);
-            buffer.push_back(normal.x);
-            buffer.push_back(normal.y);
-            buffer.push_back(normal.z);
-            buffer.push_back(tangent.x);
-            buffer.push_back(tangent.y);
-            buffer.push_back(tangent.z);
-            buffer.push_back(tex.x);
-            buffer.push_back(tex.y);
+        for (int offset = 0; offset < face.vertices.size()-2; offset++) {
+            for (int i = offset; i < face.vertices.size(); i++) {
+                auto &vertex = face.vertices[i];
+                auto &normal = face.normals[i];
+                auto &tex = face.texCoords[i];
+                buffer.push_back(vertex.x);
+                buffer.push_back(vertex.y);
+                buffer.push_back(vertex.z);
+                buffer.push_back(normal.x);
+                buffer.push_back(normal.y);
+                buffer.push_back(normal.z);
+                buffer.push_back(tangent.x);
+                buffer.push_back(tangent.y);
+                buffer.push_back(tangent.z);
+                buffer.push_back(tex.x);
+                buffer.push_back(tex.y);
+            }
         }
     }
     return buffer;
@@ -113,16 +115,18 @@ std::vector<Vertex> OBJFile::createVulkanBuffer() {
     auto buffer = std::vector<Vertex>();
     for (auto& face : faces) {
         auto tangent = calculateTangent(face);
-        for (int i = 0; i < face.vertices.size(); i++) {
-            auto& vertex = face.vertices[i];
-            auto& normal = face.normals[i];
-            auto& tex = face.texCoords[i];
-            buffer.push_back(Vertex {
-                vertex,
-                normal,
-                tex,
-                tangent
-            });
+        for (int offset = 0; offset < face.vertices.size() - 2; offset++) {
+            for (int i = offset; i < offset + 3; i++) {
+                auto& vertex = face.vertices[i];
+                auto& normal = face.normals[i];
+                auto& tex = face.texCoords[i];
+                buffer.push_back(Vertex {
+                        vertex,
+                        normal,
+                        tex,
+                        tangent
+                });
+            }
         }
     }
     return buffer;

@@ -21,6 +21,7 @@ void VertexBuffer::initializeVertexBuffer() {
     if (vertices.size() == 0) {
         throw std::runtime_error("Can't initialize empty buffer(missing vertices)");
     }
+    vertex_count = vertices.size();
     VkBufferCreateInfo coreBuffer {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
     coreBuffer.size = sizeof (vertices[0]) * vertices.size();
     coreBuffer.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
@@ -48,7 +49,7 @@ void VertexBuffer::updateVertexBuffer() {
 
         vk::BufferCopy copy_region {};
 
-        copy_region.setSize(sizeof (vertices[0]) * vertices.size());
+        copy_region.setSize(sizeof (Vertex) * vertex_count);
         copy_region.setDstOffset(0);
         copy_region.setSrcOffset(0);
 
@@ -58,6 +59,8 @@ void VertexBuffer::updateVertexBuffer() {
     } else {
         Vertex::writeVectorToBuffer(vertices, vertexBuffer);
     }
+
+    vertices.clear();
 }
 
 void VertexBuffer::destroy() {
@@ -71,12 +74,12 @@ VertexBuffer::VertexBuffer(VulkanContext *context, bool staging_buffer) : contex
 
 void VertexBuffer::draw(vk::raii::CommandBuffer &buffer) {
     attachToCommandBuffer(buffer);
-    buffer.draw(vertices.size(), 1, 0, 0);
+    buffer.draw(vertex_count, 1, 0, 0);
 }
 
 IndirectCallStruct VertexBuffer::createBasicIndirectCall() {
     return {
-        static_cast<uint32_t>(vertices.size()),
+        static_cast<uint32_t>(vertex_count),
         1,
         0,
         0
@@ -96,9 +99,9 @@ vk::Buffer *VertexBuffer::getBuffer() {
 }
 
 vk::DeviceSize VertexBuffer::getSize() {
-    return sizeof (vertices[0]) * vertices.size();
+    return sizeof (Vertex) * vertex_count;
 }
 
 uint32_t VertexBuffer::getVertexCount() {
-    return vertices.size();
+    return vertex_count;
 }

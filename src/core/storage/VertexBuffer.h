@@ -37,6 +37,7 @@ public:
     constexpr static unsigned long DeferredQuadBit = 1 << 1;
     constexpr static unsigned long TransparentBit = 1 << 2;
 private:
+    unsigned long vertex_count = 0;
     void initializeVertexBuffer();
     VulkanAllocator::VulkanBufferAllocation vertexBuffer;
     VulkanAllocator::VulkanBufferAllocation stagingBuffer;

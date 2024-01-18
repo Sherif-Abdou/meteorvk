@@ -74,7 +74,7 @@ float getOcclusion() {
             net += occlusion / (5.0f * 5.0f);
         }
     }
-    return pow(net, 2.0f);
+    return pow(net, 1.0f);
 }
 
 void main() {
