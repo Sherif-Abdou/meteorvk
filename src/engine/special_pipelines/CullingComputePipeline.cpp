@@ -27,7 +27,7 @@ void CullingComputePipeline::generateIndirects() {
 
 
         auto initial = vertices->createBasicIndirectCall();
-        initial.vertexCount = 0;
+        initial.indexCount = 0;
         output_buffer->updateBuffer(initial, i);
 
         pipeline->workgroups = std::floor(vertices->getVertexCount() / 256.0f);

@@ -54,8 +54,8 @@ OBJFile::OBJFile(std::istream& stream) {
 std::vector<float> OBJFile::createBuffer() {
     auto buffer = std::vector<float>();
     for (auto& face : faces) {
-        auto tangent = calculateTangent(face);
         for (int offset = 0; offset < face.vertices.size()-2; offset++) {
+            auto tangent = calculateTangent(face, offset);
             for (int i = offset; i < face.vertices.size(); i++) {
                 auto &vertex = face.vertices[i];
                 auto &normal = face.normals[i];
@@ -87,13 +87,13 @@ long OBJFile::size() const {
     return i;
 }
 
-glm::vec3 OBJFile::calculateTangent(Face & face) {
-    auto pos = face.vertices[0];
-    auto pos2 = face.vertices[1];
-    auto pos3 = face.vertices[2];
-    auto uv = face.texCoords[0];
-    auto uv2 = face.texCoords[1];
-    auto uv3 = face.texCoords[2];
+glm::vec3 OBJFile::calculateTangent(Face & face, int offset) {
+    auto pos = face.vertices[0 + offset];
+    auto pos2 = face.vertices[1 + offset];
+    auto pos3 = face.vertices[2 + offset];
+    auto uv = face.texCoords[0 + offset];
+    auto uv2 = face.texCoords[1 + offset];
+    auto uv3 = face.texCoords[2 + offset];
 
     glm::vec3 tangent {};
 
@@ -114,8 +114,8 @@ glm::vec3 OBJFile::calculateTangent(Face & face) {
 std::vector<Vertex> OBJFile::createVulkanBuffer() {
     auto buffer = std::vector<Vertex>();
     for (auto& face : faces) {
-        auto tangent = calculateTangent(face);
         for (int offset = 0; offset < face.vertices.size() - 2; offset++) {
+            auto tangent = calculateTangent(face, offset);
             for (int i = offset; i < offset + 3; i++) {
                 auto& vertex = face.vertices[i];
                 auto& normal = face.normals[i];
@@ -130,6 +130,42 @@ std::vector<Vertex> OBJFile::createVulkanBuffer() {
         }
     }
     return buffer;
+}
+
+OBJFile::IndexPair OBJFile::createVulkanBufferIndexed() {
+    auto v = std::vector<Vertex>();
+    auto indices = std::vector<unsigned int>();
+    auto point_map = std::map<std::string, unsigned int>();
+    for (auto& face : faces) {
+        for (int offset = 0; offset < face.vertices.size() - 2; offset++) {
+            auto tangent = calculateTangent(face, offset);
+            for (int i = offset; i < offset + 3; i++) {
+                auto& vertex = face.vertices[i];
+                auto& normal = face.normals[i];
+                auto& tex = face.texCoords[i];
+                Point p = {vertex, normal, tex};
+
+                if (point_map.find(p.to_string()) == point_map.end()) {
+                    point_map[p.to_string()] = v.size();
+                    v.push_back(Vertex {
+                            vertex,
+                            normal,
+                            tex,
+                            tangent
+                    });
+                }
+
+                auto res = point_map[p.to_string()];
+                indices.push_back(res);
+                if (point_map.size() != v.size()) {
+                    throw std::exception();
+                }
+                assert(point_map.size() == v.size());
+                assert(point_map.max_size() > 255);
+            }
+        }
+    }
+    return {indices, v};
 }
 
 OBJFile OBJFile::fromFilePath(const std::string & file_path) {

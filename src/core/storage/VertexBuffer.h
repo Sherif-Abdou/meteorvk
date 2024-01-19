@@ -16,6 +16,7 @@ public:
     explicit VertexBuffer(VulkanContext *context, bool staging_buffer = false);
 
     std::vector<Vertex> vertices {};
+    std::optional<std::vector<uint32_t>> indices {};
     unsigned long mask = 0;
     void init();
     void updateVertexBuffer();
@@ -38,11 +39,18 @@ public:
     constexpr static unsigned long TransparentBit = 1 << 2;
 private:
     unsigned long vertex_count = 0;
+    unsigned long index_count = 0;
     void initializeVertexBuffer();
+    void initializeIndexBuffer();
     VulkanAllocator::VulkanBufferAllocation vertexBuffer;
-    VulkanAllocator::VulkanBufferAllocation stagingBuffer;
+    VulkanAllocator::VulkanBufferAllocation indexBuffer;
+    VulkanAllocator::VulkanBufferAllocation vertexStagingBuffer;
+    VulkanAllocator::VulkanBufferAllocation indexStagingBuffer;
 
     bool use_staging_buffer = false;
+    bool use_index_buffer = false;
+
+    void updateIndexBuffer();
 };
 
 

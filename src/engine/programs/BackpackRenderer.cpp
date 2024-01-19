@@ -40,7 +40,7 @@ void BackpackRenderer::run(VulkanContext *context) {
     cullingComputePipeline.models = modelBuffer;
     cullingComputePipeline.vertex_buffers = {&vertexbuffer1, &vertexbuffer2};
     cullingComputePipeline.init();
-    modelPipeline->indirectBuffer = cullingComputePipeline.output_buffer->getBuffer();
+//    modelPipeline->indirectBuffer = cullingComputePipeline.output_buffer->getBuffer();
     auto pipeline = ForwardRenderedGraphicsPipeline(std::move(modelPipeline));
     auto shadowModelPipeline = std::make_unique<ModelBufferGraphicsPipeline>(createShadowPipeline(context, &shadow_descriptor),
                                                            modelBuffer);
@@ -263,8 +263,9 @@ void BackpackRenderer::run(VulkanContext *context) {
 VertexBuffer BackpackRenderer::createVertexBuffer(VulkanContext *context, const char *path) {
     VertexBuffer buffer(context, true);
     OBJFile file = OBJFile::fromFilePath(path);
-    auto raw = file.createVulkanBuffer();
-    buffer.vertices = std::move(raw);
+    auto raw = file.createVulkanBufferIndexed();
+    buffer.vertices = std::move(raw.vertices);
+    buffer.indices = std::move(raw.indices);
     return buffer;
 }
 
