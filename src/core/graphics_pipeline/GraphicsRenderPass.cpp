@@ -15,6 +15,9 @@ void GraphicsRenderPass::createRenderPass() {
     if (useDepth) {
         attachments.push_back(depthDescription);
     }
+    if (multisampling) {
+        attachments.push_back(colorDescriptionResolve);
+    }
 
     auto subpasses = {subpass.description};
     auto dependencies = {subpass.dependency};
@@ -28,21 +31,35 @@ void GraphicsRenderPass::createRenderPass() {
 
 GraphicsRenderPass::Subpass GraphicsRenderPass::createSubpass() {
     vk::SubpassDescription subpassDescription {};
+    int i = 0;
 
     if (useColor) {
         //TODO: Potential Memory Leak
         auto* colorReference = new vk::AttachmentReference {};
-        colorReference->setAttachment(0);
+        colorReference->setAttachment(i);
         colorReference->setLayout(vk::ImageLayout::eColorAttachmentOptimal);
         subpassDescription.setColorAttachments(*colorReference);
+
+        i++;
     }
 
     if (useDepth) {
         //TODO: Potential Memory Leak
         auto depthReference = new vk::AttachmentReference {};
-        depthReference->setAttachment(1 ? useColor : 0);
+        depthReference->setAttachment(i);
         depthReference->setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
         subpassDescription.setPDepthStencilAttachment(depthReference);
+
+        i++;
+    }
+
+    if (multisampling) {
+        auto* resolveReference = new vk::AttachmentReference {};
+        resolveReference->setAttachment(i);
+        resolveReference->setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+
+        subpassDescription.setResolveAttachments(*resolveReference);
+        i++;
     }
 
     subpassDescription.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
@@ -71,6 +88,11 @@ void GraphicsRenderPass::createAttachments() {
             .setStoreOp(vk::AttachmentStoreOp::eStore)
             .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
             .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
+        if (multisampling) {
+            colorDescription
+                .setSamples(context->sampleCountFlagBits)
+                .setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
+        }
     }
 
     if (useDepth) {
@@ -78,10 +100,23 @@ void GraphicsRenderPass::createAttachments() {
             .setInitialLayout(vk::ImageLayout::eUndefined)
             .setFinalLayout(vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal)
             .setFormat(vk::Format::eD32Sfloat)
+            .setSamples(colorDescription.samples)
             .setLoadOp(vk::AttachmentLoadOp::eClear)
             .setStoreOp(storeDepth ? vk::AttachmentStoreOp::eStore : vk::AttachmentStoreOp::eDontCare)
             .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
             .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
+    }
+
+    if (multisampling) {
+        colorDescriptionResolve.setFormat(context->swapChainImageFormat)
+                .setInitialLayout(vk::ImageLayout::eUndefined)
+                .setFinalLayout(vk::ImageLayout::ePresentSrcKHR)
+                .setFormat(context->swapChainImageFormat)
+                .setSamples(vk::SampleCountFlagBits::e1)
+                .setLoadOp(vk::AttachmentLoadOp::eClear)
+                .setStoreOp(vk::AttachmentStoreOp::eStore)
+                .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+                .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
     }
 }
 

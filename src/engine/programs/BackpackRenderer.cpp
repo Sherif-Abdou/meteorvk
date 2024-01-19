@@ -23,6 +23,7 @@ void BackpackRenderer::run(VulkanContext *context) {
     auto shadow_descriptor = createUniformBindings(context);
     auto forward_descriptor = createUniformBindings(context);
     auto renderPass = std::make_unique<GraphicsRenderPass>(context);
+    renderPass->multisampling = true;
     renderPass->init();
 
     // Build graphics pipelines
@@ -32,6 +33,7 @@ void BackpackRenderer::run(VulkanContext *context) {
         builder.targetImageViews.push_back(*targetSwapchainImageView);
     }
     builder.descriptorSets = {&forward_descriptor};
+    builder.enableMultisampling();
     builder.addDepthImage();
     auto modelPipeline = std::make_unique<ModelBufferGraphicsPipeline>(builder.buildGraphicsPipeline(), 16);
     modelPipeline->descriptorSet = &forward_descriptor;

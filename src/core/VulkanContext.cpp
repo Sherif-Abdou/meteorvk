@@ -218,6 +218,7 @@ void VulkanContext::createLogicalDevice() {
         queueCreateInfos.push_back(queueCreateInfo);
     }
     VkPhysicalDeviceFeatures deviceFeatures{};
+    deviceFeatures.sampleRateShading = VK_TRUE;
     VkPhysicalDeviceSynchronization2Features deviceFeatures2 {};
     deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
     deviceFeatures2.synchronization2 = true;

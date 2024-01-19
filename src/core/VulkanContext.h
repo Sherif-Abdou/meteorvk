@@ -38,6 +38,8 @@ struct VulkanContext {
     vk::Extent2D swapChainExtent;
     VulkanAllocator* allocator;
 
+    vk::SampleCountFlagBits sampleCountFlagBits = vk::SampleCountFlagBits::e4;
+
     VulkanContext();
 
     void initVulkan();

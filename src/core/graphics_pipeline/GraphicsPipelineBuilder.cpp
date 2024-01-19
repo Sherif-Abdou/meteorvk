@@ -156,6 +156,9 @@ void GraphicsPipelineBuilder::addDepthImage() {
     imageCreateInfo.setTiling(vk::ImageTiling::eOptimal);
     imageCreateInfo.setUsage(vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
 
+    if (enable_multisampling) {
+        imageCreateInfo.setSamples(context->sampleCountFlagBits);
+    }
     VkImageCreateInfo rawImageCreateInfo = imageCreateInfo;
     context->allocator->allocateImage(&rawImageCreateInfo, VMA_MEMORY_USAGE_AUTO, &depthImage);
 
@@ -172,7 +175,7 @@ void GraphicsPipelineBuilder::addDepthImage() {
     this->depthImageAttachment = std::move(depthImagePair);
 }
 
-void GraphicsPipelineBuilder::addColorImage(vk::Format format) {
+void GraphicsPipelineBuilder::addColorImage(vk::Format format, vk::SampleCountFlagBits samples) {
     VulkanAllocator::VulkanImageAllocation colorImage;
     vk::raii::ImageView colorImageView = nullptr;
 
@@ -183,7 +186,7 @@ void GraphicsPipelineBuilder::addColorImage(vk::Format format) {
     imageCreateInfo.setExtent({extent.width, extent.height, 1});
     imageCreateInfo.setImageType(vk::ImageType::e2D);
     imageCreateInfo.setMipLevels(1);
-    imageCreateInfo.setSamples(vk::SampleCountFlagBits::e1);
+    imageCreateInfo.setSamples(samples);
     imageCreateInfo.setSharingMode(vk::SharingMode::eExclusive);
     imageCreateInfo.setTiling(vk::ImageTiling::eOptimal);
     imageCreateInfo.setUsage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
@@ -211,12 +214,18 @@ GraphicsPipeline GraphicsPipelineBuilder::buildGraphicsPipeline() {
     if (!targetImageViews.empty()) { // Create Framebuffer for each target image view
         for (auto& targetImageView: targetImageViews) {
             vk::FramebufferCreateInfo createInfo {};
-            auto attachments = std::vector<vk::ImageView> {targetImageView};
+            auto attachments = std::vector<vk::ImageView> {};
+            if (!enable_multisampling) {
+                attachments.push_back(targetImageView);
+            }
             for (auto& colorImageView : colorImageAttachments) {
                 attachments.push_back(*colorImageView.imageView);
             }
             if (depthImageAttachment.has_value()) {
                 attachments.push_back(*depthImageAttachment->imageView);
+            }
+            if (enable_multisampling) {
+                attachments.push_back(targetImageView);
             }
 
             createInfo.setRenderPass(*renderPass->getRenderPass());
@@ -254,7 +263,7 @@ GraphicsPipeline GraphicsPipelineBuilder::buildGraphicsPipeline() {
 
     pipeline.init();
 
-    if (!targetImageViews.empty()) {
+    if (!targetImageViews.empty() && !enable_multisampling) {
         pipeline.clearValues.push_back(vk::ClearValue(vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)));
     }
 
@@ -263,9 +272,14 @@ GraphicsPipeline GraphicsPipelineBuilder::buildGraphicsPipeline() {
         pipeline.ownedImages.push_back(std::move(colorImageAttachment));
     }
 
+
     if (depthImageAttachment.has_value()) {
         pipeline.clearValues.push_back(vk::ClearValue(vk::ClearDepthStencilValue(1.0f, 0)));
         pipeline.ownedImages.push_back(std::move(*depthImageAttachment));
+    }
+
+    if (!targetImageViews.empty() && enable_multisampling) {
+        pipeline.clearValues.push_back(vk::ClearValue(vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)));
     }
 
 
@@ -286,4 +300,12 @@ const vk::Extent2D &GraphicsPipelineBuilder::getExtent() const {
 
 void GraphicsPipelineBuilder::setExtent(const vk::Extent2D &extent) {
     GraphicsPipelineBuilder::extent = extent;
+}
+
+void GraphicsPipelineBuilder::enableMultisampling() {
+    enable_multisampling = true;
+    multisampleStateCreateInfo.setRasterizationSamples(context->sampleCountFlagBits);
+    multisampleStateCreateInfo.setSampleShadingEnable(true);
+    multisampleStateCreateInfo.setMinSampleShading(0.2f);
+    addColorImage(context->swapChainImageFormat, context->sampleCountFlagBits);
 }

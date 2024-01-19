@@ -27,6 +27,7 @@ public:
     bool useColor = true;
     bool useDepth = true;
     bool storeDepth = false;
+    bool multisampling = false;
     vk::Format colorFormat = vk::Format::eUndefined;
 private:
     vk::raii::RenderPass renderPass = nullptr;
@@ -35,6 +36,8 @@ private:
     bool custom_color = false;
     vk::AttachmentDescription colorDescription {};
     vk::AttachmentDescription depthDescription {};
+    vk::AttachmentDescription colorDescriptionResolve {};
+
     Subpass subpass;
 
     void createRenderPass();

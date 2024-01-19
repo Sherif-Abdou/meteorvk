@@ -15,6 +15,7 @@ class GraphicsPipelineBuilder {
 private:
     using ImagePair = GraphicsPipeline::ImagePair;
 public:
+    bool enable_multisampling = false;
     GraphicsPipelineBuilder(VulkanContext *context, std::unique_ptr<GraphicsShaders> shaders, std::unique_ptr<GraphicsRenderPass> renderPass);
 
     void setViewport(const vk::Viewport &viewport);
@@ -51,7 +52,9 @@ public:
     std::optional<GraphicsPipeline::ImagePair> depthImageAttachment {}; // Depth Image to attach to pipeline
 
     void addDepthImage();
-    void addColorImage(vk::Format format);
+    void addColorImage(vk::Format format, vk::SampleCountFlagBits samples = vk::SampleCountFlagBits::e1);
+
+    void enableMultisampling();
 
     GraphicsPipeline buildGraphicsPipeline();
 private:
