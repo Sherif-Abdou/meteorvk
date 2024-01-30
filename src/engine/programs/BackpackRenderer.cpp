@@ -7,6 +7,9 @@
 #include "../../core/graphics_pipeline/GraphicsCommandBuffer.h"
 #include "../../core/shared_pipeline/PipelineBarrierBuilder.h"
 #include "../special_pipelines/CullingComputePipeline.h"
+#include "../storage/TextureDescriptorSet.h"
+#include "../../core/storage/DescriptorSampler.h"
+#include "../../core/storage/StorageImage.h"
 
 void BackpackRenderer::run(VulkanContext *context) {
     auto vertexbuffer1 = createVertexBuffer(context, model_path_1);
@@ -26,13 +29,16 @@ void BackpackRenderer::run(VulkanContext *context) {
     renderPass->multisampling = true;
     renderPass->init();
 
+
+    auto textureDescriptorSet = createTextureDescriptor(context);
+
     // Build graphics pipelines
     auto shaders = std::make_unique<GraphicsShaders>(context, "shaders/basic.vert", "shaders/basic.frag");
     GraphicsPipelineBuilder builder = GraphicsPipelineBuilder(context, std::move(shaders), std::move(renderPass));
     for (auto& targetSwapchainImageView: context->swapChainImageViews) {
         builder.targetImageViews.push_back(*targetSwapchainImageView);
     }
-    builder.descriptorSets = {&forward_descriptor};
+    builder.descriptorSets = {&forward_descriptor, textureDescriptorSet};
     builder.enableMultisampling();
     builder.addDepthImage();
     auto modelPipeline = std::make_unique<ModelBufferGraphicsPipeline>(builder.buildGraphicsPipeline(), 16);
@@ -161,6 +167,11 @@ void BackpackRenderer::run(VulkanContext *context) {
                                              &ssao_pipeline->getPipeline().getPipelineLayout(),
                                      });
     commandBuffer.bindings.push_back({
+        textureDescriptorSet,
+        &pipeline.getPipeline().getPipelineLayout(),
+        1
+    });
+    commandBuffer.bindings.push_back({
                                              &forward_descriptor,
                                              &pipeline.getPipeline().getPipelineLayout(),
                                      });
@@ -177,6 +188,11 @@ void BackpackRenderer::run(VulkanContext *context) {
     float backpack_rotation = 0;
     auto t = 0.0f;
 
+    images[1] = new StorageImage(context);
+    images[1]->target_image_view = *red_sampler.view;
+    images[1]->target_image_layout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    images[1]->updateDescriptor(*textureDescriptorSet, 1, 0);
+
     CombinedDescriptorSampler occlusionSampler(context);
     occlusionSampler.targetImageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     occlusionSampler.targetImageView = ssao_pipeline->getOcclusionImageView();
@@ -184,18 +200,19 @@ void BackpackRenderer::run(VulkanContext *context) {
     cullingComputePipeline.generateIndirects();
 
 
+    int i = 0;
+    int j = 120 * 5;
     while (!glfwWindowShouldClose(context->window)) {
         glfwPollEvents();
         commandBuffer.beginSwapchainRender();
         auto delta = glfwGetTime() - last_time;
         t += delta;
 //        backpack_rotation += delta * 1.0f;
-        auto rot = glm::rotate(glm::scale(glm::identity<glm::mat4>(), glm::vec3(2)), backpack_rotation + 3.14f / 4.0f, glm::vec3(0, 1.0f, 0));
-        auto model = glm::translate(rot, glm::vec3(0,-1.0f,0));
-        modelBuffer->updateBuffer({
-                                                        model,
-                                                        Material {glm::vec4(1.0, 0.0, 0.0, 1.0)}
-                                                }, 0);
+        auto rot = glm::rotate(glm::scale(glm::identity<glm::mat4>(), glm::vec3(1)), backpack_rotation + -1 * 3.14f / 4.0f, glm::vec3(0, 1.0f, 0));
+        auto model = glm::translate(rot, glm::vec3(0,-0.0f,0));
+        auto material = Material {glm::vec4(1.0, 0.0, 0.0, 1.0)};
+        material.setTextureId(0);
+        modelBuffer->updateBuffer({model, material}, 0);
 
 
         pipeline.ubo.lightProjView = shadow_pipeline.lightUBO.proj * shadow_pipeline.lightUBO.view;
@@ -223,6 +240,14 @@ void BackpackRenderer::run(VulkanContext *context) {
             rotation += glm::vec3(0, 1.0f * (float)delta, 0);
         }
 
+        if (i % 200 == 0) {
+            images[0]->updateDescriptor(*textureDescriptorSet, 1, 0);
+        }
+
+        if (i % 200 == 100) {
+            images[1]->updateDescriptor(*textureDescriptorSet, 1, 0);
+        }
+
 
         pipeline.ubo.view = glm::translate(glm::rotate(glm::identity<glm::mat4>(), rotation.y, glm::vec3(0, 1, 0)),
                                            position);
@@ -244,11 +269,13 @@ void BackpackRenderer::run(VulkanContext *context) {
         red_sampler.sampler.updateSampler(ssao_descriptors, 3);
         last_time = glfwGetTime();
         commandBuffer.finishSwapchainRender();
+        i++;
     }
 
 
     context->device.waitIdle();
     cullingComputePipeline.destroy();
+    textureImage.destroy();
     red_image.destroy();
     modelBuffer->destroy();
     pipeline.destroy();
@@ -256,6 +283,10 @@ void BackpackRenderer::run(VulkanContext *context) {
     depth_pipeline.destroy();
     ssao_pipeline->destroy();
     commandBuffer.destroy();
+
+    delete images[0];
+    delete images[1];
+    delete textureDescriptorSet;
 
     // delete depth_model_pipeline;
     // delete depth_forward_pipeline;
@@ -386,7 +417,7 @@ CombinedDescriptorSampler BackpackRenderer::createSampler(VulkanContext *context
 BackpackRenderer::TextureResult
 BackpackRenderer::load_texture_from_file(VulkanContext *context, VulkanAllocator::VulkanImageAllocation &red_image) {
     auto loader = ImageTextureLoader(context);
-    red_image = loader.loadImageFromFile("./textures/1001_albedo.jpg");
+    red_image = loader.loadImageFromFile("./textures/red.jpeg");
     vk::ImageViewCreateInfo image_view_create_info {};
     image_view_create_info.components = vk::ComponentMapping();
     image_view_create_info.format = vk::Format::eR8G8B8A8Srgb;
@@ -441,4 +472,33 @@ BackpackRenderer::createSSAOPipeline(VulkanContext *context, DescriptorSet *desc
     res->init();
 
     return res;
+}
+
+DescriptorSet* BackpackRenderer::createTextureDescriptor(VulkanContext *context) {
+    auto* textureSet = new TextureDescriptorSet (context);
+    textureSet->buildDescriptor();
+
+    textureSampler = new DescriptorSampler { context };
+    textureSampler->buildSampler();
+    textureSampler->updateSampler(*textureSet, 0, 0);
+
+    ImageTextureLoader loader(context);
+    textureImage = loader.loadImageFromFile("textures/1001_albedo.jpg");
+
+    vk::ImageViewCreateInfo createInfo {};
+    createInfo.setImage(textureImage.image);
+    createInfo.setComponents(vk::ComponentMapping());
+    createInfo.setFormat(vk::Format::eR8G8B8A8Srgb);
+    createInfo.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
+    createInfo.setViewType(vk::ImageViewType::e2D);
+
+    textureImageView = context->device.createImageView(createInfo);
+
+    images[0] = new StorageImage(context);
+    images[0]->setTargetImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+    images[0]->setTargetImageView(*textureImageView);
+
+    images[0]->updateDescriptor(*textureSet, 1, 0);
+
+    return textureSet;
 }

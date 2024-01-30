@@ -16,6 +16,9 @@ void ModelBufferGraphicsPipeline::renderPipeline(Renderable::RenderArguments ren
     VkDeviceSize offset_stride = sizeof (IndirectCallStruct);
     for (uint32_t i = 0; i < vertex_buffers.size(); i++) {
         auto vertex_buffer = vertex_buffers[i];
+        if (vertex_buffers.size() > 1 && vertex_buffer->mask & VertexBuffer::DeferredQuadBit) {
+            continue;
+        }
         modelBuffer->attachOffsetToDescriptor(*descriptorSet, 0);
         descriptorSet->bindToCommandBuffer(renderArguments.commandBuffer, graphicsPipeline.getPipelineLayout());
 

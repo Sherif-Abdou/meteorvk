@@ -16,6 +16,11 @@ public:
     void updateDescriptor(DescriptorSet& descriptor, unsigned int binding, unsigned int index=0);
 
     vk::ImageView target_image_view;
+
+    void setTargetImageView(const vk::ImageView &targetImageView);
+
+    void setTargetImageLayout(vk::ImageLayout targetImageLayout);
+
     vk::ImageLayout target_image_layout;
 };
 

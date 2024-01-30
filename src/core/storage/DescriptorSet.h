@@ -9,8 +9,8 @@
 
 /// Wrapper around VkDescriptorSet
 class DescriptorSet {
-private:
-    static constexpr unsigned int FRAMES_IN_FLIGHT = 2;
+protected:
+    unsigned int frames_in_flight = 2;
     unsigned int current_frame = 0;
     VulkanContext* context;
     std::vector<vk::DescriptorSetLayoutBinding> bindings;
@@ -18,9 +18,9 @@ private:
     vk::DescriptorSetLayout descriptorSetLayout = nullptr;
     vk::DescriptorPool descriptorPool = nullptr;
 
-    void createDescriptorLayout();
-    void createDescriptorPool();
-    void createDescriptorSet();
+    virtual void createDescriptorLayout();
+    virtual void createDescriptorPool();
+    virtual void createDescriptorSet();
 public:
     [[nodiscard]] vk::DescriptorSet getDescriptorSet();
 

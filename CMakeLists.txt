@@ -88,6 +88,12 @@ add_executable(vulkan_engine main.cpp
         src/core/interfaces/IndirectCallStruct.h
         src/engine/special_pipelines/CullingComputePipeline.cpp
         src/engine/special_pipelines/CullingComputePipeline.h
+        src/engine/special_pipelines/PostGraphicsPipeline.cpp
+        src/engine/special_pipelines/PostGraphicsPipeline.h
+        src/engine/special_pipelines/GeometryGraphicsPipeline.cpp
+        src/engine/special_pipelines/GeometryGraphicsPipeline.h
+        src/engine/storage/TextureDescriptorSet.cpp
+        src/engine/storage/TextureDescriptorSet.h
 )
 # Apple MoltenVK Requirements
 if (APPLE)

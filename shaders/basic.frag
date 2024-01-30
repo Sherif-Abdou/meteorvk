@@ -1,4 +1,5 @@
 #version 450
+#extension GL_EXT_nonuniform_qualifier : enable
 
 layout(location = 0) out vec4 color;
 
@@ -24,6 +25,8 @@ struct AtlasRect {
 struct Material {
     vec4 albedo;
     AtlasRect bounds;
+    int textureIndex;
+    int samplerIndex;
 };
 
 layout(binding = 2) uniform DynamicUBO {
@@ -36,6 +39,9 @@ layout(binding = 1) uniform sampler2D depthSampler;
 layout(binding = 3) uniform sampler2D textureSampler;
 
 layout(binding = 4) uniform sampler2D occlusionSampler;
+
+layout(set = 1, binding=0) uniform sampler s[8];
+layout(set = 1, binding=1) uniform texture2D textures[100];
 
 vec4 lightPosition = view * 1 * vec4(-0, 5, 0, 1);
 
@@ -51,16 +57,24 @@ float calculateShadow() {
 
     vec3 screenLocation = lightSpacePosition.xyz * 0.5 + 0.5;
     screenLocation.y = 1 - screenLocation.y; // Needs to be flipped for some reason?
-    float closestLightDepth = texture(depthSampler, screenLocation.xy).r;
-    float currentLightDepth = lightSpacePosition.z;
 
-    float bias = max(0.05 * (1.0 - normal.y), 0.005);
+    float net = 0.0f;
 
-    if (currentLightDepth > 1.0) {
-        return 0.0;
+    for (int i = -1; i <= 1; i++) {
+        for (int j = -1; j <= 1; j++) {
+            float closestLightDepth = texture(depthSampler, screenLocation.xy + vec2(i, j) / vec2(1280, 720)).r;
+            float currentLightDepth = lightSpacePosition.z;
+
+            float bias = max(0.05 * (1.0 - normal.y), 0.005);
+            net += clamp(currentLightDepth - bias, 0.0f, 1.0f) > closestLightDepth ? 0.8 : 0.0;;
+        }
     }
 
-    return currentLightDepth - bias > closestLightDepth ? 0.8 : 0.0;
+//    if (currentLightDepth > 1.0) {
+//        return 0.0;
+//    }
+
+    return net / (3.0f * 3.0f);
 }
 
 float getOcclusion() {
@@ -79,6 +93,12 @@ float getOcclusion() {
 
 void main() {
     float shadow = calculateShadow();
+    vec3 sampledAlbedo = vec3(0.0);
+    if (material.textureIndex != -1) {
+        sampledAlbedo = texture(sampler2D(textures[material.textureIndex], s[material.samplerIndex]), uv).rgb;
+    } else {
+        sampledAlbedo = material.albedo.rgb;
+    }
     vec2 adjustedUV = uv / vec2(material.bounds.x2 - material.bounds.x1, material.bounds.y2 - material.bounds.y1);
     adjustedUV += vec2(material.bounds.x1, material.bounds.y1);
 
@@ -92,5 +112,5 @@ void main() {
     float occlusion = getOcclusion();
     vec2 screenUV = gl_FragCoord.xy / vec2(2560, 1440);
 
-    color = vec4(diffuse * (1-shadow) * kD * albedo.rgb + kA * (occlusion) * albedo.rgb + (1-kD) * specular * specularColor, 1.0);
+    color = vec4(diffuse * (1-shadow) * kD * sampledAlbedo + kA * (occlusion) * sampledAlbedo + (1-kD) * specular * specularColor, 1.0);
 }

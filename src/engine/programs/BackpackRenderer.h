@@ -10,15 +10,21 @@
 #include "../storage/ImageTextureLoader.h"
 #include "../special_pipelines/DepthOnlyPipeline.h"
 #include "../../core/storage/OBJFile.h"
+#include "../../core/storage/DescriptorSampler.h"
+#include "../../core/storage/StorageImage.h"
 
-static constexpr const char *const model_path_1 = "./models/Jeep_Renegade_2016.obj";
+static constexpr const char *const model_path_1 = "./models/super_backpack.obj";
 
 class BackpackRenderer {
 private:
     std::unique_ptr<ModelBufferGraphicsPipeline> ssao_model_pipeline = nullptr;
     std::unique_ptr<ModelBufferGraphicsPipeline> depth_model_pipeline = nullptr;
     std::unique_ptr<ForwardRenderedGraphicsPipeline> depth_forward_pipeline = nullptr;
+    DescriptorSampler* textureSampler = nullptr;
+    vk::raii::ImageView textureImageView = nullptr;
+    VulkanAllocator::VulkanImageAllocation textureImage;
 
+    StorageImage* images[2];
 
     DepthOnlyPipeline createDepthOnlyPipeline(VulkanContext* context, ModelBuffer* modelBuffer, DescriptorSet* descriptorSet);
     std::unique_ptr<SSAOGraphicsPipeline> createSSAOPipeline(VulkanContext* context, DescriptorSet* descriptorSet, ModelBuffer* buffer);
@@ -28,6 +34,8 @@ private:
     DescriptorSet createUniformBindings(VulkanContext* context);
 
     CombinedDescriptorSampler createSampler(VulkanContext* context);
+
+    DescriptorSet* createTextureDescriptor(VulkanContext* context);
 
     struct TextureResult {
         CombinedDescriptorSampler sampler;

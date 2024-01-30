@@ -9,8 +9,8 @@ void StorageImage::updateDescriptor(DescriptorSet& descriptor, unsigned binding,
     writeDescriptorSet.setDstBinding(binding);
     writeDescriptorSet.setDstSet(descriptor.getDescriptorSet());
     writeDescriptorSet.setDescriptorCount(1);
-    writeDescriptorSet.setDstArrayElement(0);
-    writeDescriptorSet.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
+    writeDescriptorSet.setDstArrayElement(index);
+    writeDescriptorSet.setDescriptorType(vk::DescriptorType::eSampledImage);
 
     vk::DescriptorImageInfo descriptorImageInfo {};
     descriptorImageInfo.setImageLayout(target_image_layout);
@@ -19,4 +19,12 @@ void StorageImage::updateDescriptor(DescriptorSet& descriptor, unsigned binding,
     writeDescriptorSet.setImageInfo(descriptorImageInfo);
 
     context->device.updateDescriptorSets(writeDescriptorSet, {});
+}
+
+void StorageImage::setTargetImageView(const vk::ImageView &targetImageView) {
+    target_image_view = targetImageView;
+}
+
+void StorageImage::setTargetImageLayout(vk::ImageLayout targetImageLayout) {
+    target_image_layout = targetImageLayout;
 }

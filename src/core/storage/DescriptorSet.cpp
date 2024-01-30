@@ -39,7 +39,7 @@ void DescriptorSet::createDescriptorPool() {
     vk::DescriptorPoolCreateInfo createInfo {};
     auto sizes = std::vector<vk::DescriptorPoolSize> {uniformBufferSize, samplerSize, dynamicUniformBufferSize, storageBufferSize};
     createInfo.setPoolSizes(sizes);
-    createInfo.setMaxSets(FRAMES_IN_FLIGHT);
+    createInfo.setMaxSets(frames_in_flight);
 
     descriptorPool = context->device.createDescriptorPool(createInfo).release();
 }
@@ -87,5 +87,5 @@ DescriptorSet::~DescriptorSet() {
 }
 
 void DescriptorSet::nextFrame() {
-    current_frame = (current_frame + 1) % 2;
+    current_frame = (current_frame + 1) % frames_in_flight;
 }

@@ -24,12 +24,16 @@ void DescriptorSampler::buildSampler() {
 }
 
 void DescriptorSampler::updateSampler(DescriptorSet& descriptorSet, unsigned int binding, unsigned int index) {
+    vk::DescriptorImageInfo descriptorImageInfo {};
+    descriptorImageInfo.setSampler(*sampler);
+
     vk::WriteDescriptorSet writeDescriptorSet {};
     writeDescriptorSet.setDstBinding(binding);
     writeDescriptorSet.setDstSet(descriptorSet.getDescriptorSet());
     writeDescriptorSet.setDescriptorCount(1);
     writeDescriptorSet.setDstArrayElement(index);
     writeDescriptorSet.setDescriptorType(vk::DescriptorType::eSampler);
+    writeDescriptorSet.setImageInfo(descriptorImageInfo);
 
     context->device.updateDescriptorSets(writeDescriptorSet, {});
 }
