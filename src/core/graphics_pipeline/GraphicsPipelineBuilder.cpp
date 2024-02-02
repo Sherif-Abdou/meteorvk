@@ -29,7 +29,7 @@ void GraphicsPipelineBuilder::initializeDefaults() {
     pipelineViewportStateCreateInfo.setViewportCount(1);
     pipelineViewportStateCreateInfo.setScissorCount(1);
 
-    pipelineRasterizationStateCreateInfo.setCullMode(vk::CullModeFlagBits::eFront);
+    pipelineRasterizationStateCreateInfo.setCullMode(vk::CullModeFlagBits::eNone);
     pipelineRasterizationStateCreateInfo.setRasterizerDiscardEnable(false);
     pipelineRasterizationStateCreateInfo.setLineWidth(1.0f);
     pipelineRasterizationStateCreateInfo.setPolygonMode(vk::PolygonMode::eFill);
@@ -264,11 +264,12 @@ GraphicsPipeline GraphicsPipelineBuilder::buildGraphicsPipeline() {
     pipeline.init();
 
     if (!targetImageViews.empty() && !enable_multisampling) {
-        pipeline.clearValues.push_back(vk::ClearValue(vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)));
+        pipeline.clearValues.push_back(vk::ClearValue(vk::ClearColorValue(1.0f, 1.0f, 1.0f, 1.0f)));
     }
 
     for (auto& colorImageAttachment : colorImageAttachments) {
-        pipeline.clearValues.push_back(vk::ClearValue(vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)));
+//        pipeline.clearValues.push_back(vk::ClearValue(vk::ClearColorValue(135.0f / 255.0f, 206.0f / 255.f, 235.f/ 255.f, 1.0f)));
+        pipeline.clearValues.push_back(vk::ClearValue(vk::ClearColorValue(0.0f / 255.0f, 0.0f / 255.f, 0.f/ 255.f, 1.0f)));
         pipeline.ownedImages.push_back(std::move(colorImageAttachment));
     }
 
@@ -279,7 +280,7 @@ GraphicsPipeline GraphicsPipelineBuilder::buildGraphicsPipeline() {
     }
 
     if (!targetImageViews.empty() && enable_multisampling) {
-        pipeline.clearValues.push_back(vk::ClearValue(vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)));
+        pipeline.clearValues.push_back(vk::ClearValue(vk::ClearColorValue(1.0f, 1.0f, 1.0f, 1.0f)));
     }
 
 

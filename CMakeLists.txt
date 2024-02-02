@@ -94,6 +94,8 @@ add_executable(vulkan_engine main.cpp
         src/engine/special_pipelines/GeometryGraphicsPipeline.h
         src/engine/storage/TextureDescriptorSet.cpp
         src/engine/storage/TextureDescriptorSet.h
+        src/engine/storage/TextureContainer.cpp
+        src/engine/storage/TextureContainer.h
 )
 # Apple MoltenVK Requirements
 if (APPLE)

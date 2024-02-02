@@ -44,9 +44,18 @@ OBJFile::OBJFile(std::istream& stream) {
                 stringstream >> vertex_index >> buf >> tex_index >> buf >> normal_index;
                 face.vertices.push_back(vertices[vertex_index-1]);
                 face.normals.push_back(normals[normal_index-1]);
-                face.texCoords.push_back(texCoords[tex_index-1]);
+                if (tex_index != 0) {
+                    face.texCoords.push_back(texCoords[tex_index-1]);
+                } else {
+                    while (buf != ' ') {
+                        stringstream >> buf;
+                    }
+//                    break;
+                }
             } while (!stringstream.eof());
             faces.push_back(face);
+        } else if (opener == "o") {
+
         }
     }
 }
@@ -137,12 +146,43 @@ OBJFile::IndexPair OBJFile::createVulkanBufferIndexed() {
     auto indices = std::vector<unsigned int>();
     auto point_map = std::map<std::string, unsigned int>();
     for (auto& face : faces) {
-        for (int offset = 0; offset < face.vertices.size() - 2; offset++) {
-            auto tangent = calculateTangent(face, offset);
-            for (int i = offset; i < offset + 3; i++) {
+
+        for (int offset = 1; offset <= face.vertices.size() - 2; offset++) {
+            auto tangent = calculateTangent(face, 0);
+            auto& vertex = face.vertices[0];
+            auto& normal = face.normals[0];
+            glm::vec2 tex;
+            tex = face.texCoords[0];
+//                if (i >= face.texCoords.size()) {
+//                    tex = {0, 0};
+//                } else {
+//                }
+            Point p = {vertex, normal, tex};
+
+            if (point_map.find(p.to_string()) == point_map.end()) {
+                point_map[p.to_string()] = v.size();
+                v.push_back(Vertex {
+                        vertex,
+                        normal,
+                        tex,
+                        tangent
+                });
+            }
+
+            auto res = point_map[p.to_string()];
+            indices.push_back(res);
+            if (point_map.size() != v.size()) {
+                throw std::exception();
+            }
+            for (int i = offset; i < offset + 2; i++) {
                 auto& vertex = face.vertices[i];
                 auto& normal = face.normals[i];
-                auto& tex = face.texCoords[i];
+                glm::vec2 tex;
+                tex = face.texCoords[i];
+//                if (i >= face.texCoords.size()) {
+//                    tex = {0, 0};
+//                } else {
+//                }
                 Point p = {vertex, normal, tex};
 
                 if (point_map.find(p.to_string()) == point_map.end()) {
@@ -160,8 +200,6 @@ OBJFile::IndexPair OBJFile::createVulkanBufferIndexed() {
                 if (point_map.size() != v.size()) {
                     throw std::exception();
                 }
-                assert(point_map.size() == v.size());
-                assert(point_map.max_size() > 255);
             }
         }
     }

@@ -30,7 +30,12 @@ void BackpackRenderer::run(VulkanContext *context) {
     renderPass->init();
 
 
-    auto textureDescriptorSet = createTextureDescriptor(context);
+    TextureDescriptorSet* textureDescriptorSet = createTextureDescriptor(context);
+//    textureContainer = TextureContainer();
+    textureContainer.context = context;
+
+    addTexture(context, textureDescriptorSet, "textures/1001_albedo.jpg");
+    addTexture(context, textureDescriptorSet, "textures/red.jpeg");
 
     // Build graphics pipelines
     auto shaders = std::make_unique<GraphicsShaders>(context, "shaders/basic.vert", "shaders/basic.frag");
@@ -90,11 +95,13 @@ void BackpackRenderer::run(VulkanContext *context) {
                                                     glm::identity<glm::mat4>(),
                                                     Material(glm::vec4(0.8f, 0.1f, 0.26f, 1.0f))
                                             }, 0);
+    auto material = Material(glm::vec4(127.0f, 255.0f, 212.0f, 256.0f) / glm::vec4(256.f));
+    material.setTextureId(-1);
     modelBuffer->updateBuffer({
                                                     glm::translate(
                                                             glm::scale(glm::identity<glm::mat4>(), glm::vec3(2.3, 0.3, 2.3)),
                                                             glm::vec3(0, -8, 0)),
-                                                    Material(glm::vec4(127.0f, 255.0f, 212.0f, 256.0f) / glm::vec4(256.f))
+                                                            material
                                             }, 1);
 
     vertexbuffer1.updateVertexBuffer();
@@ -188,11 +195,6 @@ void BackpackRenderer::run(VulkanContext *context) {
     float backpack_rotation = 0;
     auto t = 0.0f;
 
-    images[1] = new StorageImage(context);
-    images[1]->target_image_view = *red_sampler.view;
-    images[1]->target_image_layout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    images[1]->updateDescriptor(*textureDescriptorSet, 1, 0);
-
     CombinedDescriptorSampler occlusionSampler(context);
     occlusionSampler.targetImageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     occlusionSampler.targetImageView = ssao_pipeline->getOcclusionImageView();
@@ -207,11 +209,11 @@ void BackpackRenderer::run(VulkanContext *context) {
         commandBuffer.beginSwapchainRender();
         auto delta = glfwGetTime() - last_time;
         t += delta;
-//        backpack_rotation += delta * 1.0f;
+        backpack_rotation += delta * 1.0f;
         auto rot = glm::rotate(glm::scale(glm::identity<glm::mat4>(), glm::vec3(1)), backpack_rotation + -1 * 3.14f / 4.0f, glm::vec3(0, 1.0f, 0));
-        auto model = glm::translate(rot, glm::vec3(0,-0.0f,0));
-        auto material = Material {glm::vec4(1.0, 0.0, 0.0, 1.0)};
-        material.setTextureId(0);
+        auto model = glm::translate(rot, glm::vec3(0,-2.0f,0));
+        auto material = Material {glm::vec4(255.0, 218.0, 185.0, 256.0) / glm::vec4(256.0f)};
+        material.setTextureId(-1);
         modelBuffer->updateBuffer({model, material}, 0);
 
 
@@ -241,11 +243,13 @@ void BackpackRenderer::run(VulkanContext *context) {
         }
 
         if (i % 200 == 0) {
-            images[0]->updateDescriptor(*textureDescriptorSet, 1, 0);
+            textureContainer[1].storageImage->updateDescriptor(*textureDescriptorSet, 1, 0);
+            textureContainer[1].storageImage->updateDescriptor(*textureDescriptorSet, 1, 1);
         }
 
         if (i % 200 == 100) {
-            images[1]->updateDescriptor(*textureDescriptorSet, 1, 0);
+//            textureContainer[0].storageImage->updateDescriptor(*textureDescriptorSet, 1, 1);
+//            textureContainer[1].storageImage->updateDescriptor(*textureDescriptorSet, 1, 0);
         }
 
 
@@ -275,7 +279,7 @@ void BackpackRenderer::run(VulkanContext *context) {
 
     context->device.waitIdle();
     cullingComputePipeline.destroy();
-    textureImage.destroy();
+    textureContainer.destroy();
     red_image.destroy();
     modelBuffer->destroy();
     pipeline.destroy();
@@ -284,8 +288,6 @@ void BackpackRenderer::run(VulkanContext *context) {
     ssao_pipeline->destroy();
     commandBuffer.destroy();
 
-    delete images[0];
-    delete images[1];
     delete textureDescriptorSet;
 
     // delete depth_model_pipeline;
@@ -474,16 +476,23 @@ BackpackRenderer::createSSAOPipeline(VulkanContext *context, DescriptorSet *desc
     return res;
 }
 
-DescriptorSet* BackpackRenderer::createTextureDescriptor(VulkanContext *context) {
+TextureDescriptorSet* BackpackRenderer::createTextureDescriptor(VulkanContext *context) {
     auto* textureSet = new TextureDescriptorSet (context);
     textureSet->buildDescriptor();
 
     textureSampler = new DescriptorSampler { context };
     textureSampler->buildSampler();
     textureSampler->updateSampler(*textureSet, 0, 0);
+    textureContainer.addSampler(textureSampler);
 
+
+
+    return textureSet;
+}
+
+void BackpackRenderer::addTexture(VulkanContext* context, TextureDescriptorSet *textureSet, const char* path) {
     ImageTextureLoader loader(context);
-    textureImage = loader.loadImageFromFile("textures/1001_albedo.jpg");
+    auto textureImage = loader.loadImageFromFile(path);
 
     vk::ImageViewCreateInfo createInfo {};
     createInfo.setImage(textureImage.image);
@@ -492,13 +501,13 @@ DescriptorSet* BackpackRenderer::createTextureDescriptor(VulkanContext *context)
     createInfo.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
     createInfo.setViewType(vk::ImageViewType::e2D);
 
-    textureImageView = context->device.createImageView(createInfo);
+    auto textureImageView = context->device.createImageView(createInfo);
 
-    images[0] = new StorageImage(context);
-    images[0]->setTargetImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-    images[0]->setTargetImageView(*textureImageView);
 
-    images[0]->updateDescriptor(*textureSet, 1, 0);
+    auto* image = new StorageImage(context);
+    image->setTargetImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+    image->setTargetImageView(*textureImageView);
+    image->updateDescriptor(*textureSet, 1, 0);
 
-    return textureSet;
+    textureContainer.addTexture(textureImage, std::move(textureImageView), image);
 }
