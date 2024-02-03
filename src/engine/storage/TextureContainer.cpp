@@ -61,3 +61,15 @@ uint32_t TextureContainer::addSampler(DescriptorSampler *sampler) {
     samplers.push_back(sampler);
     return i;
 }
+
+uint32_t TextureContainer::addMaterial(RenderMaterial material) {
+    auto i = materials.size();
+    materials.push_back(material);
+    return i;
+}
+
+void TextureContainer::copyMaterialsTo(TextureDescriptorSet *set) {
+    for (int i = 0; i < std::min(materials.size(), 256ul); i++) {
+        set->materialList.materials[i] = materials[i];
+    }
+}

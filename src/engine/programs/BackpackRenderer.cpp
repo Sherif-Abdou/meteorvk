@@ -10,6 +10,7 @@
 #include "../storage/TextureDescriptorSet.h"
 #include "../../core/storage/DescriptorSampler.h"
 #include "../../core/storage/StorageImage.h"
+#include "../storage/MTLFile.h"
 
 void BackpackRenderer::run(VulkanContext *context) {
     auto vertexbuffer1 = createVertexBuffer(context, model_path_1);
@@ -204,6 +205,8 @@ void BackpackRenderer::run(VulkanContext *context) {
 
     int i = 0;
     int j = 120 * 5;
+    textureContainer.copyMaterialsTo(textureDescriptorSet);
+    textureDescriptorSet->uploadMaterialList();
     while (!glfwWindowShouldClose(context->window)) {
         glfwPollEvents();
         commandBuffer.beginSwapchainRender();
@@ -299,6 +302,17 @@ VertexBuffer BackpackRenderer::createVertexBuffer(VulkanContext *context, const 
     VertexBuffer buffer(context, true);
     OBJFile file = OBJFile::fromFilePath(path);
     auto raw = file.createVulkanBufferIndexed();
+    if (file.getMaterialPath() != "") {
+        std::filesystem::path p = path;
+        std::string sep = "/";
+        auto new_path = p.parent_path().c_str() + sep + file.getMaterialPath();
+        MTLFile new_file = MTLFile::fromFilePath(new_path);
+        auto map = new_file.getRenderMaterials();
+        for (int i = 0; i < map.size(); i++) {
+            auto material = map[file.material_index_map[i]];
+            textureContainer.addMaterial(material);
+        }
+    }
     buffer.vertices = std::move(raw.vertices);
     buffer.indices = std::move(raw.indices);
     return buffer;

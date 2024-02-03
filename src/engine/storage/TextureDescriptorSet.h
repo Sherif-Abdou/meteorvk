@@ -7,6 +7,8 @@
 
 
 #include "../../core/storage/DescriptorSet.h"
+#include "../material/RenderMaterial.h"
+#include "../../core/storage/StorageBuffer.h"
 
 class TextureDescriptorSet: public DescriptorSet {
 protected:
@@ -16,10 +18,22 @@ protected:
 
     void createDescriptorLayout() override;
 
+
 public:
+    struct MaterialList {
+        RenderMaterial materials[256];
+    };
+    MaterialList materialList;
+
+    void uploadMaterialList();
     explicit TextureDescriptorSet(VulkanContext* context);
+
+    ~TextureDescriptorSet() override;
+
     const uint32_t max_images = 100;
     const uint32_t max_samplers = 8;
+protected:
+    StorageBuffer<MaterialList> material_storage_buffer;
 };
 
 

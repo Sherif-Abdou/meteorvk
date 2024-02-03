@@ -84,7 +84,7 @@ private:
     std::vector<vk::DynamicState> dynamic_states {};
     std::vector<vk::PipelineShaderStageCreateInfo> stages {};
     std::vector<vk::VertexInputBindingDescription> bindings = {Vertex::bindingDescription()};
-    std::array<vk::VertexInputAttributeDescription, 4> descriptions = Vertex::attributeDescriptions();
+    std::array<vk::VertexInputAttributeDescription, Vertex::VERTEX_NUM> descriptions = Vertex::attributeDescriptions();
     std::vector<vk::PipelineColorBlendAttachmentState> colorBlendAttachments = {};
 
     void initializeDefaults();

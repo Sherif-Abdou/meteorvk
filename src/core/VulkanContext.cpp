@@ -228,6 +228,7 @@ void VulkanContext::createLogicalDevice() {
     descriptorFeatures.descriptorBindingPartiallyBound = true;
     descriptorFeatures.descriptorBindingSampledImageUpdateAfterBind = true;
     descriptorFeatures.descriptorBindingVariableDescriptorCount = true;
+    descriptorFeatures.descriptorBindingStorageBufferUpdateAfterBind = true;
     descriptorFeatures.runtimeDescriptorArray = true;
 
     deviceFeatures2.pNext = &descriptorFeatures;

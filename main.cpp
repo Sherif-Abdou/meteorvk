@@ -54,33 +54,33 @@ int main() {
         auto renderer = BackpackRenderer();
         renderer.run(&context);
     }
-    else {
-        CullingComputePipeline pipeline(&context);
-        ModelBuffer* buffer = new ModelBuffer(&context, 2);
-        buffer->updateBuffer({glm::identity<glm::mat4>(), Material{glm::vec4(0.0)}}, 0);
-        buffer->updateBuffer({glm::translate(glm::identity<glm::mat4>(), glm::vec3(-1, 0, 0)), Material{glm::vec4(0.0)}}, 1);
-        auto v1 = BackpackRenderer::createVertexBuffer(&context, "./models/super_backpack.obj");
-        v1.canBeStorage = true;
-        v1.init();
-        v1.updateVertexBuffer();
-
-        auto v2 = BackpackRenderer::createVertexBuffer(&context, "./models/floor.obj");
-        v2.canBeStorage = true;
-        v2.init();
-        v2.updateVertexBuffer();
-
-        pipeline.vertex_buffers = {&v1, &v2};
-        pipeline.models = buffer;
-
-        pipeline.init();
-        pipeline.generateIndirects();
-
-        buffer->destroy();
-        v1.destroy();
-        v2.destroy();
-        pipeline.destroy();
-        delete buffer;
-    }
+//    else {
+//        CullingComputePipeline pipeline(&context);
+//        ModelBuffer* buffer = new ModelBuffer(&context, 2);
+//        buffer->updateBuffer({glm::identity<glm::mat4>(), Material{glm::vec4(0.0)}}, 0);
+//        buffer->updateBuffer({glm::translate(glm::identity<glm::mat4>(), glm::vec3(-1, 0, 0)), Material{glm::vec4(0.0)}}, 1);
+//        auto v1 = BackpackRenderer::createVertexBuffer(&context, "./models/super_backpack.obj");
+//        v1.canBeStorage = true;
+//        v1.init();
+//        v1.updateVertexBuffer();
+//
+//        auto v2 = BackpackRenderer::createVertexBuffer(&context, "./models/floor.obj");
+//        v2.canBeStorage = true;
+//        v2.init();
+//        v2.updateVertexBuffer();
+//
+//        pipeline.vertex_buffers = {&v1, &v2};
+//        pipeline.models = buffer;
+//
+//        pipeline.init();
+//        pipeline.generateIndirects();
+//
+//        buffer->destroy();
+//        v1.destroy();
+//        v2.destroy();
+//        pipeline.destroy();
+//        delete buffer;
+//    }
     context.cleanup();
     return 0;
 }

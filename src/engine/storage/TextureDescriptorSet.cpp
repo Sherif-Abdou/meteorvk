@@ -15,9 +15,13 @@ void TextureDescriptorSet::createDescriptorPool() {
     sampledImageSize.setType(vk::DescriptorType::eSampledImage);
     sampledImageSize.setDescriptorCount(max_images*frames_in_flight);
 
+    vk::DescriptorPoolSize storageSize {};
+    storageSize.setType(vk::DescriptorType::eStorageBuffer);
+    storageSize.setDescriptorCount(frames_in_flight);
+
 
     vk::DescriptorPoolCreateInfo createInfo {};
-    auto sizes = std::vector<vk::DescriptorPoolSize> {samplerSize, sampledImageSize};
+    auto sizes = std::vector<vk::DescriptorPoolSize> {samplerSize, sampledImageSize, storageSize};
     createInfo.setPoolSizes(sizes);
     createInfo.setMaxSets(frames_in_flight);
     createInfo.setFlags(vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind);
@@ -33,11 +37,11 @@ void TextureDescriptorSet::createDescriptorSet() {
     allocateInfo.setDescriptorPool(descriptorPool);
     allocateInfo.setSetLayouts(list);
 
-    vk::DescriptorSetVariableDescriptorCountAllocateInfo variableAllocateInfo {};
-    std::vector<uint32_t> descriptor_counts {max_images};
-    variableAllocateInfo.setDescriptorCounts(descriptor_counts);
-
-    allocateInfo.setPNext(&variableAllocateInfo);
+//    vk::DescriptorSetVariableDescriptorCountAllocateInfo variableAllocateInfo {};
+//    std::vector<uint32_t> descriptor_counts {max_images};
+//    variableAllocateInfo.setDescriptorCounts(descriptor_counts);
+//
+//    allocateInfo.setPNext(&variableAllocateInfo);
 
     descriptorSet = (*context->device).allocateDescriptorSets(allocateInfo);
 }
@@ -45,8 +49,8 @@ void TextureDescriptorSet::createDescriptorSet() {
 void TextureDescriptorSet::createDescriptorLayout() {
     vk::DescriptorSetLayoutCreateInfo createInfo {};
     vk::DescriptorSetLayoutBindingFlagsCreateInfo flagsCreateInfo {};
-    auto special_flags = vk::DescriptorBindingFlagBits::eUpdateAfterBind | vk::DescriptorBindingFlagBits::ePartiallyBound | vk::DescriptorBindingFlagBits::eVariableDescriptorCount;
-    std::vector<vk::DescriptorBindingFlags> flags {vk::DescriptorBindingFlagBits::eUpdateAfterBind | vk::DescriptorBindingFlagBits::ePartiallyBound, special_flags};
+    auto special_flags = vk::DescriptorBindingFlagBits::eUpdateAfterBind | vk::DescriptorBindingFlagBits::ePartiallyBound;
+    std::vector<vk::DescriptorBindingFlags> flags {special_flags, special_flags, special_flags};
     flagsCreateInfo.setBindingFlags(flags);
     std::vector<vk::DescriptorSetLayoutBinding> bindings {};
 
@@ -64,6 +68,12 @@ void TextureDescriptorSet::createDescriptorLayout() {
         .setBinding(1)
     );
 
+    bindings.push_back(vk::DescriptorSetLayoutBinding()
+        .setDescriptorCount(1)
+        .setStageFlags(vk::ShaderStageFlagBits::eFragment)
+        .setDescriptorType(vk::DescriptorType::eStorageBuffer)
+        .setBinding(2));
+
     for (auto& binding: bindings) {
         if (binding.descriptorType == vk::DescriptorType::eUniformBufferDynamic || binding.descriptorType == vk::DescriptorType::eStorageBufferDynamic) {
             dynamic_offsets.push_back(0);
@@ -77,6 +87,18 @@ void TextureDescriptorSet::createDescriptorLayout() {
     this->descriptorSetLayout = context->device.createDescriptorSetLayout(createInfo).release();
 }
 
-TextureDescriptorSet::TextureDescriptorSet(VulkanContext *context) : DescriptorSet(context, {}) {
+TextureDescriptorSet::TextureDescriptorSet(VulkanContext *context) : DescriptorSet(context, {}),
+                                                                     material_storage_buffer(context) {
     frames_in_flight = 1;
+    material_storage_buffer.allocateBuffer();
+}
+
+void TextureDescriptorSet::uploadMaterialList() {
+    material_storage_buffer.updateBuffer(materialList);
+    material_storage_buffer.writeToDescriptor(*this, 2);
+}
+
+TextureDescriptorSet::~TextureDescriptorSet() {
+    material_storage_buffer.destroy();
+
 }

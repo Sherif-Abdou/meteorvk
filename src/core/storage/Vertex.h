@@ -12,11 +12,12 @@
 
 
 struct Vertex {
-    constexpr static unsigned int VERTEX_NUM = 4;
+    constexpr static unsigned int VERTEX_NUM = 5;
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec2 texCoord;
     glm::vec3 tangent;
+    uint32_t material = -1;
 
     static vk::VertexInputBindingDescription bindingDescription();
     static std::array<vk::VertexInputAttributeDescription, VERTEX_NUM> attributeDescriptions();

@@ -8,6 +8,7 @@ layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 uv;
 layout(location = 3) in vec3 tangent;
 layout(location = 4) in vec3 light_space_position;
+layout(location = 5) flat in uint material_id;
 
 layout(binding = 0) uniform UBO {
     mat4 proj;
@@ -29,6 +30,16 @@ struct Material {
     int samplerIndex;
 };
 
+struct RenderMaterial {
+    vec3 kA;
+    vec3 kD;
+    vec3 kS;
+    float nS;
+    uint illum;
+    int kD_index;
+    int kS_index;
+};
+
 layout(binding = 2) uniform DynamicUBO {
     mat4 _model;
     Material material;
@@ -43,13 +54,18 @@ layout(binding = 4) uniform sampler2D occlusionSampler;
 layout(set = 1, binding=0) uniform sampler s[8];
 layout(set = 1, binding=1) uniform texture2D textures[100];
 
+layout(set = 1, binding=2) buffer materialBuffer {
+    RenderMaterial materials[];
+};
+
 vec4 lightPosition = view * 1 * vec4(-0, 5, 0, 1);
 
 //const vec3 albedo = vec3(0.054901960784313725, 0.4549019607843137, 0.5647058823529412);
-const float kA = 0.5f;
-const float kD = 0.8f;
+float kA = 0.0f;
+float kD = 0.7f;
+float kS = 0.0f;
 
-const vec3 specularColor = vec3(0.7);
+vec3 specularColor = vec3(0.7);
 
 float calculateShadow() {
     vec4 lightSpacePosition = vec4(light_space_position, 1.0f);
@@ -92,13 +108,27 @@ float getOcclusion() {
 }
 
 void main() {
-    float shadow = calculateShadow();
     vec3 sampledAlbedo = vec3(0.0);
-    if (material.textureIndex != -1) {
+    vec3 sampledAmbient = vec3(0.0);
+    float nS = 8.0;
+    if (material_id != -1) {
+        sampledAlbedo = materials[material_id].kD;
+        sampledAmbient = materials[material_id].kA;
+        specularColor = materials[material_id].kS;
+        if (materials[material_id].illum != 2) {
+            kS = 0.0f;
+        }
+        nS = materials[material_id].nS;
+    } else if (material.textureIndex != -1) {
         sampledAlbedo = texture(sampler2D(textures[material.textureIndex], s[material.samplerIndex]), uv).rgb;
+        sampledAmbient = sampledAlbedo;
+        specularColor = vec3(0.7);
     } else {
         sampledAlbedo = material.albedo.rgb;
+        sampledAmbient = sampledAlbedo;
+        specularColor = vec3(0.7);
     }
+    float shadow = calculateShadow();
     vec2 adjustedUV = uv / vec2(material.bounds.x2 - material.bounds.x1, material.bounds.y2 - material.bounds.y1);
     adjustedUV += vec2(material.bounds.x1, material.bounds.y1);
 
@@ -106,11 +136,15 @@ void main() {
     lightPosition /= lightPosition.w;
     float diffuse = max(dot(normalize(normal) , normalize(lightPosition.xyz-position)), 0);
     vec3 halfway = normalize(-position + (lightPosition.xyz - position));
-    float specular = pow(max(dot(halfway, normal), 0), 8);
+    float specular = pow(max(dot(halfway, normal), 0), nS);
 
     vec4 albedo = material.albedo.a == 0.0 ? texture(textureSampler, adjustedUV) : material.albedo;
     float occlusion = getOcclusion();
     vec2 screenUV = gl_FragCoord.xy / vec2(2560, 1440);
 
-    color = vec4(diffuse * (1-shadow) * kD * sampledAlbedo + kA * (occlusion) * sampledAlbedo + (1-kD) * specular * specularColor, 1.0);
+    color = vec4(diffuse * (1-shadow) * kD * sampledAlbedo
+        + kA * (occlusion) * sampledAmbient
+        + kS * (1.0f) * specular * specularColor
+        , 1.0);
+    color.rgb = color.rgb / (color.rgb + vec3(1.0));
 }

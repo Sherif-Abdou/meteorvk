@@ -14,6 +14,8 @@
 #include "../../core/storage/StorageImage.h"
 #include "../storage/TextureContainer.h"
 #include "../storage/TextureDescriptorSet.h"
+#include <filesystem>
+#include <paths.h>
 
 static constexpr const char *const model_path_1 = "./models/non_triangled_senna.obj";
 
@@ -47,7 +49,7 @@ private:
     static TextureResult load_texture_from_file(VulkanContext* context, VulkanAllocator::VulkanImageAllocation& red_image);
 public:
     void run(VulkanContext* context);
-    static VertexBuffer createVertexBuffer(VulkanContext* context, const char* path);
+    VertexBuffer createVertexBuffer(VulkanContext* context, const char* path);
 
     void addTexture(VulkanContext *context, TextureDescriptorSet *textureSet, const char* path);
 };

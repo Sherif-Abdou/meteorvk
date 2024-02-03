@@ -6,7 +6,11 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <cstdint>
 
+
+uint32_t OBJFile::start = -1;
+std::optional<uint32_t> OBJFile::oldStart;
 
 OBJFile::OBJFile(std::istream& stream) {
     string str {};
@@ -16,6 +20,11 @@ OBJFile::OBJFile(std::istream& stream) {
         std::stringstream stringstream {str};
         string opener;
         stringstream >> opener;
+        if (opener == "mtllib") {
+            string local_path;
+            stringstream >> local_path;
+            material_path = local_path;
+        }
         if (opener == "vt") {
             float u;
             float v;
@@ -52,10 +61,30 @@ OBJFile::OBJFile(std::istream& stream) {
                     }
 //                    break;
                 }
+                if (material_path != "") {
+                    face.material_id = start;
+                }
             } while (!stringstream.eof());
             faces.push_back(face);
-        } else if (opener == "o") {
-
+        } else if (opener == "usemtl") {
+            string mtl_name;
+            stringstream >> mtl_name;
+            if (material_name_map.find(mtl_name) != material_name_map.end()) {
+                if (!OBJFile::oldStart.has_value()) {
+                    OBJFile::oldStart = start;
+                } else {
+                    OBJFile::oldStart = std::max(*OBJFile::oldStart, OBJFile::start);
+                }
+                OBJFile::start = material_name_map[mtl_name];
+//                OBJFile::start++;
+            } else {
+                if (OBJFile::oldStart.has_value()) {
+                    OBJFile::start = *OBJFile::oldStart;
+                }
+                OBJFile::start++;
+            }
+            material_index_map[OBJFile::start] = mtl_name;
+            material_name_map[mtl_name] = start;
         }
     }
 }
@@ -144,7 +173,7 @@ std::vector<Vertex> OBJFile::createVulkanBuffer() {
 OBJFile::IndexPair OBJFile::createVulkanBufferIndexed() {
     auto v = std::vector<Vertex>();
     auto indices = std::vector<unsigned int>();
-    auto point_map = std::map<std::string, unsigned int>();
+    auto point_map = std::unordered_map<std::string, unsigned int>();
     for (auto& face : faces) {
 
         for (int offset = 1; offset <= face.vertices.size() - 2; offset++) {
@@ -157,7 +186,7 @@ OBJFile::IndexPair OBJFile::createVulkanBufferIndexed() {
 //                    tex = {0, 0};
 //                } else {
 //                }
-            Point p = {vertex, normal, tex};
+            Point p = {vertex, normal, tex, face.material_id};
 
             if (point_map.find(p.to_string()) == point_map.end()) {
                 point_map[p.to_string()] = v.size();
@@ -165,7 +194,8 @@ OBJFile::IndexPair OBJFile::createVulkanBufferIndexed() {
                         vertex,
                         normal,
                         tex,
-                        tangent
+                        tangent,
+                        face.material_id
                 });
             }
 
@@ -210,5 +240,15 @@ OBJFile OBJFile::fromFilePath(const std::string & file_path) {
     std::ifstream file (file_path);
     return OBJFile(file);
 }
+
+void OBJFile::setStart(uint32_t new_start) {
+    OBJFile::start = new_start;
+}
+
+const OBJFile::string &OBJFile::getMaterialPath() const {
+    return material_path;
+}
+
+
 
 

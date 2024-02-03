@@ -9,6 +9,8 @@
 #include "../../core/VulkanContext.h"
 #include "../../core/storage/StorageImage.h"
 #include "../../core/storage/DescriptorSampler.h"
+#include "../material/RenderMaterial.h"
+#include "TextureDescriptorSet.h"
 
 class TextureContainer {
 public:
@@ -17,14 +19,17 @@ public:
         vk::raii::ImageView imageView;
         StorageImage* storageImage;
     };
+
 private:
     std::vector<Texture> textures {};
     std::vector<DescriptorSampler*> samplers {};
+    std::vector<RenderMaterial> materials {};
 public:
     VulkanContext* context;
 
     uint32_t addTexture(Texture texture);
     uint32_t addTexture(VulkanAllocator::VulkanImageAllocation allocation, vk::raii::ImageView imageView, StorageImage* storageImage);
+    uint32_t addMaterial(RenderMaterial material);
 
     uint32_t addSampler(DescriptorSampler* sampler);
 
@@ -36,6 +41,8 @@ public:
     VulkanAllocator::VulkanImageAllocation* getAllocation(uint32_t index);
 
     Texture& operator[](uint32_t index);
+
+    void copyMaterialsTo(TextureDescriptorSet* set);
 
     void destroy();
 };

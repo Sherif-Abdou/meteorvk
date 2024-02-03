@@ -37,7 +37,14 @@ std::array<vk::VertexInputAttributeDescription, Vertex::VERTEX_NUM> Vertex::attr
     tangent_attribute.format = VK_FORMAT_R32G32B32_SFLOAT;
     tangent_attribute.offset = offsetof(Vertex, tangent);
 
-    std::array<vk::VertexInputAttributeDescription, 4> all = {position_attribute, normal_attribute, tex_attribute, tangent_attribute};
+    auto material_attribute = VkVertexInputAttributeDescription();
+    material_attribute.binding = 0;
+    material_attribute.location = 4;
+    material_attribute.format = VK_FORMAT_R32_UINT;
+    material_attribute.offset = offsetof(Vertex, material);
+
+
+    std::array<vk::VertexInputAttributeDescription, VERTEX_NUM> all = {position_attribute, normal_attribute, tex_attribute, tangent_attribute, material_attribute};
     std::array<vk::VertexInputAttributeDescription, VERTEX_NUM> final {};
     for (int i = 0; i < VERTEX_NUM; i++) {
         final[i] = all[i];
