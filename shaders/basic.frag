@@ -10,6 +10,8 @@ layout(location = 3) in vec3 tangent;
 layout(location = 4) in vec3 light_space_position;
 layout(location = 5) flat in uint material_id;
 
+const float PI = 3.14159265359;
+
 layout(binding = 0) uniform UBO {
     mat4 proj;
     mat4 view;
@@ -107,7 +109,50 @@ float getOcclusion() {
     return pow(net, 1.0f);
 }
 
+// PBR methods from learnopengl.com
+vec3 fresnelSchlick(float cosTheta, vec3 F0)
+{
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+float DistributionGGX(vec3 N, vec3 H, float roughness)
+{
+    float a      = roughness*roughness;
+    float a2     = a*a;
+    float NdotH  = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH*NdotH;
+
+    float num   = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+
+    return num / denom;
+}
+
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    float r = (roughness + 1.0);
+    float k = (r*r) / 8.0;
+
+    float num   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+
+    return num / denom;
+}
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2  = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1  = GeometrySchlickGGX(NdotL, roughness);
+
+    return ggx1 * ggx2;
+}
+
+
+
 void main() {
+    float metallic = 0.0f;
     vec3 sampledAlbedo = vec3(0.0);
     vec3 sampledAmbient = vec3(0.0);
     float nS = 8.0;
@@ -117,7 +162,13 @@ void main() {
         specularColor = materials[material_id].kS;
         if (materials[material_id].illum != 2) {
             kS = 0.0f;
+            metallic = 1.0f;
         }
+//        int index = materials[material_id].kD_index;
+//        if (index != -1) {
+//
+//            sampledAlbedo = texture(sampler2D(textures[index], s[0]), uv).rgb;
+//        }
         nS = materials[material_id].nS;
     } else if (material.textureIndex != -1) {
         sampledAlbedo = texture(sampler2D(textures[material.textureIndex], s[material.samplerIndex]), uv).rgb;
@@ -128,23 +179,50 @@ void main() {
         sampledAmbient = sampledAlbedo;
         specularColor = vec3(0.7);
     }
-    float shadow = calculateShadow();
     vec2 adjustedUV = uv / vec2(material.bounds.x2 - material.bounds.x1, material.bounds.y2 - material.bounds.y1);
     adjustedUV += vec2(material.bounds.x1, material.bounds.y1);
 
     lightPosition = view * lightPosition;
     lightPosition /= lightPosition.w;
-    float diffuse = max(dot(normalize(normal) , normalize(lightPosition.xyz-position)), 0);
-    vec3 halfway = normalize(-position + (lightPosition.xyz - position));
-    float specular = pow(max(dot(halfway, normal), 0), nS);
+    vec3 light = normalize(lightPosition.xyz - position);
+    float diffuse = max(dot(normalize(normal) , light), 0);
+    vec3 view = normalize(-position);
+    vec3 halfway = normalize(view + light);
+//    float specular = pow(max(dot(halfway, normal), 0), nS);
 
-    vec4 albedo = material.albedo.a == 0.0 ? texture(textureSampler, adjustedUV) : material.albedo;
+    vec3 F0 = vec3(0.04);
+    F0 = mix(F0, sampledAlbedo, metallic);
+    vec3 F  = fresnelSchlick(max(dot(halfway, view), metallic), F0);
+
+    float NDF = DistributionGGX(normal, halfway, nS);
+    float G   = GeometrySmith(normal, view, light, nS);
+
+    vec3 numerator    = NDF * G * F;
+    float denominator = 4.0 * max(dot(normal, view), 0.0) * max(dot(normal, light), 0.0)  + 0.0001;
+    vec3 specular     = numerator / denominator;
+
+    vec3 S = F;
+    vec3 D = vec3(1.0) - S;
+
+    D *= 1.0 - metallic;
+
+
+    float shadow = calculateShadow();
     float occlusion = getOcclusion();
-    vec2 screenUV = gl_FragCoord.xy / vec2(2560, 1440);
 
-    color = vec4(diffuse * (1-shadow) * kD * sampledAlbedo
-        + kA * (occlusion) * sampledAmbient
-        + kS * (1.0f) * specular * specularColor
-        , 1.0);
+    float NdotL = max(dot(normal, light), 0.0);
+    vec3 radiance = vec3(1.0f);
+
+    vec3 ambient = vec3(0.3) * sampledAlbedo * occlusion;
+
+    color.rgb = (D * sampledAlbedo * (1.0 - shadow) / PI + specular) * radiance * NdotL;
+    color.rgb += ambient;
+
+
+
+//    color = vec4(diffuse * (1-shadow) * kD * sampledAlbedo
+//        + kA * (occlusion) * sampledAmbient
+//        + kS * (1.0f) * specular * specularColor
+//        , 1.0);
     color.rgb = color.rgb / (color.rgb + vec3(1.0));
 }

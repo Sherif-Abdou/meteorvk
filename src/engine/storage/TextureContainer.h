@@ -42,6 +42,8 @@ public:
 
     Texture& operator[](uint32_t index);
 
+    uint32_t addTextureFromPath(const char* path);
+
     void copyMaterialsTo(TextureDescriptorSet* set);
 
     void destroy();

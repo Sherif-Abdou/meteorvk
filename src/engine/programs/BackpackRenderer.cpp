@@ -35,7 +35,7 @@ void BackpackRenderer::run(VulkanContext *context) {
 //    textureContainer = TextureContainer();
     textureContainer.context = context;
 
-    addTexture(context, textureDescriptorSet, "textures/1001_albedo.jpg");
+    addTexture(context, textureDescriptorSet, "textures/Base_Color_1.jpg");
     addTexture(context, textureDescriptorSet, "textures/red.jpeg");
 
     // Build graphics pipelines
@@ -214,7 +214,7 @@ void BackpackRenderer::run(VulkanContext *context) {
         t += delta;
         backpack_rotation += delta * 1.0f;
         auto rot = glm::rotate(glm::scale(glm::identity<glm::mat4>(), glm::vec3(1)), backpack_rotation + -1 * 3.14f / 4.0f, glm::vec3(0, 1.0f, 0));
-        auto model = glm::translate(rot, glm::vec3(0,-2.0f,0));
+        auto model = glm::translate(rot, glm::vec3(0,-1.0f,0));
         auto material = Material {glm::vec4(255.0, 218.0, 185.0, 256.0) / glm::vec4(256.0f)};
         material.setTextureId(-1);
         modelBuffer->updateBuffer({model, material}, 0);
@@ -246,7 +246,7 @@ void BackpackRenderer::run(VulkanContext *context) {
         }
 
         if (i % 200 == 0) {
-            textureContainer[1].storageImage->updateDescriptor(*textureDescriptorSet, 1, 0);
+            textureContainer[0].storageImage->updateDescriptor(*textureDescriptorSet, 1, 0);
             textureContainer[1].storageImage->updateDescriptor(*textureDescriptorSet, 1, 1);
         }
 

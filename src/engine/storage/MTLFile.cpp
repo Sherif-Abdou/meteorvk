@@ -4,6 +4,8 @@
 
 #include "MTLFile.h"
 
+int MTLFile::image_index = -1;
+
 MTLFile::MTLFile(std::istream &stream) {
     string str {};
 
@@ -44,6 +46,10 @@ MTLFile::MTLFile(std::istream &stream) {
 
             current_material->nS = s;
         }
+        if (opener == "map_Kd") {
+            image_index++;
+            current_material->kD_index = image_index;
+        }
         if (opener == "illum") {
             uint32_t s;
             stringstream >> s;
@@ -62,5 +68,7 @@ const std::unordered_map<std::string, RenderMaterial> &MTLFile::getRenderMateria
 
 MTLFile MTLFile::fromFilePath(const std::string & path) {
     std::ifstream stream(path);
-    return MTLFile(stream);
+    auto res = MTLFile(stream);
+    res.path = path;
+    return res;
 }

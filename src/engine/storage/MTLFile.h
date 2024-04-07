@@ -9,6 +9,8 @@
 #include <sstream>
 #include <fstream>
 #include <string>
+#include <optional>
+#include <unordered_map>
 #include "../material/RenderMaterial.h"
 
 class MTLFile {
@@ -20,6 +22,8 @@ public:
 private:
     std::optional<RenderMaterial> current_material;
     std::optional<string> current_material_name;
+    std::string path;
+    static int image_index;
 
 public:
     explicit MTLFile(std::istream& stream);

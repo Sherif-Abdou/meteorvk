@@ -20,8 +20,9 @@ protected:
 
 
 public:
+    static constexpr unsigned long MAX_MATERIALS = 256;
     struct MaterialList {
-        RenderMaterial materials[256];
+        RenderMaterial materials[MAX_MATERIALS];
     };
     MaterialList materialList;
 

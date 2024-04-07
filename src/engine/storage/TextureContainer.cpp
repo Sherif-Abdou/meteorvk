@@ -4,6 +4,8 @@
 
 #include "TextureContainer.h"
 
+#include "ImageTextureLoader.h"
+
 void TextureContainer::destroy() {
     for (auto& texture: textures) {
         texture.allocation.destroy();
@@ -48,6 +50,29 @@ TextureContainer::Texture& TextureContainer::operator[](uint32_t index) {
     return textures[index];
 }
 
+uint32_t TextureContainer::addTextureFromPath(const char* path) {
+    assert(context != nullptr);
+
+    ImageTextureLoader loader(context);
+    auto textureImage = loader.loadImageFromFile(path);
+
+    vk::ImageViewCreateInfo createInfo {};
+    createInfo.setImage(textureImage.image);
+    createInfo.setComponents(vk::ComponentMapping());
+    createInfo.setFormat(vk::Format::eR8G8B8A8Srgb);
+    createInfo.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
+    createInfo.setViewType(vk::ImageViewType::e2D);
+
+    auto textureImageView = context->device.createImageView(createInfo);
+
+
+    auto* image = new StorageImage(context);
+    image->setTargetImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+    image->setTargetImageView(*textureImageView);
+
+    return addTexture(textureImage, std::move(textureImageView), image);
+}
+
 uint32_t TextureContainer::getTextureSize() {
     return textures.size();
 }
@@ -69,7 +94,13 @@ uint32_t TextureContainer::addMaterial(RenderMaterial material) {
 }
 
 void TextureContainer::copyMaterialsTo(TextureDescriptorSet *set) {
-    for (int i = 0; i < std::min(materials.size(), 256ul); i++) {
+    int index_slot = -1;
+    for (int i = 0; i < std::min(materials.size(), TextureDescriptorSet::MAX_MATERIALS); i++) {
         set->materialList.materials[i] = materials[i];
+        if (set->materialList.materials[i].kD_index != -1) {
+            index_slot++;
+            set->materialList.materials[i].kD_index = index_slot;
+            textures[materials[i].kD_index].storageImage->updateDescriptor(*set, 1, index_slot);
+        }
     }
 }
