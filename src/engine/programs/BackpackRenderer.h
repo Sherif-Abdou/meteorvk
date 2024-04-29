@@ -5,18 +5,14 @@
 #ifndef VULKAN_ENGINE_BACKPACKRENDERER_H
 #define VULKAN_ENGINE_BACKPACKRENDERER_H
 
+
+#include <paths.h>
 #include "../special_pipelines/SSAOGraphicsPipeline.h"
 #include "../special_pipelines/ForwardRenderedGraphicsPipeline.h"
-#include "../storage/ImageTextureLoader.h"
 #include "../special_pipelines/DepthOnlyPipeline.h"
-#include "../../core/storage/OBJFile.h"
 #include "../../core/storage/DescriptorSampler.h"
-#include "../../core/storage/StorageImage.h"
 #include "../storage/TextureContainer.h"
 #include "../storage/TextureDescriptorSet.h"
-#include <filesystem>
-#include <paths.h>
-
 static constexpr const char *const model_path_1 = "./models/non_triangled_senna.obj";
 
 class BackpackRenderer {

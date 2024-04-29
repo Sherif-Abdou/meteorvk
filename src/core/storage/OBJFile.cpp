@@ -182,7 +182,7 @@ OBJFile::IndexPair OBJFile::createVulkanBufferIndexed() {
             auto& normal = face.normals[0];
             glm::vec2 tex;
             tex = face.texCoords[0];
-//                if (i >= face.texCoords.size()) {
+//                if (i >= face.texCoordIndices.size()) {
 //                    tex = {0, 0};
 //                } else {
 //                }
@@ -209,7 +209,7 @@ OBJFile::IndexPair OBJFile::createVulkanBufferIndexed() {
                 auto& normal = face.normals[i];
                 glm::vec2 tex;
                 tex = face.texCoords[i];
-//                if (i >= face.texCoords.size()) {
+//                if (i >= face.texCoordIndices.size()) {
 //                    tex = {0, 0};
 //                } else {
 //                }
@@ -221,7 +221,8 @@ OBJFile::IndexPair OBJFile::createVulkanBufferIndexed() {
                             vertex,
                             normal,
                             tex,
-                            tangent
+                            tangent,
+                            face.material_id
                     });
                 }
 

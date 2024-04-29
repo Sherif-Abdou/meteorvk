@@ -1,11 +1,17 @@
 //
 // Created by Sherif Abdou on 12/10/23.
 //
+#include <filesystem>
 
 #include "BackpackRenderer.h"
+
+#include "../storage/ImageTextureLoader.h"
 #include "../special_pipelines/ShadowGraphicsPipeline.h"
 #include "../../core/graphics_pipeline/GraphicsCommandBuffer.h"
 #include "../../core/shared_pipeline/PipelineBarrierBuilder.h"
+#include "../../core/storage/OBJFile.h"
+#include "../../core/storage/NewOBJFile.h"
+#include "../../core/storage/StorageImage.h"
 #include "../special_pipelines/CullingComputePipeline.h"
 #include "../storage/TextureDescriptorSet.h"
 #include "../../core/storage/DescriptorSampler.h"
@@ -300,16 +306,17 @@ void BackpackRenderer::run(VulkanContext *context) {
 
 VertexBuffer BackpackRenderer::createVertexBuffer(VulkanContext *context, const char *path) {
     VertexBuffer buffer(context, true);
-    OBJFile file = OBJFile::fromFilePath(path);
-    auto raw = file.createVulkanBufferIndexed();
-    if (file.getMaterialPath() != "") {
+    NewOBJFile file = NewOBJFile::fromFilePath(path);
+    auto raw = file.exportIndexedBuffer();
+    if (!file.getMaterialPaths().empty()) {
         std::filesystem::path p = path;
         std::string sep = "/";
-        auto new_path = p.parent_path().c_str() + sep + file.getMaterialPath();
+        auto new_path = p.parent_path().c_str() + sep + file.getMaterialPaths()[0];
         MTLFile new_file = MTLFile::fromFilePath(new_path);
         auto map = new_file.getRenderMaterials();
+        auto mtl_indices = file.getMTLIndexMap();
         for (int i = 0; i < map.size(); i++) {
-            auto material = map[file.material_index_map[i]];
+            auto material = map[mtl_indices[i]];
             textureContainer.addMaterial(material);
         }
     }

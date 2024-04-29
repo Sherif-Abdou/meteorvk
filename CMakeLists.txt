@@ -14,6 +14,12 @@ find_library(GLFW_LIBRARY REQUIRED NAMES glfw glfw3)
 find_path(GLFW_HEADERS REQUIRED NAMES "GLFW")
 variable_watch(VULKAN_HEADERS)
 
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost 1.45.0 COMPONENTS regex container)
+
+
 add_executable(vulkan_engine main.cpp
         src/core/VulkanContext.h
         src/core/VulkanContext.cpp
@@ -100,6 +106,8 @@ add_executable(vulkan_engine main.cpp
         src/engine/material/RenderMaterial.h
         src/engine/storage/MTLFile.cpp
         src/engine/storage/MTLFile.h
+        src/core/storage/NewOBJFile.h
+        src/core/storage/NewOBJFile.cpp
 )
 # Apple MoltenVK Requirements
 if (APPLE)
@@ -108,6 +116,11 @@ if (APPLE)
     target_link_libraries(vulkan_engine "-framework IOKit")
     target_link_libraries(vulkan_engine "-framework Cocoa")
 endif (APPLE)
+
+if(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+    target_link_libraries(vulkan_engine ${Boost_LIBRARIES})
+endif()
 #    target_link_libraries(vulkan_engine vulkan glfw shaderc_shared)
 target_link_libraries(vulkan_engine ${VULKAN_LIBRARY} ${SHADER_C_LIBRARY} ${GLFW_LIBRARY})
 target_include_directories(vulkan_engine PUBLIC ${VULKAN_HEADERS} ${SHADER_C_HEADERS} ${GLFW_HEADERS} ${VMA_HEADERS} ${GLM_HEADERS})
