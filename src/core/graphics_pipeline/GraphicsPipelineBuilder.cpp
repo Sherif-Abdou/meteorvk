@@ -310,3 +310,4 @@ void GraphicsPipelineBuilder::enableMultisampling() {
     multisampleStateCreateInfo.setMinSampleShading(0.2f);
     addColorImage(context->swapChainImageFormat, context->sampleCountFlagBits);
 }
+

@@ -33,12 +33,11 @@ void BackpackRenderer::run(VulkanContext *context) {
     auto shadow_descriptor = createUniformBindings(context);
     auto forward_descriptor = createUniformBindings(context);
     auto renderPass = std::make_unique<GraphicsRenderPass>(context);
-    renderPass->multisampling = true;
+    renderPass->useMultisampling(true);
     renderPass->init();
 
 
     TextureDescriptorSet* textureDescriptorSet = createTextureDescriptor(context);
-//    textureContainer = TextureContainer();
     textureContainer.context = context;
 
     addTexture(context, textureDescriptorSet, "textures/Base_Color_1.jpg");
@@ -47,27 +46,36 @@ void BackpackRenderer::run(VulkanContext *context) {
     // Build graphics pipelines
     auto shaders = std::make_unique<GraphicsShaders>(context, "shaders/basic.vert", "shaders/basic.frag");
     GraphicsPipelineBuilder builder = GraphicsPipelineBuilder(context, std::move(shaders), std::move(renderPass));
+
+    // Set the Graphics pipeline to render to the swapchain
     for (auto& targetSwapchainImageView: context->swapChainImageViews) {
         builder.targetImageViews.push_back(*targetSwapchainImageView);
     }
-    builder.descriptorSets = {&forward_descriptor, textureDescriptorSet};
+    builder.setDescriptorSets({&forward_descriptor, textureDescriptorSet});
     builder.enableMultisampling();
     builder.addDepthImage();
+
+    // Wrap the raw pipeline in a ModelPipeline that handles the Dynamic Uniform Buffer
     auto modelPipeline = std::make_unique<ModelBufferGraphicsPipeline>(builder.buildGraphicsPipeline(), 16);
-    modelPipeline->descriptorSet = &forward_descriptor;
+    modelPipeline->setDescriptorSet(&forward_descriptor);
     auto* modelBuffer = modelPipeline->modelBuffer;
+
+    
+    /*
     CullingComputePipeline cullingComputePipeline(context);
     cullingComputePipeline.models = modelBuffer;
     cullingComputePipeline.vertex_buffers = {&vertexbuffer1, &vertexbuffer2};
     cullingComputePipeline.init();
 //    modelPipeline->indirectBuffer = cullingComputePipeline.output_buffer->getBuffer();
+    */
     auto pipeline = ForwardRenderedGraphicsPipeline(std::move(modelPipeline));
+
     auto shadowModelPipeline = std::make_unique<ModelBufferGraphicsPipeline>(createShadowPipeline(context, &shadow_descriptor),
                                                            modelBuffer);
-    shadowModelPipeline->descriptorSet = &shadow_descriptor;
+    shadowModelPipeline->setDescriptorSet(&shadow_descriptor);
     auto shadow_pipeline = ShadowGraphicsPipeline(std::move(shadowModelPipeline));
-    pipeline.descriptorSet = &forward_descriptor;
-    shadow_pipeline.descriptorSet = &shadow_descriptor;
+    pipeline.setDescriptorSet(&forward_descriptor);
+    shadow_pipeline.setDescriptorSet(&shadow_descriptor);
 
     auto depth_descriptors = createUniformBindings(context);
     auto depth_pipeline = createDepthOnlyPipeline(context, modelBuffer, &depth_descriptors);
@@ -154,6 +162,7 @@ void BackpackRenderer::run(VulkanContext *context) {
             .forImage(shadowDepthImage, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1))
             .withInitialLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
             .withFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+    /*
     auto cull_indirect_barrier = PipelineBarrierBuilder();
     cull_indirect_barrier
         .waitFor(vk::PipelineStageFlagBits2::eComputeShader)
@@ -161,34 +170,35 @@ void BackpackRenderer::run(VulkanContext *context) {
         .beforeDoing(vk::PipelineStageFlagBits2::eDrawIndirect)
         .whichUses(vk::AccessFlagBits2::eIndirectCommandRead)
         .forBuffer(*cullingComputePipeline.output_buffer->getBuffer(), 2 * sizeof(IndirectCallStruct), 0);
+        */
 
 
-    commandBuffer.dependencies[0] = {cull_indirect_barrier.build()};
+    commandBuffer.dependencies[0] = {};
     commandBuffer.dependencies[3] = {occlusion_image_barrier.build()};
 //    commandBuffer.dependencies[1] = shadow_image_barrier.build();
     commandBuffer.dependencies[2] = {depth_image_barrier.build()};
 
     commandBuffer.bindings.push_back({
-                                             &shadow_descriptor,
-                                             &shadow_pipeline.getPipeline().getPipelineLayout(),
-                                     });
+        &shadow_descriptor,
+        &shadow_pipeline.getPipeline().getPipelineLayout(),
+    });
     commandBuffer.bindings.push_back({
-                                             &depth_descriptors,
-                                             &depth_pipeline.getPipeline().getPipelineLayout(),
-                                     });
+        &depth_descriptors,
+        &depth_pipeline.getPipeline().getPipelineLayout(),
+    });
     commandBuffer.bindings.push_back({
-                                             &ssao_descriptors,
-                                             &ssao_pipeline->getPipeline().getPipelineLayout(),
-                                     });
+        &ssao_descriptors,
+        &ssao_pipeline->getPipeline().getPipelineLayout(),
+    });
     commandBuffer.bindings.push_back({
         textureDescriptorSet,
         &pipeline.getPipeline().getPipelineLayout(),
         1
     });
     commandBuffer.bindings.push_back({
-                                             &forward_descriptor,
-                                             &pipeline.getPipeline().getPipelineLayout(),
-                                     });
+        &forward_descriptor,
+        &pipeline.getPipeline().getPipelineLayout(),
+    });
     //    commandBuffer.layout = layout;
     //    commandBuffer.descriptorSet = &shadow_descriptor;
     //    commandBuffer.bindDescriptorSet(shadow_descriptor, commandBuffer.pipelines[0].getPipelineLayout(), 0);
@@ -206,7 +216,7 @@ void BackpackRenderer::run(VulkanContext *context) {
     occlusionSampler.targetImageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     occlusionSampler.targetImageView = ssao_pipeline->getOcclusionImageView();
     occlusionSampler.buildSampler();
-    cullingComputePipeline.generateIndirects();
+    // cullingComputePipeline.generateIndirects();
 
 
     int i = 0;
@@ -264,13 +274,15 @@ void BackpackRenderer::run(VulkanContext *context) {
 
         pipeline.ubo.view = glm::translate(glm::rotate(glm::identity<glm::mat4>(), rotation.y, glm::vec3(0, 1, 0)),
                                            position);
+        /*
         cullingComputePipeline.ubo.proj = pipeline.ubo.proj;
         cullingComputePipeline.ubo.view = pipeline.ubo.view;
+        */
         depth_pipeline.getUBO().ubo.view = pipeline.ubo.view;
         ssao_pipeline->ubo->view = pipeline.ubo.view;
 
         if (glfwGetKey(context->window, GLFW_KEY_0)) {
-            cullingComputePipeline.generateIndirects();
+            // cullingComputePipeline.generateIndirects();
         }
 
         sampler.updateSampler(forward_descriptor, 1);
@@ -287,7 +299,7 @@ void BackpackRenderer::run(VulkanContext *context) {
 
 
     context->device.waitIdle();
-    cullingComputePipeline.destroy();
+    // cullingComputePipeline.destroy();
     textureContainer.destroy();
     red_image.destroy();
     modelBuffer->destroy();
@@ -298,10 +310,6 @@ void BackpackRenderer::run(VulkanContext *context) {
     commandBuffer.destroy();
 
     delete textureDescriptorSet;
-
-    // delete depth_model_pipeline;
-    // delete depth_forward_pipeline;
-    // delete ssao_model_pipeline;
 }
 
 VertexBuffer BackpackRenderer::createVertexBuffer(VulkanContext *context, const char *path) {
@@ -405,7 +413,6 @@ DescriptorSet BackpackRenderer::createUniformBindings(VulkanContext *context) {
     imageBinding.setDescriptorCount(1);
     imageBinding.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
     imageBinding.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
-//    imageBinding.setImmutableSamplers(*descriptorSampler.getSampler());
 
     vk::DescriptorSetLayoutBinding dynamicBufferBinding{};
     dynamicBufferBinding.setBinding(2);
@@ -491,7 +498,7 @@ BackpackRenderer::createSSAOPipeline(VulkanContext *context, DescriptorSet *desc
     ssao_model_pipeline->modelBuffer = buffer;
 
     std::unique_ptr<SSAOGraphicsPipeline> res = std::make_unique<SSAOGraphicsPipeline>(context, std::move(ssao_model_pipeline), descriptorSet);
-    res->descriptor_set = descriptorSet;
+    res->setDescriptorSet(descriptorSet);
     res->init();
 
     return res;
@@ -511,24 +518,11 @@ TextureDescriptorSet* BackpackRenderer::createTextureDescriptor(VulkanContext *c
     return textureSet;
 }
 
+// Loads texture from path and attaches it to the Texture descriptor set and texture container?
+// I forgot how this works lol
 void BackpackRenderer::addTexture(VulkanContext* context, TextureDescriptorSet *textureSet, const char* path) {
-    ImageTextureLoader loader(context);
-    auto textureImage = loader.loadImageFromFile(path);
+    auto image_index = textureContainer.addTextureFromPath(path);
+    auto* image = textureContainer.getStorageImage(image_index);
 
-    vk::ImageViewCreateInfo createInfo {};
-    createInfo.setImage(textureImage.image);
-    createInfo.setComponents(vk::ComponentMapping());
-    createInfo.setFormat(vk::Format::eR8G8B8A8Srgb);
-    createInfo.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
-    createInfo.setViewType(vk::ImageViewType::e2D);
-
-    auto textureImageView = context->device.createImageView(createInfo);
-
-
-    auto* image = new StorageImage(context);
-    image->setTargetImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-    image->setTargetImageView(*textureImageView);
     image->updateDescriptor(*textureSet, 1, 0);
-
-    textureContainer.addTexture(textureImage, std::move(textureImageView), image);
 }

@@ -31,6 +31,9 @@ public:
     std::unique_ptr<UBO> ubo = nullptr;
     std::unique_ptr<UniformBuffer<SSAOGraphicsPipeline::UBO>> ubo_buffer = nullptr;
     DescriptorSet* descriptor_set{};
+
+    void setDescriptorSet(DescriptorSet* descriptor);
+
     GraphicsPipeline& getPipeline();
     CombinedDescriptorSampler* depth_sampler{};
 

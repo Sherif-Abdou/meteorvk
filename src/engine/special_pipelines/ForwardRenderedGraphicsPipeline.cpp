@@ -40,3 +40,7 @@ void ForwardRenderedGraphicsPipeline::destroy() {
     uniformBuffer.destroy();
     pipeline->destroy();
 }
+
+void ForwardRenderedGraphicsPipeline::setDescriptorSet(DescriptorSet* descriptor) {
+  this->descriptorSet = descriptor;
+}

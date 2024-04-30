@@ -29,6 +29,9 @@ public:
     GraphicsPipeline & getGraphicsPipeline();
 
     DescriptorSet* descriptorSet;
+
+    void setDescriptorSet(DescriptorSet* descriptor);
+
     ModelBuffer* modelBuffer = nullptr;
     /// Indirect Buffer to use by rendering pipeline, expects packed calls in order of models in model buffer
     vk::Buffer* indirectBuffer = nullptr;

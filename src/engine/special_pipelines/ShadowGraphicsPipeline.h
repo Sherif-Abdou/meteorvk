@@ -21,6 +21,9 @@ private:
 public:
     GraphicsPipeline &getPipeline();
     DescriptorSet* descriptorSet = nullptr;
+
+    void setDescriptorSet(DescriptorSet* descriptor);
+
     uint32_t binding = 0;
     struct UBO {
         glm::mat4 proj;

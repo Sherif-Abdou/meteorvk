@@ -133,3 +133,7 @@ void SSAOGraphicsPipeline::setDepthSampler(CombinedDescriptorSampler *depthSampl
     depth_sampler = depthSampler;
 }
 
+
+void SSAOGraphicsPipeline::setDescriptorSet(DescriptorSet* descriptor) {
+  this->descriptor_set = descriptor;
+}

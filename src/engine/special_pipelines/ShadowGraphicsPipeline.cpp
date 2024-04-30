@@ -31,3 +31,8 @@ void ShadowGraphicsPipeline::destroy() {
     lightUniformBuffer.destroy();
     pipeline->destroy();
 }
+
+
+void ShadowGraphicsPipeline::setDescriptorSet(DescriptorSet* descriptor) {
+  this->descriptorSet = descriptor;
+}

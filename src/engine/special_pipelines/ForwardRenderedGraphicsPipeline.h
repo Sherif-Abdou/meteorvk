@@ -37,6 +37,9 @@ public:
     UniformBuffer<UBO> uniformBuffer;
 
     DescriptorSet* descriptorSet = nullptr;
+
+    void setDescriptorSet(DescriptorSet* descriptor);
+
     GraphicsPipeline &getPipeline();
 
     static ForwardRenderedGraphicsPipeline createFromModelPipeline(std::unique_ptr<ModelBufferGraphicsPipeline> pipeline);

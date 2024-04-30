@@ -67,3 +67,7 @@ void ModelBufferGraphicsPipeline::destroy() {
     getGraphicsPipeline().destroy();
 }
 
+
+void ModelBufferGraphicsPipeline::setDescriptorSet(DescriptorSet* descriptor) {
+  this->descriptorSet = descriptor;
+}

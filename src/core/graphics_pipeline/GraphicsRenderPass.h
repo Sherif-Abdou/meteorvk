@@ -28,6 +28,10 @@ public:
     bool useDepth = true;
     bool storeDepth = false;
     bool multisampling = false;
+
+    GraphicsRenderPass* shouldStoreDepth(bool option);
+    GraphicsRenderPass* shouldUseDepth(bool option);
+    GraphicsRenderPass* useMultisampling(bool option);
     vk::Format colorFormat = vk::Format::eUndefined;
 private:
     vk::raii::RenderPass renderPass = nullptr;

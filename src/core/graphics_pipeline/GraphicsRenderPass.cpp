@@ -153,3 +153,18 @@ void GraphicsRenderPass::useCustomColor(vk::Format format, vk::ImageLayout final
         .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
         .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
 }
+
+GraphicsRenderPass* GraphicsRenderPass::shouldStoreDepth(bool option) {
+  storeDepth = option;
+  return this;
+}
+
+GraphicsRenderPass* GraphicsRenderPass::shouldUseDepth(bool option) {
+  useDepth = option;
+  return this;
+}
+
+GraphicsRenderPass* GraphicsRenderPass::useMultisampling(bool option) {
+  multisampling = option;
+  return this;
+}

@@ -39,6 +39,7 @@ public:
 
     void setMultisampleStateCreateInfo(const vk::PipelineMultisampleStateCreateInfo &multisampleStateCreateInfo);
 
+
     uint32_t subPassIndex = 0;
     std::vector<vk::ImageView> targetImageViews {}; // External image view to output to, usually swapchain
     std::vector<DescriptorSet*> descriptorSets {};
