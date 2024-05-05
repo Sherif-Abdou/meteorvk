@@ -12,9 +12,11 @@
 #include "glm/ext.hpp"
 
 
-SSAOGraphicsPipeline::SSAOGraphicsPipeline(VulkanContext* context, std::unique_ptr<ModelBufferGraphicsPipeline> input_pipeline, DescriptorSet* set): context(context), pipeline(std::move(input_pipeline)), descriptor_set(set) {
+SSAOGraphicsPipeline::SSAOGraphicsPipeline(VulkanContext* context, std::unique_ptr<ModelBufferGraphicsPipeline> input_pipeline, DescriptorSet* set): context(context), pipeline(std::move(input_pipeline)) {
     ubo = std::make_unique<UBO>();
     ubo_buffer = std::make_unique<UniformBuffer<UBO>>(context);
+
+    this->descriptors =  this->pipeline->descriptors;
 };
 
 void SSAOGraphicsPipeline::init() {
@@ -34,8 +36,7 @@ void SSAOGraphicsPipeline::renderPipeline(Renderable::RenderArguments renderArgu
 void SSAOGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {
     pipeline->prepareRender(renderArguments);
     ubo_buffer->updateBuffer(*ubo);
-    assert(this->descriptor_set != nullptr);
-    DescriptorSet& ref = *descriptor_set;
+    DescriptorSet& ref = *descriptors->getDescriptorSet("main");
     ubo_buffer->writeToDescriptor(ref);
     noise_sampler->updateSampler(ref, 4);
     if (depth_sampler != nullptr) {
@@ -84,6 +85,10 @@ GraphicsPipeline& SSAOGraphicsPipeline::getPipeline() {
     return pipeline->getGraphicsPipeline();
 }
 
+GraphicsPipeline& SSAOGraphicsPipeline::getGraphicsPipeline() {
+  return getPipeline();
+}
+
 void SSAOGraphicsPipeline::destroy() {
     noise_image.destroy();
     ubo_buffer->destroy();
@@ -93,7 +98,7 @@ void SSAOGraphicsPipeline::destroy() {
 void SSAOGraphicsPipeline::createSamples() {
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0);
     std::default_random_engine generator;
-    for (unsigned int i = 0; i < 64; ++i)
+    for (unsigned int i = 0; i < 64; i++)
     {
         glm::vec3 sample(
                 randomFloats(generator) * 2.0 - 1.0,
@@ -135,5 +140,5 @@ void SSAOGraphicsPipeline::setDepthSampler(CombinedDescriptorSampler *depthSampl
 
 
 void SSAOGraphicsPipeline::setDescriptorSet(DescriptorSet* descriptor) {
-  this->descriptor_set = descriptor;
+  descriptors->addDescriptorSet("main", descriptor);
 }

@@ -10,12 +10,17 @@
 #include "../../core/graphics_pipeline/GraphicsPipeline.h"
 #include "../storage/ModelBuffer.h"
 #include "../../core/graphics_pipeline/GraphicsPipelineBuilder.h"
+#include "BasePipeline.h"
 
 /// Graphics pipeline that adjusts the model buffer per vertexbuffer
 /// Modelbuffer indices must be in the same order as the vertexbuffers
-class ModelBufferGraphicsPipeline: public Renderable {
+class ModelBufferGraphicsPipeline: public BasePipeline {
 private:
-    GraphicsPipeline graphicsPipeline;
+  GraphicsPipeline graphicsPipeline;
+
+  uint32_t max_size;
+
+  void loadGraphicsPipeline();
 public:
     explicit ModelBufferGraphicsPipeline(GraphicsPipeline &&graphicsPipeline,
                                          unsigned int size);
@@ -23,12 +28,10 @@ public:
     explicit ModelBufferGraphicsPipeline(GraphicsPipeline &&graphicsPipeline,
                                          ModelBuffer* modelBuffer);
 
-    static ModelBufferGraphicsPipeline
+    static ModelBufferGraphicsPipeline*
     createPipelineFromBuilder(GraphicsPipelineBuilder &&builder, ModelBuffer *modelBuffer, DescriptorSet* descriptor);
 
-    GraphicsPipeline & getGraphicsPipeline();
-
-    DescriptorSet* descriptorSet;
+    GraphicsPipeline & getGraphicsPipeline() override;
 
     void setDescriptorSet(DescriptorSet* descriptor);
 
@@ -40,7 +43,7 @@ public:
 
     void prepareRender(Renderable::RenderArguments renderArguments) override;
 
-    void destroy();
+    void destroy() override;
 };
 
 

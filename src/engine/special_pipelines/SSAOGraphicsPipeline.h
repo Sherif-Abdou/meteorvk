@@ -4,13 +4,14 @@
 
 #ifndef SSAOGRAPHICSPIPELINE_H
 #define SSAOGRAPHICSPIPELINE_H
+#include "BasePipeline.h"
 #include "ModelBufferGraphicsPipeline.h"
 #include "../../core/graphics_pipeline/GraphicsPipeline.h"
 #include "../../core/interfaces/Renderable.h"
 #include "../../core/storage/CombinedDescriptorSampler.h"
 
 
-class SSAOGraphicsPipeline: public Renderable {
+class SSAOGraphicsPipeline: public BasePipeline {
 public:
     SSAOGraphicsPipeline(VulkanContext* context, std::unique_ptr<ModelBufferGraphicsPipeline> input_pipeline, DescriptorSet* set = nullptr);
 //    SSAOGraphicsPipeline::SSAOGraphicsPipeline(VulkanContext& context, ModelBufferGraphicsPipeline* input_pipeline) {
@@ -30,11 +31,11 @@ public:
 
     std::unique_ptr<UBO> ubo = nullptr;
     std::unique_ptr<UniformBuffer<SSAOGraphicsPipeline::UBO>> ubo_buffer = nullptr;
-    DescriptorSet* descriptor_set{};
 
     void setDescriptorSet(DescriptorSet* descriptor);
 
     GraphicsPipeline& getPipeline();
+    GraphicsPipeline& getGraphicsPipeline() override;
     CombinedDescriptorSampler* depth_sampler{};
 
     CombinedDescriptorSampler *getDepthSampler() const;
@@ -44,7 +45,7 @@ public:
 
     VulkanContext* context;
 
-    void destroy();
+    void destroy() override;
     vk::ImageView getOcclusionImageView();
     vk::Image getOcclusionImage();
 

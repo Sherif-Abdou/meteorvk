@@ -15,14 +15,15 @@
 #include <glm/ext.hpp>
 
 /// Graphics pipeline meant for generating a shadow map
-class ShadowGraphicsPipeline: public Renderable {
+class ShadowGraphicsPipeline: public BasePipeline {
 private:
     std::unique_ptr<ModelBufferGraphicsPipeline> pipeline;
 public:
     GraphicsPipeline &getPipeline();
-    DescriptorSet* descriptorSet = nullptr;
+    GraphicsPipeline &getGraphicsPipeline() override;
 
     void setDescriptorSet(DescriptorSet* descriptor);
+
 
     uint32_t binding = 0;
     struct UBO {
@@ -49,7 +50,7 @@ public:
 
     virtual ~ShadowGraphicsPipeline();
 
-    void destroy();
+    void destroy() override;
 };
 
 

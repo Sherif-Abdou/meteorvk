@@ -1,6 +1,13 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : enable
 
+#ifndef CUSTOM_BINDINGS
+#define UBO_BINDING 0
+#define DEPTH_BINDING 1
+#define DYNAMIC_UBO_BINDING 2
+#define OCCLUSION_BINDING 4
+#endif
+
 layout(location = 0) out vec4 color;
 
 layout(location = 0) in vec3 position;
@@ -12,7 +19,7 @@ layout(location = 5) flat in uint material_id;
 
 const float PI = 3.14159265359;
 
-layout(binding = 0) uniform UBO {
+layout(binding = UBO_BINDING) uniform UBO {
     mat4 proj;
     mat4 view;
     mat4 lightProjView;
@@ -42,16 +49,16 @@ struct RenderMaterial {
     int kS_index;
 };
 
-layout(binding = 2) uniform DynamicUBO {
+layout(binding = DYNAMIC_UBO_BINDING) uniform DynamicUBO {
     mat4 _model;
     Material material;
 };
 
-layout(binding = 1) uniform sampler2D depthSampler;
+layout(binding = DEPTH_BINDING) uniform sampler2D depthSampler;
 
 layout(binding = 3) uniform sampler2D textureSampler;
 
-layout(binding = 4) uniform sampler2D occlusionSampler;
+layout(binding = OCCLUSION_BINDING) uniform sampler2D occlusionSampler;
 
 layout(set = 1, binding=0) uniform sampler s[8];
 layout(set = 1, binding=1) uniform texture2D textures[100];

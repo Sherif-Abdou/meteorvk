@@ -356,9 +356,9 @@ DepthOnlyPipeline BackpackRenderer::createDepthOnlyPipeline(VulkanContext *conte
     builder.addDepthImage();
 
     depth_model_pipeline = std::make_unique<ModelBufferGraphicsPipeline>(builder.buildGraphicsPipeline(), modelBuffer);
-    depth_model_pipeline->descriptorSet = descriptorSet;
+    depth_model_pipeline->setDescriptorSet(descriptorSet);
     depth_forward_pipeline = std::make_unique<ForwardRenderedGraphicsPipeline>(std::move(depth_model_pipeline));
-    depth_forward_pipeline->descriptorSet = descriptorSet;
+    depth_forward_pipeline->setDescriptorSet(descriptorSet);
     return DepthOnlyPipeline(*depth_forward_pipeline);
 }
 
@@ -494,7 +494,7 @@ BackpackRenderer::createSSAOPipeline(VulkanContext *context, DescriptorSet *desc
     auto pipeline = builder.buildGraphicsPipeline();
     ssao_model_pipeline = std::make_unique<ModelBufferGraphicsPipeline> (std::move(pipeline), buffer);
 
-    ssao_model_pipeline->descriptorSet = descriptorSet;
+    ssao_model_pipeline->setDescriptorSet(descriptorSet);
     ssao_model_pipeline->modelBuffer = buffer;
 
     std::unique_ptr<SSAOGraphicsPipeline> res = std::make_unique<SSAOGraphicsPipeline>(context, std::move(ssao_model_pipeline), descriptorSet);

@@ -5,6 +5,7 @@
 #ifndef VULKAN_ENGINE_FORWARDRENDEREDGRAPHICSPIPELINE_H
 #define VULKAN_ENGINE_FORWARDRENDEREDGRAPHICSPIPELINE_H
 
+#include "BasePipeline.h"
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
@@ -17,9 +18,9 @@
 #include "ModelBufferGraphicsPipeline.h"
 
 /// Graphics pipelines that stores render specific uniforms
-class ForwardRenderedGraphicsPipeline: public Renderable {
+class ForwardRenderedGraphicsPipeline: public BasePipeline {
 public:
-    explicit ForwardRenderedGraphicsPipeline(std::unique_ptr<ModelBufferGraphicsPipeline> pipeline);
+    explicit ForwardRenderedGraphicsPipeline(std::unique_ptr<BasePipeline> pipeline);
 
     void renderPipeline(Renderable::RenderArguments renderArguments) override;
     struct UBO {
@@ -36,19 +37,18 @@ public:
 
     UniformBuffer<UBO> uniformBuffer;
 
-    DescriptorSet* descriptorSet = nullptr;
-
     void setDescriptorSet(DescriptorSet* descriptor);
 
     GraphicsPipeline &getPipeline();
+    GraphicsPipeline &getGraphicsPipeline() override;
 
-    static ForwardRenderedGraphicsPipeline createFromModelPipeline(std::unique_ptr<ModelBufferGraphicsPipeline> pipeline);
+    static ForwardRenderedGraphicsPipeline* createFromModelPipeline(std::unique_ptr<ModelBufferGraphicsPipeline> pipeline);
 
     void prepareRender(Renderable::RenderArguments renderArguments) override;
 
-    void destroy();
+    void destroy() override;
 private:
-    std::unique_ptr<ModelBufferGraphicsPipeline> pipeline;
+    std::unique_ptr<BasePipeline> pipeline;
 };
 
 

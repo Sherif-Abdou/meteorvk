@@ -8,3 +8,5 @@ build
 .cache/
 models/
 textures/
+.DS_Store
+compile_commands.json
