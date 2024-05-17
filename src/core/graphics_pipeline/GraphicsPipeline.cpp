@@ -17,7 +17,7 @@ void GraphicsPipeline::createSyncObjects() {
     pipelineFence = context->device.createFence(fenceCreateInfo);
 }
 GraphicsPipeline::GraphicsPipeline(VulkanContext *context, std::unique_ptr<GraphicsRenderPass> renderPass)
-        : context(context), renderPass(std::move(renderPass)) {}
+        : context(context), ownedRenderPass(std::move(renderPass)) {}
 
 vk::raii::Semaphore & GraphicsPipeline::getPipelineSemaphore() {
     return pipelineSemaphore;
@@ -56,7 +56,11 @@ void GraphicsPipeline::prepareRender(Renderable::RenderArguments &renderArgument
 
 
     beginInfo.setFramebuffer(*targetFramebuffers[imageIndex]);
-    beginInfo.setRenderPass(*renderPass->getRenderPass());
+    if (ownedRenderPass != nullptr) {
+        beginInfo.setRenderPass(*ownedRenderPass->getRenderPass());
+    } else if (ownedDirectRenderPass != nullptr) {
+        beginInfo.setRenderPass(**ownedDirectRenderPass);
+    }
     beginInfo.setClearValues(clearValues);
     auto rect = vk::Rect2D {};
     rect.setOffset({0, 0});
@@ -105,4 +109,9 @@ const vk::raii::Pipeline &GraphicsPipeline::getPipeline() const {
 
 void GraphicsPipeline::setPipeline(vk::raii::Pipeline && pipeline) {
     GraphicsPipeline::pipeline = std::move(pipeline);
+}
+
+GraphicsPipeline::GraphicsPipeline(VulkanContext *context, std::unique_ptr<vk::raii::RenderPass> renderPass)
+    : context(context), ownedDirectRenderPass(std::move(renderPass)) {
+
 }

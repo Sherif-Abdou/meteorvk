@@ -1,7 +1,7 @@
 //
 // Created by Sherif Abodu on 4/29/24
 //
-#ifndef VULKAN_ENGINE_DESCRIPTORMANAGER_H
+#ifndef VULKAN_ENGINE_NEWDESCRIPTORMANAGER_H
 #define VULKAN_ENGINE_DESCRIPTORMANAGER_H
 
 #include <vector>
@@ -23,7 +23,7 @@ class DescriptorManager {
     /// Returns a nullptr if the name doesn't exist
     DescriptorSet* getDescriptorSet(const std::string& name);
 
-    /// Checks if the DescriptorManager contains every name in a vector
+    /// Checks if the NewDescriptorManager contains every name in a vector
     bool containsMandatoryDescriptors(const std::vector<std::string>& name_list);
 };
 

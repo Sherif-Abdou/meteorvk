@@ -121,7 +121,9 @@ void GraphicsCommandBuffer::sendToSwapchain() {
 
     current_frame = (current_frame + 1) % FRAMES_IN_FLIGHT;
     for (auto &binding: bindings) {
-        binding.descriptorSet->nextFrame();
+        if (binding.descriptorSet != nullptr) {
+            binding.descriptorSet->nextFrame();
+        }
     }
 }
 

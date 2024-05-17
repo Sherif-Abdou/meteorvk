@@ -1,10 +1,19 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : enable
 
-#ifndef CUSTOM_BINDINGS
+#ifndef UBO_BINDING
 #define UBO_BINDING 0
+#endif
+
+#ifndef DEPTH_BINDING
 #define DEPTH_BINDING 1
+#endif
+
+#ifndef DYNAMIC_UBO_BINDING
 #define DYNAMIC_UBO_BINDING 2
+#endif
+
+#ifndef OCCLUSION_BINDING
 #define OCCLUSION_BINDING 4
 #endif
 

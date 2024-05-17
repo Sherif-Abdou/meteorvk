@@ -38,6 +38,7 @@
 #include "src/engine/special_pipelines/DepthOnlyPipeline.h"
 #include "src/engine/programs/BackpackRenderer.h"
 #include "src/engine/special_pipelines/CullingComputePipeline.h"
+#include "src/engine/programs/MinimalRenderer.h"
 
 CombinedDescriptorSampler createSampler(VulkanContext* context) {
     auto descriptorSampler = CombinedDescriptorSampler(context);
@@ -51,8 +52,10 @@ int main() {
     const auto use_backpack_render = true;
     if (use_backpack_render) {
 
-        auto renderer = BackpackRenderer();
-        renderer.run(&context);
+//        auto renderer = BackpackRenderer();
+//        renderer.run(&context);
+        auto renderer = MinimalRenderer(&context);
+        renderer.run();
     }
 //    else {
 //        CullingComputePipeline pipeline(&context);

@@ -1,6 +1,8 @@
 #include "DescriptorManager.h"
 
-DescriptorManager::DescriptorManager(VulkanContext* context): context(context) {};
+DescriptorManager::DescriptorManager(VulkanContext* context): context(context) {
+
+};
 
 
 void DescriptorManager::addDescriptorSet(const std::string& name, DescriptorSet* set) {

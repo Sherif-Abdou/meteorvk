@@ -17,6 +17,7 @@
 #include "../../core/storage/DescriptorSampler.h"
 #include "../../core/storage/StorageImage.h"
 #include "../storage/MTLFile.h"
+#include "../../core_v2/GraphicsPipelineBuilder2.h"
 
 void BackpackRenderer::run(VulkanContext *context) {
     auto vertexbuffer1 = createVertexBuffer(context, model_path_1);
