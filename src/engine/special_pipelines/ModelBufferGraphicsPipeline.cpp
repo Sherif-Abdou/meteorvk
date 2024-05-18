@@ -21,7 +21,7 @@ void ModelBufferGraphicsPipeline::renderPipeline(Renderable::RenderArguments ren
         }
         auto* descriptorSet = descriptors->getDescriptorSet("main");
         modelBuffer->attachOffsetToDescriptor(*descriptorSet, 0);
-        descriptorSet->bindToCommandBuffer(renderArguments.commandBuffer, graphicsPipeline.getPipelineLayout());
+        descriptorSet->bindToCommandBuffer(&renderArguments.commandBuffer, graphicsPipeline.getPipelineLayout());
 
         graphicsPipeline.renderVertexBuffer({
             renderArguments.commandBuffer,
@@ -29,8 +29,7 @@ void ModelBufferGraphicsPipeline::renderPipeline(Renderable::RenderArguments ren
             {vertex_buffer},
             indirectBuffer,
             renderArguments.indirectBufferOffset + i * offset_stride,
-        }, vertex_buffer);
-        modelBuffer->nextIndex();
+        }, vertex_buffer); modelBuffer->nextIndex();
     }
     graphicsPipeline.finishRender(renderArguments);
 }

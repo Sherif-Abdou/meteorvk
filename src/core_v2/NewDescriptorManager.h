@@ -15,9 +15,9 @@ class NewDescriptorManager {
 public:
     // How often a binding is expected to be rebound
     enum class BindingUpdateRate {
-        FRAME,
-        PIPELINE,
-        MODEL,
+        Frame,
+        Pipeline,
+        Model,
     };
 private:
     struct BindingLayoutInformation {
@@ -38,7 +38,8 @@ private:
     DescriptorSet* buildDescriptorsOfCategory(NewDescriptorManager::BindingUpdateRate rate, uint32_t set = 0);
 public:
     explicit NewDescriptorManager(VulkanContext* context);
-    void addBinding(const std::string& name, vk::DescriptorSetLayoutBinding layout, BindingUpdateRate rate);
+    // Adds a Descriptor Layout to a specific descriptor rate slot
+    void addLayoutBinding(const std::string& name, vk::DescriptorSetLayoutBinding layout, BindingUpdateRate rate);
 
 
     std::vector<DescriptorSet*> buildDescriptors();
@@ -47,6 +48,7 @@ public:
     uint32_t getSetOf(const std::string& name);
 
     DescriptorSet* getDescriptorFor(const std::string & name);
+    DescriptorSet* getDescriptorFor(BindingUpdateRate rate);
 
     ~NewDescriptorManager();
 };

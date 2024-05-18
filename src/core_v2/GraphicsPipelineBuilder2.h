@@ -67,9 +67,11 @@ public:
         ImageSource imageSource;
         bool useDepth;
         bool shouldStoreDepth;
+
         vk::Format format = vk::Format::eUndefined;
         std::string vertexShaderPath;
         std::string fragmentShaderPath;
+
     };
     struct ImageTargets {
         std::vector<vk::ImageView> colorTargets;
@@ -83,10 +85,13 @@ public:
     // All attached to each framebuffer
     ImageTargets attachments;
 
-    NewDescriptorManager descriptorManager;
+    NewDescriptorManager* descriptorManager;
+
+    NewDescriptorManager* getDescriptorManager();
+
     std::vector<ImagePair> ownedImages;
 
-    explicit GraphicsPipelineBuilder2(VulkanContext* context);
+    explicit GraphicsPipelineBuilder2(VulkanContext* context, NewDescriptorManager* descriptorManager = nullptr);
 
     GraphicsPipeline build();
 private:

@@ -39,7 +39,7 @@ public:
 
     /// Builds the Vulkan Descriptor pool and sets
     void buildDescriptor();
-    void bindToCommandBuffer(vk::raii::CommandBuffer &, vk::raii::PipelineLayout& pipelineLayout, uint32_t set=0);
+    void bindToCommandBuffer(vk::raii::CommandBuffer*, vk::raii::PipelineLayout& pipelineLayout, uint32_t set=0);
 
     void bindToCommandBufferCompute(vk::raii::CommandBuffer&commandBuffer, vk::raii::PipelineLayout&pipelineLayout,
                                     uint32_t set=0);

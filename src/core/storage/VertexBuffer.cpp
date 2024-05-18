@@ -9,6 +9,7 @@
 
 void VertexBuffer::init() {
     initializeVertexBuffer();
+    updateVertexBuffer();
 }
 
 void VertexBuffer::attachToCommandBuffer(vk::raii::CommandBuffer &buffer) {

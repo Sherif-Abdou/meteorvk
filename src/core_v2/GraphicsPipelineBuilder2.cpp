@@ -4,7 +4,10 @@
 
 #include "GraphicsPipelineBuilder2.h"
 
-GraphicsPipelineBuilder2::GraphicsPipelineBuilder2(VulkanContext *context): context(context), descriptorManager(context) {
+GraphicsPipelineBuilder2::GraphicsPipelineBuilder2(VulkanContext *context, NewDescriptorManager* manager): context(context), descriptorManager(manager) {
+    if (descriptorManager == nullptr) {
+      descriptorManager = new NewDescriptorManager(context);
+    }
     initializePipelineStatesDefaults();
 }
 
@@ -64,7 +67,7 @@ void GraphicsPipelineBuilder2::enableMultisampling() {
 }
 
 void GraphicsPipelineBuilder2::buildDescriptors() {
-    descriptorSets = descriptorManager.buildDescriptors();
+    descriptorSets = descriptorManager->buildDescriptors();
 }
 
 void GraphicsPipelineBuilder2::buildRenderpass() {
@@ -256,9 +259,9 @@ std::vector<uint32_t> GraphicsPipelineBuilder2::compileShader(const std::string 
     shaderc::CompileOptions compile_options;
 
     compile_options.AddMacroDefinition("CUSTOM_BINDINGS");
-    for (auto layout_name: descriptorManager.getLayoutNames()) {
-        uint32_t setNum = descriptorManager.getSetOf(layout_name);
-        uint32_t bindingNum = descriptorManager.getBindingOf(layout_name);
+    for (auto layout_name: descriptorManager->getLayoutNames()) {
+        uint32_t setNum = descriptorManager->getSetOf(layout_name);
+        uint32_t bindingNum = descriptorManager->getBindingOf(layout_name);
         std::transform(layout_name.begin(), layout_name.end(), layout_name.begin(), ::toupper);
         compile_options.AddMacroDefinition(layout_name + "_BINDING", std::to_string(bindingNum));
         compile_options.AddMacroDefinition(layout_name + "_SET", std::to_string(setNum));
@@ -413,4 +416,8 @@ void GraphicsPipelineBuilder2::attach() {
     pipelineCreateInfo.setPVertexInputState(&pipelineVertexInputStateCreateInfo);
     pipelineCreateInfo.setPMultisampleState(&multisampleStateCreateInfo);
     pipelineCreateInfo.setStages(this->shader_stages);
+}
+
+NewDescriptorManager* GraphicsPipelineBuilder2::getDescriptorManager() {
+  return this->descriptorManager;
 }

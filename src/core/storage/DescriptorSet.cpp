@@ -69,8 +69,8 @@ void DescriptorSet::buildDescriptor() {
 }
 
 void
-DescriptorSet::bindToCommandBuffer(vk::raii::CommandBuffer &commandBuffer, vk::raii::PipelineLayout& pipelineLayout, uint32_t set) {
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipelineLayout, set, descriptorSet[current_frame], dynamic_offsets);
+DescriptorSet::bindToCommandBuffer(vk::raii::CommandBuffer *commandBuffer, vk::raii::PipelineLayout& pipelineLayout, uint32_t set) {
+    commandBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipelineLayout, set, descriptorSet[current_frame], dynamic_offsets);
 }
 
 void

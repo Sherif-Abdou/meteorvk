@@ -4,8 +4,8 @@
 
 #include "NewDescriptorManager.h"
 
-void NewDescriptorManager::addBinding(const std::string &name, vk::DescriptorSetLayoutBinding layout,
-                                      NewDescriptorManager::BindingUpdateRate rate) {
+void NewDescriptorManager::addLayoutBinding(const std::string &name, vk::DescriptorSetLayoutBinding layout,
+        NewDescriptorManager::BindingUpdateRate rate) {
     BindingLayoutInformation layout_info;
     layout_info.layout = layout;
     layout_info.bind_rate = rate;
@@ -32,13 +32,13 @@ uint32_t NewDescriptorManager::getSetOf(const std::string &name) {
 std::vector<DescriptorSet *> NewDescriptorManager::buildDescriptors() {
     descriptors = {};
     DescriptorSet* set;
-    if ((set = buildDescriptorsOfCategory(BindingUpdateRate::FRAME, 0)) != nullptr) {
+    if ((set = buildDescriptorsOfCategory(BindingUpdateRate::Frame, 0)) != nullptr) {
         descriptors.push_back(set);
     }
-    if ((set = buildDescriptorsOfCategory(BindingUpdateRate::PIPELINE, 1)) != nullptr) {
+    if ((set = buildDescriptorsOfCategory(BindingUpdateRate::Pipeline, 1)) != nullptr) {
         descriptors.push_back(set);
     }
-    if ((set = buildDescriptorsOfCategory(BindingUpdateRate::MODEL, 2)) != nullptr) {
+    if ((set = buildDescriptorsOfCategory(BindingUpdateRate::Model, 2)) != nullptr) {
         descriptors.push_back(set);
     }
 
@@ -79,6 +79,17 @@ DescriptorSet *NewDescriptorManager::getDescriptorFor(const std::string &name) {
     }
     auto set = getSetOf(name);
     return descriptors[set];
+}
+
+DescriptorSet* NewDescriptorManager::getDescriptorFor(NewDescriptorManager::BindingUpdateRate rate) {
+    switch (rate) {
+        case NewDescriptorManager::BindingUpdateRate::Frame:
+            return this->descriptors[0];
+        case NewDescriptorManager::BindingUpdateRate::Pipeline:
+            return this->descriptors[1];
+        case NewDescriptorManager::BindingUpdateRate::Model:
+            return this->descriptors[2];
+    }
 }
 
 NewDescriptorManager::~NewDescriptorManager() {

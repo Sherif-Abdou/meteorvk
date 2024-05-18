@@ -74,7 +74,7 @@ void GraphicsCommandBuffer::recordCommandBuffer() {
         auto layout = binding.layout;
         auto set = binding.set;
         if (descriptorSet != nullptr && layout != nullptr) {
-            descriptorSet->bindToCommandBuffer(commandBuffer[current_frame], *layout, set);
+            descriptorSet->bindToCommandBuffer(&commandBuffer[current_frame], *layout, set);
         }
 
         pipeline->renderPipeline(arguments);
