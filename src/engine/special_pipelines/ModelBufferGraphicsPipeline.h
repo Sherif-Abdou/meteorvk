@@ -22,6 +22,8 @@ private:
 
   void loadGraphicsPipeline();
 public:
+    static constexpr const char* MODEL_BUFFER_DESCRIPTOR_NAME = "model_buffer";
+
     explicit ModelBufferGraphicsPipeline(GraphicsPipeline &&graphicsPipeline,
                                          unsigned int size);
 

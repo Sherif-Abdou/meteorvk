@@ -110,9 +110,11 @@ add_executable(vulkan_engine main.cpp
         src/core/storage/NewOBJFile.cpp
         src/engine/storage/DescriptorManager.h
         src/engine/storage/DescriptorManager.cpp
+        src/core_v2/render_chain/RenderableChain.cpp
         src/core_v2/GraphicsPipelineBuilder2.cpp
         src/core_v2/NewDescriptorManager.cpp
         src/engine/programs/MinimalRenderer.cpp
+        src/engine/programs/NewRenderer.cpp
 )
 # Apple MoltenVK Requirements
 if (APPLE)

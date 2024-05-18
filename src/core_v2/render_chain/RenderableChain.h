@@ -25,6 +25,8 @@ public:
     explicit RenderableChain(VulkanContext* context, NewDescriptorManager* descriptorManager);
 
     void applyToCommandBuffer(GraphicsCommandBuffer* command_buffer);
+
+    void addRenderable(const RenderableContext& cont);
 };
 
 #endif

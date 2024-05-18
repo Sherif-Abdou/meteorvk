@@ -13,6 +13,9 @@
 
 class SSAOGraphicsPipeline: public BasePipeline {
 public:
+    static constexpr const char* SSAO_UBO_NAME = "global_ubo";
+    static constexpr const char* SSAO_DEPTH_NAME = "ssao_depth";
+    static constexpr const char* SSAO_NOISE_NAME = "ssao_noise";
     SSAOGraphicsPipeline(VulkanContext* context, std::unique_ptr<ModelBufferGraphicsPipeline> input_pipeline, DescriptorSet* set = nullptr);
 //    SSAOGraphicsPipeline::SSAOGraphicsPipeline(VulkanContext& context, ModelBufferGraphicsPipeline* input_pipeline) {
 //    }

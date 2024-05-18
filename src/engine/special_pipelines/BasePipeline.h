@@ -3,12 +3,12 @@
 
 #include "../../core/interfaces/Renderable.h"
 #include "../../core/graphics_pipeline/GraphicsPipeline.h"
-#include "../storage/DescriptorManager.h"
+#include "../../core_v2/NewDescriptorManager.h"
 
 // Generic Specialized Pipeline
 class BasePipeline: public Renderable {
   public:
-    DescriptorManager* descriptors;
+    NewDescriptorManager* descriptors;
 
     BasePipeline() = default;
 

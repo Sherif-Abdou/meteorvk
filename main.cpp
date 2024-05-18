@@ -1,3 +1,4 @@
+#include "src/engine/programs/NewRenderer.h"
 #include <iostream>
 
 #define GLFW_INCLUDE_VULKAN
@@ -54,7 +55,9 @@ int main() {
 
 //        auto renderer = BackpackRenderer();
 //        renderer.run(&context);
-        auto renderer = MinimalRenderer(&context);
+//        auto renderer = MinimalRenderer(&context);
+        // renderer.run();
+        auto renderer = NewRenderer(&context);
         renderer.run();
     }
 //    else {

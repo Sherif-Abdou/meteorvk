@@ -25,7 +25,7 @@ GraphicsPipeline &ShadowGraphicsPipeline::getGraphicsPipeline() {
 void ShadowGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {
     pipeline->prepareRender(renderArguments);
     lightUniformBuffer.updateBuffer(lightUBO);
-    lightUniformBuffer.writeToDescriptor(*descriptors->getDescriptorSet("main"), binding);
+    lightUniformBuffer.writeToDescriptor(*descriptors->getDescriptorFor("global_ubo"), descriptors->getBindingOf("global_ubo"));
 }
 
 ShadowGraphicsPipeline::~ShadowGraphicsPipeline() {
@@ -38,6 +38,5 @@ void ShadowGraphicsPipeline::destroy() {
 
 
 void ShadowGraphicsPipeline::setDescriptorSet(DescriptorSet* descriptor) {
-  descriptors->getDescriptorSet("main");
 }
 

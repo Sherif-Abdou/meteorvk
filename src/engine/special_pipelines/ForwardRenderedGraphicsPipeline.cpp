@@ -30,7 +30,7 @@ ForwardRenderedGraphicsPipeline::ForwardRenderedGraphicsPipeline(std::unique_ptr
 void ForwardRenderedGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {
     pipeline->prepareRender(renderArguments);
     uniformBuffer.updateBuffer(ubo);
-    uniformBuffer.writeToDescriptor(*descriptors->getDescriptorSet("main"), 0);
+    uniformBuffer.writeToDescriptor(*descriptors->getDescriptorFor(FORWARD_UBO_NAME), descriptors->getBindingOf(FORWARD_UBO_NAME));
 }
 
 ForwardRenderedGraphicsPipeline*
@@ -46,5 +46,4 @@ void ForwardRenderedGraphicsPipeline::destroy() {
 }
 
 void ForwardRenderedGraphicsPipeline::setDescriptorSet(DescriptorSet* descriptor) {
-  descriptors->addDescriptorSet("main", descriptor);
 }

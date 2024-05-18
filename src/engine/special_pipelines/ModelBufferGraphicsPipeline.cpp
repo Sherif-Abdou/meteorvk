@@ -5,6 +5,7 @@
 #include "ModelBufferGraphicsPipeline.h"
 #include "../../core/interfaces/IndirectCallStruct.h"
 
+
 GraphicsPipeline & ModelBufferGraphicsPipeline::getGraphicsPipeline() {
     return graphicsPipeline;
 }
@@ -19,7 +20,7 @@ void ModelBufferGraphicsPipeline::renderPipeline(Renderable::RenderArguments ren
         if (vertex_buffers.size() > 1 && vertex_buffer->mask & VertexBuffer::DeferredQuadBit) {
             continue;
         }
-        auto* descriptorSet = descriptors->getDescriptorSet("main");
+        auto* descriptorSet = descriptors->getDescriptorFor(MODEL_BUFFER_DESCRIPTOR_NAME);
         modelBuffer->attachOffsetToDescriptor(*descriptorSet, 0);
         descriptorSet->bindToCommandBuffer(&renderArguments.commandBuffer, graphicsPipeline.getPipelineLayout());
 
@@ -37,17 +38,16 @@ void ModelBufferGraphicsPipeline::renderPipeline(Renderable::RenderArguments ren
 ModelBufferGraphicsPipeline::ModelBufferGraphicsPipeline(GraphicsPipeline &&graphicsPipeline,
                                                          unsigned int size) : graphicsPipeline(
         std::move(graphicsPipeline)), modelBuffer(new ModelBuffer(this->graphicsPipeline.context, size)) {
-    descriptors = new DescriptorManager(graphicsPipeline.context);
 }
 
 void ModelBufferGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {
-    modelBuffer->writeBuffer(*descriptors->getDescriptorSet("main"), 2);
+    modelBuffer->writeBuffer(*descriptors->getDescriptorFor(MODEL_BUFFER_DESCRIPTOR_NAME), descriptors->getBindingOf(MODEL_BUFFER_DESCRIPTOR_NAME));
 }
 
 ModelBufferGraphicsPipeline::ModelBufferGraphicsPipeline(GraphicsPipeline &&graphicsPipeline,
                                                          ModelBuffer *modelBuffer):
                                                          graphicsPipeline(std::move(graphicsPipeline)), modelBuffer(modelBuffer) {
-    descriptors = new DescriptorManager(graphicsPipeline.context);
+    // descriptors = new NewDescriptorManager(graphicsPipeline.context);
 }
 
 ModelBufferGraphicsPipeline*
@@ -59,17 +59,16 @@ ModelBufferGraphicsPipeline::createPipelineFromBuilder(GraphicsPipelineBuilder &
     auto pipeline = builder.buildGraphicsPipeline();
 
     auto* final_pipeline = new ModelBufferGraphicsPipeline(std::move(pipeline), modelBuffer);
-    final_pipeline->descriptors->addDescriptorSet("main", descriptor);
+    // final_pipeline->descriptors->addDescriptorSet("main", descriptor);
 
     return final_pipeline;
 }
 
 void ModelBufferGraphicsPipeline::destroy() {
     getGraphicsPipeline().destroy();
-    delete descriptors;
 }
 
 
 void ModelBufferGraphicsPipeline::setDescriptorSet(DescriptorSet* descriptor) {
-  this->descriptors->addDescriptorSet("main", descriptor);
+  // this->descriptors->addDescriptorSet("main", descriptor);
 }

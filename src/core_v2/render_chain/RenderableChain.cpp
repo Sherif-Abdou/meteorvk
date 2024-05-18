@@ -20,3 +20,7 @@ void RenderableChain::applyToCommandBuffer(GraphicsCommandBuffer* command_buffer
     }
 
 }
+
+void RenderableChain::addRenderable(const RenderableContext& cont) {
+    this->renderable_contexts.push_back(cont);
+}

@@ -36,11 +36,11 @@ void SSAOGraphicsPipeline::renderPipeline(Renderable::RenderArguments renderArgu
 void SSAOGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {
     pipeline->prepareRender(renderArguments);
     ubo_buffer->updateBuffer(*ubo);
-    DescriptorSet& ref = *descriptors->getDescriptorSet("main");
-    ubo_buffer->writeToDescriptor(ref);
-    noise_sampler->updateSampler(ref, 4);
+    DescriptorSet& ref = *descriptors->getDescriptorFor(SSAO_UBO_NAME);
+    ubo_buffer->writeToDescriptor(ref, descriptors->getBindingOf(SSAO_UBO_NAME));
+    noise_sampler->updateSampler(ref, descriptors->getBindingOf(SSAO_NOISE_NAME));
     if (depth_sampler != nullptr) {
-        depth_sampler->updateSampler(ref, 3);
+        depth_sampler->updateSampler(ref, descriptors->getBindingOf(SSAO_NOISE_NAME));
     } else {
         std::cerr << "Missing depth sampler \n";
     }
@@ -140,5 +140,4 @@ void SSAOGraphicsPipeline::setDepthSampler(CombinedDescriptorSampler *depthSampl
 
 
 void SSAOGraphicsPipeline::setDescriptorSet(DescriptorSet* descriptor) {
-  descriptors->addDescriptorSet("main", descriptor);
 }

@@ -20,6 +20,8 @@
 /// Graphics pipelines that stores render specific uniforms
 class ForwardRenderedGraphicsPipeline: public BasePipeline {
 public:
+    static constexpr const char* FORWARD_UBO_NAME = "global_ubo";
+
     explicit ForwardRenderedGraphicsPipeline(std::unique_ptr<BasePipeline> pipeline);
 
     void renderPipeline(Renderable::RenderArguments renderArguments) override;
