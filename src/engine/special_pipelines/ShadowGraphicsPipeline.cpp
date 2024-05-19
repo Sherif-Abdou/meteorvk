@@ -40,3 +40,6 @@ void ShadowGraphicsPipeline::destroy() {
 void ShadowGraphicsPipeline::setDescriptorSet(DescriptorSet* descriptor) {
 }
 
+vk::ImageView ShadowGraphicsPipeline::getDepthImageView() {
+    return *this->pipeline->getGraphicsPipeline().ownedImages[0].imageView;
+}

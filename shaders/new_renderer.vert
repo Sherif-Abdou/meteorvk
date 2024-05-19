@@ -13,6 +13,7 @@ layout(location = 3) out vec3 outputTangent;
 layout(location = 4) out vec3 lightSpacePosition;
 layout(location = 5) out uint outputMaterialIndex;
 
+/*
 #ifndef GLOBAL_UBO_BINDING
 #define GLOBAL_UBO_BINDING 0
 #endif
@@ -20,13 +21,14 @@ layout(location = 5) out uint outputMaterialIndex;
 #ifndef MODEL_BUFFER_BINDING
 #define MODEL_BUFFER_BINDING 1
 #endif
+*/
 
-layout(binding = GLOBAL_UBO_BINDING) uniform UBO {
+layout(set = GLOBAL_UBO_SET, binding = GLOBAL_UBO_BINDING) uniform UBO {
     mat4 proj;
     mat4 view;
 };
 
-layout(binding = MODEL_BUFFER_BINDING) uniform DynamicUBO {
+layout(set = MODEL_BUFFER_SET, binding = MODEL_BUFFER_BINDING) uniform DynamicUBO {
     mat4 model;
 };
 

@@ -48,6 +48,8 @@ public:
 
     void prepareRender(Renderable::RenderArguments renderArguments) override;
 
+    vk::ImageView getDepthImageView();
+
     virtual ~ShadowGraphicsPipeline();
 
     void destroy() override;

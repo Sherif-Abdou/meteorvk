@@ -5,6 +5,8 @@ void NewRenderer::run() {
     buildDescriptorLayouts();
     auto vertex = createVertexBuffer(context, "./models/car.obj");
     vertex.init();
+    auto vertex2 = createVertexBuffer(context, "./models/super_backpack.obj");
+    vertex2.init();
 
     pipeline =
         buildForwardGraphicsPipeline();
@@ -14,6 +16,9 @@ void NewRenderer::run() {
 
 
     RenderableChain render_chain(context, descriptorManager.get());
+
+    shadow_pipeline = 
+        buildShadowGraphicsPipeline();
 
     depth_pipeline =
         buildDepthOnlyPipeline();
@@ -42,6 +47,10 @@ void NewRenderer::run() {
             .withFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
     render_chain.addRenderable({
+            shadow_pipeline.get(),
+            &shadow_pipeline.get()->getPipeline().getPipelineLayout(),
+            });
+    render_chain.addRenderable({
             depth_pipeline.get(),
             &depth_pipeline.get()->getPipeline().getPipelineLayout(),
             });
@@ -56,7 +65,7 @@ void NewRenderer::run() {
             {occlusion_image_barrier.build()}
             });
 
-    command_buffer.vertexBuffers = { &vertex };
+    command_buffer.vertexBuffers = { &vertex, &vertex2 };
 
     render_chain.applyToCommandBuffer(&command_buffer);
 
@@ -78,6 +87,7 @@ void NewRenderer::run() {
 
     command_buffer.destroy();
     pipeline->destroy();
+    shadow_pipeline->destroy();
     depth_pipeline->destroy();
     ssao_pipeline->destroy();
 
@@ -105,6 +115,11 @@ std::unique_ptr<ForwardRenderedGraphicsPipeline> NewRenderer::buildForwardGraphi
             model_mat,
             Material(glm::vec4(0.3,0.1,0.7,1)),
             }, 0);
+    model_mat = glm::translate(model_mat, glm::vec3(3.0f, 0.0f, 3.0f));
+    model_pipeline->modelBuffer->updateBuffer({
+            model_mat,
+            Material(glm::vec4(0.3,0.1,0.7,1)),
+            }, 1);
     model_pipeline->descriptors = descriptorManager.get();
 
     model_buffer = model_pipeline->modelBuffer;
@@ -258,3 +273,22 @@ std::unique_ptr<SSAOGraphicsPipeline> NewRenderer::buildSSAOGraphicsPipeline(vk:
     return ssao_pipeline;
 }
 
+std::unique_ptr<ShadowGraphicsPipeline> NewRenderer::buildShadowGraphicsPipeline() {
+    GraphicsPipelineBuilder2 builder(context, descriptorManager.get());
+
+    builder.options.useDepth = true;
+    builder.options.shouldStoreDepth = true;
+    builder.options.multisampling = false;
+    builder.options.imageSource = GraphicsPipelineBuilder2::ImageSource::Depth;
+    builder.options.vertexShaderPath = "shaders/new_renderer.vert";
+    builder.options.fragmentShaderPath = "shaders/shadow.frag";
+
+    GraphicsPipeline pipeline = builder.build();
+
+    auto model_pipeline = std::make_unique<ModelBufferGraphicsPipeline>(std::move(pipeline), model_buffer);
+    model_pipeline->descriptors = descriptorManager.get();
+
+    auto shadow_pipeline = std::make_unique<ShadowGraphicsPipeline>(std::move(model_pipeline));
+
+    return std::move(shadow_pipeline);
+}

@@ -11,6 +11,7 @@
 #include "../special_pipelines/ForwardRenderedGraphicsPipeline.h"
 #include "../special_pipelines/DepthOnlyPipeline.h"
 #include "../special_pipelines/SSAOGraphicsPipeline.h"
+#include "../special_pipelines/ShadowGraphicsPipeline.h"
 #include "../../core_v2/render_chain/RenderableChain.h"
 
 class NewRenderer {
@@ -29,6 +30,7 @@ private:
 
     std::unique_ptr<SSAOGraphicsPipeline> ssao_pipeline = nullptr;
     std::unique_ptr<DepthOnlyPipeline> depth_pipeline = nullptr;
+    std::unique_ptr<ShadowGraphicsPipeline> shadow_pipeline = nullptr;
 public:
     explicit NewRenderer(VulkanContext* context): context(context) {};
 
@@ -40,6 +42,7 @@ public:
     std::unique_ptr<ForwardRenderedGraphicsPipeline> buildForwardGraphicsPipeline();
     std::unique_ptr<DepthOnlyPipeline> buildDepthOnlyPipeline();
     std::unique_ptr<SSAOGraphicsPipeline> buildSSAOGraphicsPipeline(vk::ImageView depth_image_view);
+    std::unique_ptr<ShadowGraphicsPipeline> buildShadowGraphicsPipeline();
 
     VertexBuffer createVertexBuffer(VulkanContext *context, const char *path);
 };

@@ -16,12 +16,12 @@ layout(location = 5) flat in uint material_id;
 
 const float PI = 3.14159265359;
 
-layout(binding = GLOBAL_UBO_BINDING) uniform UBO {
+layout(set = GLOBAL_UBO_SET, binding = GLOBAL_UBO_BINDING) uniform UBO {
     mat4 proj;
     mat4 view;
 };
 
-layout(binding = OCCLUSION_MAP_BINDING) uniform sampler2D occlusion_map;
+layout(set = OCCLUSION_MAP_SET, binding = OCCLUSION_MAP_BINDING) uniform sampler2D occlusion_map;
 
 float calculateOcclusion() {
     vec2 multiplier = 1.0f / vec2(2560.0f, 1440.0f);
