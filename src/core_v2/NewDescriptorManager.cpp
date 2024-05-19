@@ -30,6 +30,9 @@ uint32_t NewDescriptorManager::getSetOf(const std::string &name) {
 }
 
 std::vector<DescriptorSet *> NewDescriptorManager::buildDescriptors() {
+    if (!descriptors.empty()) {
+        return descriptors;
+    }
     descriptors = {};
     DescriptorSet* set;
     if ((set = buildDescriptorsOfCategory(BindingUpdateRate::Frame, 0)) != nullptr) {

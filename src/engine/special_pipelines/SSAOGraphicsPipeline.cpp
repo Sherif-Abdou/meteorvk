@@ -40,7 +40,7 @@ void SSAOGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArgum
     ubo_buffer->writeToDescriptor(ref, descriptors->getBindingOf(SSAO_UBO_NAME));
     noise_sampler->updateSampler(ref, descriptors->getBindingOf(SSAO_NOISE_NAME));
     if (depth_sampler != nullptr) {
-        depth_sampler->updateSampler(ref, descriptors->getBindingOf(SSAO_NOISE_NAME));
+        depth_sampler->updateSampler(ref, descriptors->getBindingOf(SSAO_DEPTH_NAME));
     } else {
         std::cerr << "Missing depth sampler \n";
     }

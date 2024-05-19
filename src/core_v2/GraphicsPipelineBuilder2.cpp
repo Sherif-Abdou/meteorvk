@@ -111,7 +111,7 @@ void GraphicsPipelineBuilder2::buildRenderpass() {
         vk::AttachmentStoreOp storeOp = options.shouldStoreDepth ? vk::AttachmentStoreOp::eStore : vk::AttachmentStoreOp::eDontCare;
         depthDescription
             .setInitialLayout(vk::ImageLayout::eUndefined)
-            .setFinalLayout(vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal)
+            .setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
             .setFormat(vk::Format::eD32Sfloat)
             .setSamples(colorDescription.samples)
             .setLoadOp(vk::AttachmentLoadOp::eClear)
@@ -151,7 +151,7 @@ void GraphicsPipelineBuilder2::buildRenderpass() {
     subpassDependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
 
     std::vector<vk::AttachmentDescription> attachments;
-    if (options.imageSource != ImageSource::None) {
+    if (options.imageSource != ImageSource::None && options.imageSource != ImageSource::Depth) {
         attachments.push_back(colorDescription);
     }
     if (options.useDepth) {
@@ -307,9 +307,6 @@ GraphicsPipeline GraphicsPipelineBuilder2::build() {
     if (options.multisampling) {
         enableMultisampling();
     }
-    if (options.useDepth) {
-        addDepthImage();
-    }
     if (options.imageSource == ImageSource::Swapchain) {
         if (options.multisampling) {
             // A multisampled image is an attachment that gets resolved to in the renderpass
@@ -320,7 +317,14 @@ GraphicsPipeline GraphicsPipelineBuilder2::build() {
         }
     } else if (options.imageSource == ImageSource::Custom) {
         addColorImage(options.format, options.multisampling ? context->sampleCountFlagBits : vk::SampleCountFlagBits::e1);
+    } 
+    if (options.useDepth || options.imageSource == ImageSource::Depth) {
+        addDepthImage();
+    } 
+    if (options.imageSource == ImageSource::Depth) {
+        targets.push_back(*this->attachments.depthTarget);
     }
+
 
     buildRenderpass();
     createPipelineLayout();
@@ -335,7 +339,7 @@ GraphicsPipeline GraphicsPipelineBuilder2::build() {
         auto attachments = std::vector<vk::ImageView>();
 
         // Target is first when there isn't multisampling
-        if (!options.multisampling) {
+        if (!options.multisampling && options.imageSource != ImageSource::Depth) {
             attachments.push_back(target);
             if (!clearValuesInitialized)
                 clearValues.emplace_back(vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f));
@@ -347,7 +351,7 @@ GraphicsPipeline GraphicsPipelineBuilder2::build() {
             if (!clearValuesInitialized)
                 clearValues.emplace_back(vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f));
         }
-        if (this->attachments.depthTarget.has_value()) {
+        if (this->attachments.depthTarget.has_value() || options.imageSource == ImageSource::Depth) {
             attachments.push_back(*this->attachments.depthTarget);
 
             if (!clearValuesInitialized)

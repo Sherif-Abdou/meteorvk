@@ -214,7 +214,7 @@ void BackpackRenderer::run(VulkanContext *context) {
     auto t = 0.0f;
 
     CombinedDescriptorSampler occlusionSampler(context);
-    occlusionSampler.targetImageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    occlusionSampler.targetImageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
     occlusionSampler.targetImageView = ssao_pipeline->getOcclusionImageView();
     occlusionSampler.buildSampler();
     // cullingComputePipeline.generateIndirects();
@@ -360,7 +360,7 @@ DepthOnlyPipeline BackpackRenderer::createDepthOnlyPipeline(VulkanContext *conte
     depth_model_pipeline->setDescriptorSet(descriptorSet);
     depth_forward_pipeline = std::make_unique<ForwardRenderedGraphicsPipeline>(std::move(depth_model_pipeline));
     depth_forward_pipeline->setDescriptorSet(descriptorSet);
-    return DepthOnlyPipeline(*depth_forward_pipeline);
+    return DepthOnlyPipeline(std::move(depth_forward_pipeline));
 }
 
 GraphicsPipeline BackpackRenderer::createShadowPipeline(VulkanContext *context, DescriptorSet *descriptorSet) {

@@ -1,9 +1,9 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : enable
 
-#ifndef GLOBAL_UBO_BINDING
-#define GLOBAL_UBO_BINDING 0
-#endif
+// #ifndef GLOBAL_UBO_BINDING
+// #define GLOBAL_UBO_BINDING 0
+// #endif
 
 layout(location = 0) out vec4 color;
 
@@ -21,6 +21,27 @@ layout(binding = GLOBAL_UBO_BINDING) uniform UBO {
     mat4 view;
 };
 
+layout(binding = OCCLUSION_MAP_BINDING) uniform sampler2D occlusion_map;
+
+float calculateOcclusion() {
+    vec2 multiplier = 1.0f / vec2(2560.0f, 1440.0f);
+    vec2 screen_uv = gl_FragCoord.xy * multiplier;
+
+    float occlusion = texture(occlusion_map, screen_uv).r;
+    float sum = 0.0;
+    int c = 0;
+    for (int i = -1; i <= 1; i++) {
+        for (int j = -1; j <= 1; j++) {
+            float value = texture(occlusion_map, screen_uv + vec2(i, j) * multiplier).r;
+            sum += value;
+            c++;
+        }
+    }
+
+    return sum / (float(c));
+}
+
 void main() {
-    color = vec4(0.8, 0.2, 0.0, 1.0);
+    float occlusion = calculateOcclusion();
+    color = vec4(0.8 * occlusion, 0.2 * occlusion, 0.0, 1.0);
 }

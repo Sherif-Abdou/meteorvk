@@ -11,9 +11,9 @@
 
 class DepthOnlyPipeline: public Renderable {
 private:
-    ForwardRenderedGraphicsPipeline& forward_pipeline;
+    std::unique_ptr<ForwardRenderedGraphicsPipeline> forward_pipeline;
 public:
-    explicit DepthOnlyPipeline(ForwardRenderedGraphicsPipeline &forwardPipeline);
+    explicit DepthOnlyPipeline(std::unique_ptr<ForwardRenderedGraphicsPipeline> forwardPipeline);
 
     void renderPipeline(Renderable::RenderArguments renderArguments) override;
 

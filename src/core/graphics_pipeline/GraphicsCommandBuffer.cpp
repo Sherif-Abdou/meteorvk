@@ -3,6 +3,7 @@
 //
 
 #include "GraphicsCommandBuffer.h"
+#include <unordered_set>
 
 void GraphicsCommandBuffer::createCommandPool() {
     vk::CommandPoolCreateInfo commandPoolCreateInfo{};
@@ -120,8 +121,12 @@ void GraphicsCommandBuffer::sendToSwapchain() {
     }
 
     current_frame = (current_frame + 1) % FRAMES_IN_FLIGHT;
+
+    // Make sure not to ever tick the same descriptor set twice using a set
+    std::unordered_set<DescriptorSet*> visited_sets {};
     for (auto &binding: bindings) {
-        if (binding.descriptorSet != nullptr) {
+        if (binding.descriptorSet != nullptr && !visited_sets.contains(binding.descriptorSet)) {
+            visited_sets.insert(binding.descriptorSet);
             binding.descriptorSet->nextFrame();
         }
     }

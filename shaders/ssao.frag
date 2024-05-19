@@ -3,14 +3,14 @@
 layout(location = 0) out float color;
 layout(location = 1) in vec3 raw_normal;
 
-layout(binding = 0) uniform UBO {
+layout(binding = GLOBAL_UBO_BINDING) uniform UBO {
     mat4 proj;
     mat4 view;
     vec3 samples[64];
 };
 
-layout(binding = 3) uniform sampler2D depthSampler;
-layout(binding = 4) uniform sampler2D noiseSampler;
+layout(binding = SSAO_DEPTH_BINDING) uniform sampler2D depthSampler;
+layout(binding = SSAO_NOISE_BINDING) uniform sampler2D noiseSampler;
 
 vec2 screenSize = vec2(1, 1);
 vec2 noiseScale = screenSize / vec2(4.0, 4.0);

@@ -60,6 +60,7 @@ public:
     enum class ImageSource {
         Swapchain,
         Custom,
+        Depth,
         None,
     };
     struct GraphicsPipelineBuilderOptions {
