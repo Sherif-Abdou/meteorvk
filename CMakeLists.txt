@@ -115,6 +115,7 @@ add_executable(vulkan_engine main.cpp
         src/core_v2/NewDescriptorManager.cpp
         src/engine/programs/MinimalRenderer.cpp
         src/engine/programs/NewRenderer.cpp
+        src/engine/storage/LightBuffer.cpp
 )
 # Apple MoltenVK Requirements
 if (APPLE)

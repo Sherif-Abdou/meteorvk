@@ -3,10 +3,14 @@
 
 void NewRenderer::run() {
     buildDescriptorLayouts();
+    buildLighting();
+
     auto vertex = createVertexBuffer(context, "./models/car.obj");
     vertex.init();
     auto vertex2 = createVertexBuffer(context, "./models/super_backpack.obj");
     vertex2.init();
+    auto ground = createVertexBuffer(context, "./models/floor.obj");
+    ground.init();
 
     pipeline =
         buildForwardGraphicsPipeline();
@@ -45,6 +49,14 @@ void NewRenderer::run() {
             .forImage(ssao_pipeline->getOcclusionImage(), vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1))
             .withInitialLayout(vk::ImageLayout::eColorAttachmentOptimal)
             .withFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+    auto shadow_map_barrier = PipelineBarrierBuilder()
+        .waitFor(vk::PipelineStageFlagBits2::eLateFragmentTests | vk::PipelineStageFlagBits2::eEarlyFragmentTests)
+        .whichUses(vk::AccessFlagBits2::eDepthStencilAttachmentWrite)
+        .beforeDoing(vk::PipelineStageFlagBits2::eFragmentShader)
+        .whichUses(vk::AccessFlagBits2::eShaderRead)
+        .forImage(shadow_pipeline->getDepthImage(), vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1))
+        .withInitialLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
+        .withFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
     render_chain.addRenderable({
             shadow_pipeline.get(),
@@ -62,10 +74,10 @@ void NewRenderer::run() {
     render_chain.addRenderable({
             pipeline.get(),
             &pipeline.get()->getGraphicsPipeline().getPipelineLayout(),
-            {occlusion_image_barrier.build()}
+            {occlusion_image_barrier.build(), shadow_map_barrier.build()}
             });
 
-    command_buffer.vertexBuffers = { &vertex, &vertex2 };
+    command_buffer.vertexBuffers = { &vertex, &vertex2, &ground };
 
     render_chain.applyToCommandBuffer(&command_buffer);
 
@@ -120,6 +132,13 @@ std::unique_ptr<ForwardRenderedGraphicsPipeline> NewRenderer::buildForwardGraphi
             model_mat,
             Material(glm::vec4(0.3,0.1,0.7,1)),
             }, 1);
+
+    auto ground_model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, -3, 0));
+    model_pipeline->modelBuffer->updateBuffer({
+            ground_model,
+            Material(glm::vec4(0.3,0.1,0.7,1)),
+            }, 2);
+
     model_pipeline->descriptors = descriptorManager.get();
 
     model_buffer = model_pipeline->modelBuffer;
@@ -140,6 +159,13 @@ void NewRenderer::buildDescriptorLayouts() {
     vk::ShaderStageFlags stages = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
 
     descriptorManager->addLayoutBinding(ForwardRenderedGraphicsPipeline::FORWARD_UBO_NAME, 
+            vk::DescriptorSetLayoutBinding()
+            .setDescriptorCount(1)
+            .setStageFlags(stages)
+            .setDescriptorType(vk::DescriptorType::eUniformBuffer),
+            NewDescriptorManager::BindingUpdateRate::Frame
+            );
+    descriptorManager->addLayoutBinding("shadow_ubo", 
             vk::DescriptorSetLayoutBinding()
             .setDescriptorCount(1)
             .setStageFlags(stages)
@@ -174,6 +200,13 @@ void NewRenderer::buildDescriptorLayouts() {
             .setDescriptorType(vk::DescriptorType::eCombinedImageSampler),
             NewDescriptorManager::BindingUpdateRate::Frame
             );
+    descriptorManager->addLayoutBinding("shadow_map", 
+            vk::DescriptorSetLayoutBinding()
+            .setDescriptorCount(1)
+            .setStageFlags(stages)
+            .setDescriptorType(vk::DescriptorType::eCombinedImageSampler),
+            NewDescriptorManager::BindingUpdateRate::Frame
+            );
 }
 
 VertexBuffer NewRenderer::createVertexBuffer(VulkanContext *context, const char *path) {
@@ -199,11 +232,27 @@ void NewRenderer::tick(double elapsed) {
     if (glfwGetKey(context->window, GLFW_KEY_D)) {
         pipeline->ubo.view = glm::translate(pipeline->ubo.view, glm::vec3(-sensitivity * elapsed,0.0f, 0.0f));
     }
+    if (glfwGetKey(context->window, GLFW_KEY_SPACE)) {
+        pipeline->ubo.view = glm::translate(pipeline->ubo.view, glm::vec3(0.0f,-sensitivity * elapsed, 0.0f));
+    }
+    if (glfwGetKey(context->window, GLFW_KEY_Z)) {
+        pipeline->ubo.view = glm::translate(pipeline->ubo.view, glm::vec3(0.0f,sensitivity * elapsed, 0.0f));
+    }
 
     occlusion_sampler->updateSampler(*descriptorManager->getDescriptorFor("occlusion_map"), descriptorManager->getBindingOf("occlusion_map"));
+    shadow_sampler->updateSampler(*descriptorManager->getDescriptorFor("shadow_map"), descriptorManager->getBindingOf("shadow_map"));
+
+
 
     depth_pipeline->getUBO().ubo.view = pipeline->ubo.view;
     ssao_pipeline->ubo->view = pipeline->ubo.view;
+
+    glm::mat4 shadow_proj = glm::ortho(-20.f, 20.f, -20.f, 20.f, 0.1f, 20.f);
+
+    shadow_pipeline->lightUBO.view = glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0,0,0), glm::vec3(0,0, 1));
+    pipeline->ubo.lightProjView = shadow_proj * glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0,0,0), glm::vec3(0,0, 1));
+
+    light_buffer->updateDescriptor(descriptorManager.get());
 }
 
 std::unique_ptr<DepthOnlyPipeline> NewRenderer::buildDepthOnlyPipeline() {
@@ -280,7 +329,8 @@ std::unique_ptr<ShadowGraphicsPipeline> NewRenderer::buildShadowGraphicsPipeline
     builder.options.shouldStoreDepth = true;
     builder.options.multisampling = false;
     builder.options.imageSource = GraphicsPipelineBuilder2::ImageSource::Depth;
-    builder.options.vertexShaderPath = "shaders/new_renderer.vert";
+    builder.options.extent = {1024, 1024};
+    builder.options.vertexShaderPath = "shaders/shadow.vert";
     builder.options.fragmentShaderPath = "shaders/shadow.frag";
 
     GraphicsPipeline pipeline = builder.build();
@@ -290,5 +340,26 @@ std::unique_ptr<ShadowGraphicsPipeline> NewRenderer::buildShadowGraphicsPipeline
 
     auto shadow_pipeline = std::make_unique<ShadowGraphicsPipeline>(std::move(model_pipeline));
 
+    shadow_sampler = std::make_unique<CombinedDescriptorSampler>(context);
+    shadow_sampler->targetImageView = shadow_pipeline->getDepthImageView();
+    shadow_sampler->targetImageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    shadow_sampler->buildSampler();
+
     return std::move(shadow_pipeline);
+}
+
+
+void NewRenderer::buildLighting() {
+    light_buffer = std::make_unique<LightBuffer>(context);
+    light_buffer->addLayoutBinding(descriptorManager.get());
+    
+
+    light_buffer->addLight(glm::vec3(0, 2, 0), 
+            glm::lookAt(glm::vec3(0, 2, 0), glm::vec3(0,0,0), glm::vec3(0, 0, 1)));
+
+    light_buffer->addLight(glm::vec3(2, 2, 0), 
+            glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0,0,0), glm::vec3(0, 0, 1)));
+
+    light_buffer->addLight(glm::vec3(-2, 2, 0), 
+            glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0,0,0), glm::vec3(0, 0, 1)));
 }

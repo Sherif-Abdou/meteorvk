@@ -25,7 +25,7 @@ GraphicsPipeline &ShadowGraphicsPipeline::getGraphicsPipeline() {
 void ShadowGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {
     pipeline->prepareRender(renderArguments);
     lightUniformBuffer.updateBuffer(lightUBO);
-    lightUniformBuffer.writeToDescriptor(*descriptors->getDescriptorFor("global_ubo"), descriptors->getBindingOf("global_ubo"));
+    lightUniformBuffer.writeToDescriptor(*descriptors->getDescriptorFor("shadow_ubo"), descriptors->getBindingOf("shadow_ubo"));
 }
 
 ShadowGraphicsPipeline::~ShadowGraphicsPipeline() {
@@ -42,4 +42,8 @@ void ShadowGraphicsPipeline::setDescriptorSet(DescriptorSet* descriptor) {
 
 vk::ImageView ShadowGraphicsPipeline::getDepthImageView() {
     return *this->pipeline->getGraphicsPipeline().ownedImages[0].imageView;
+}
+
+vk::Image ShadowGraphicsPipeline::getDepthImage() {
+    return this->pipeline->getGraphicsPipeline().ownedImages[0].imageAllocation.image;
 }

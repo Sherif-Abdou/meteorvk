@@ -23,7 +23,7 @@ layout(location = 5) out uint outputMaterialIndex;
 #endif
 */
 
-layout(set = GLOBAL_UBO_SET, binding = GLOBAL_UBO_BINDING) uniform UBO {
+layout(set = SHADOW_UBO_SET, binding = SHADOW_UBO_BINDING) uniform UBO {
     mat4 proj;
     mat4 view;
     mat4 lightView;

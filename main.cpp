@@ -1,4 +1,3 @@
-#include "src/engine/programs/NewRenderer.h"
 #include <iostream>
 
 #define GLFW_INCLUDE_VULKAN
@@ -40,6 +39,7 @@
 #include "src/engine/programs/BackpackRenderer.h"
 #include "src/engine/special_pipelines/CullingComputePipeline.h"
 #include "src/engine/programs/MinimalRenderer.h"
+#include "src/engine/programs/NewRenderer.h"
 
 CombinedDescriptorSampler createSampler(VulkanContext* context) {
     auto descriptorSampler = CombinedDescriptorSampler(context);

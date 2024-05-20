@@ -304,6 +304,10 @@ void GraphicsPipelineBuilder2::buildShaderStages() {
 }
 
 GraphicsPipeline GraphicsPipelineBuilder2::build() {
+    if (options.extent.has_value()) {
+        this->extent = options.extent.value();
+    }
+
     if (options.multisampling) {
         enableMultisampling();
     }

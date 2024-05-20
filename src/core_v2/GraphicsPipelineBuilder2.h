@@ -73,6 +73,7 @@ public:
         std::string vertexShaderPath;
         std::string fragmentShaderPath;
 
+        std::optional<vk::Extent2D> extent;
     };
     struct ImageTargets {
         std::vector<vk::ImageView> colorTargets;

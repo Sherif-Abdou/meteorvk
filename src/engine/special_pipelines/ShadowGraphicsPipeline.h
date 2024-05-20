@@ -34,7 +34,7 @@ public:
 
     UBO lightUBO = {
             glm::ortho(-20.f, 20.f, -20.f, 20.f, 0.1f, 20.0f),
-            glm::lookAt(glm::vec3(-5.0f, 5.0f, 2.0f), glm::vec3(0.0f), glm::vec3(0.0, 0.0, 1.0)),
+            glm::lookAt(glm::vec3(-0.0f, 5.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.0, 0.0, 1.0)),
             glm::identity<glm::mat4>(),
     };
 
@@ -49,6 +49,7 @@ public:
     void prepareRender(Renderable::RenderArguments renderArguments) override;
 
     vk::ImageView getDepthImageView();
+    vk::Image getDepthImage();
 
     virtual ~ShadowGraphicsPipeline();
 

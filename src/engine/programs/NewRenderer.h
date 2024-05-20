@@ -13,6 +13,7 @@
 #include "../special_pipelines/SSAOGraphicsPipeline.h"
 #include "../special_pipelines/ShadowGraphicsPipeline.h"
 #include "../../core_v2/render_chain/RenderableChain.h"
+#include "../storage/LightBuffer.h"
 
 class NewRenderer {
 private:
@@ -27,10 +28,14 @@ private:
 
     std::unique_ptr<CombinedDescriptorSampler> depth_sampler = nullptr;
     std::unique_ptr<CombinedDescriptorSampler> occlusion_sampler = nullptr;
+    std::unique_ptr<CombinedDescriptorSampler> shadow_sampler = nullptr;
 
     std::unique_ptr<SSAOGraphicsPipeline> ssao_pipeline = nullptr;
     std::unique_ptr<DepthOnlyPipeline> depth_pipeline = nullptr;
     std::unique_ptr<ShadowGraphicsPipeline> shadow_pipeline = nullptr;
+
+
+    std::unique_ptr<LightBuffer> light_buffer = nullptr;
 public:
     explicit NewRenderer(VulkanContext* context): context(context) {};
 
@@ -45,6 +50,8 @@ public:
     std::unique_ptr<ShadowGraphicsPipeline> buildShadowGraphicsPipeline();
 
     VertexBuffer createVertexBuffer(VulkanContext *context, const char *path);
+
+    void buildLighting();
 };
 
 #endif
