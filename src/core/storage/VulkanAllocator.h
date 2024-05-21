@@ -6,7 +6,7 @@
 #define VULKAN_TEST_VULKANALLOCATOR_H
 
 #include <vma/vk_mem_alloc.h>
-#include "../VulkanContext.h"
+#include "core/VulkanContext.h"
 
 static int allocationCount;
 static int destructionCount;

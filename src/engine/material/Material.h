@@ -25,6 +25,7 @@ public:
     explicit Material(const glm::vec4& albedo)
         : albedo(albedo) {
     }
+    explicit Material() { }
 private:
     glm::vec4 albedo {};
     AtlasRect atlas = AtlasRect::createDefault();

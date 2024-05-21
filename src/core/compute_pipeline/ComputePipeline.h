@@ -5,10 +5,10 @@
 #ifndef VULKAN_ENGINE_COMPUTEPIPELINE_H
 #define VULKAN_ENGINE_COMPUTEPIPELINE_H
 
-#include "../VulkanContext.h"
+#include "core/VulkanContext.h"
 #include <vulkan/vulkan_raii.hpp>
 
-#include "../storage/DescriptorSet.h"
+#include "core/storage/DescriptorSet.h"
 
 class ComputePipeline {
 public:

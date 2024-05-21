@@ -4,7 +4,7 @@
 
 #ifndef IMAGETEXTURE_H
 #define IMAGETEXTURE_H
-#include "../../core/storage/VulkanAllocator.h"
+#include "core/storage/VulkanAllocator.h"
 
 
 class ImageTextureLoader {

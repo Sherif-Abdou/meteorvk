@@ -16,6 +16,16 @@ layout(location = 5) flat in uint material_id;
 
 const float PI = 3.14159265359;
 
+struct RenderMaterial {
+    vec3 kA;
+    vec3 kD;
+    vec3 kS;
+    float nS;
+    uint illum;
+    int kD_index;
+    int kS_index;
+};
+
 layout(set = GLOBAL_UBO_SET, binding = GLOBAL_UBO_BINDING) uniform UBO {
     mat4 proj;
     mat4 view;
@@ -32,9 +42,13 @@ layout(set = LIGHT_UBO_SET, binding = LIGHT_UBO_BINDING) uniform Lights {
 
 layout(set = SHADOW_MAP_SET, binding = SHADOW_MAP_BINDING) uniform sampler2D shadow_map;
 
+layout(set = MATERIAL_BUFFER_SET, binding = MATERIAL_BUFFER_BINDING) readonly buffer Materials {
+    RenderMaterial materials[64];
+};
+
 const float kA = 0.01f;
-const float kD = 0.3f;
-const float kS = 0.5f;
+const float kD = 0.35f;
+const float kS = 0.55f;
 
 float calculateShadow() {
     vec4 lightSpacePosition = vec4(light_space_position, 1.0f);
@@ -47,7 +61,9 @@ float calculateShadow() {
 
     for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {
+            // The closest depth from the perspective of the light source
             float closestLightDepth = texture(shadow_map, screenLocation.xy + vec2(i, j) / vec2(2560.f, 1440.f)).r;
+            // Our current depth from the perspective of the light source
             float currentLightDepth = lightSpacePosition.z;
 
             float bias = max(0.05 * (1.0 - normal.y), 0.005);
@@ -84,10 +100,15 @@ void main() {
     float occlusion = calculateOcclusion();
     float shadow = 1.0f - calculateShadow();
 
+    RenderMaterial material = materials[material_id];
+    color += vec4(material.kA, 1);
     color = shadow * kA * vec4(0.8 * occlusion, 0.2 * occlusion, 0.0, 1.0);
 
     for (int i = 0; i < light_count; i++) {
-        vec4 light_pos = view * positions[i];
+        vec4 light_position = positions[i];
+        float intensity = positions[i].w;
+        light_position.w = 1.f;
+        vec4 light_pos = view * light_position;
         light_pos /= light_pos.w;
 
         vec3 diffuse_ray = light_pos.xyz - position;
@@ -99,9 +120,15 @@ void main() {
 
         float specular = max(dot(halfway, normal), 0);
         specular = pow(specular, 64.0f);
+        
+        // No attentuation
+        if (intensity == 0) {
+            intensity = 1.0f;
+            attent = 1.0f;
+        }
 
-        color += shadow * attent * diffuse * kD * vec4(0.8, 0.2, 0.0, 0.0);
-        color += shadow * attent * specular * kS * vec4(0.8, 0.2, 0.0, 0);
+        color += intensity * shadow * attent * diffuse * kD * vec4(0.8, 0.2, 0.0, 0.0);
+        color += intensity * shadow * attent * specular * kS * vec4(0.9, 0.3, 0.1, 0);
     }
 
     color = color / (color + vec4(1));

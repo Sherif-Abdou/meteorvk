@@ -6,7 +6,7 @@
 #define VULKAN_ENGINE_DEPTHONLYPIPELINE_H
 
 
-#include "../../core/interfaces/Renderable.h"
+#include "core/interfaces/Renderable.h"
 #include "ForwardRenderedGraphicsPipeline.h"
 
 class DepthOnlyPipeline: public Renderable {

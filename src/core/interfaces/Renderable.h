@@ -7,7 +7,7 @@
 
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
-#include "../storage/VertexBuffer.h"
+#include "core/storage/VertexBuffer.h"
 
 class Renderable {
 public:

@@ -6,10 +6,10 @@
 #define VULKAN_ENGINE_TEXTURECONTAINER_H
 
 
-#include "../../core/VulkanContext.h"
-#include "../../core/storage/StorageImage.h"
-#include "../../core/storage/DescriptorSampler.h"
-#include "../material/RenderMaterial.h"
+#include "core/VulkanContext.h"
+#include "core/storage/StorageImage.h"
+#include "core/storage/DescriptorSampler.h"
+#include "engine/material/RenderMaterial.h"
 #include "TextureDescriptorSet.h"
 
 class TextureContainer {
@@ -26,6 +26,8 @@ private:
     std::vector<RenderMaterial> materials {};
 public:
     VulkanContext* context;
+
+    TextureContainer(VulkanContext* context);
 
     uint32_t addTexture(Texture texture);
     uint32_t addTexture(VulkanAllocator::VulkanImageAllocation allocation, vk::raii::ImageView imageView, StorageImage* storageImage);
@@ -47,6 +49,8 @@ public:
     void copyMaterialsTo(TextureDescriptorSet* set);
 
     void destroy();
+
+    ~TextureContainer();
 };
 
 

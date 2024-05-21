@@ -6,7 +6,7 @@
 #define STORAGEIMAGE_H
 
 #include "DescriptorSet.h"
-#include "../VulkanContext.h"
+#include "core/VulkanContext.h"
 
 class StorageImage {
     VulkanContext* context;

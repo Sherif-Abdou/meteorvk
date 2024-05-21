@@ -1,23 +1,20 @@
 #include "NewRenderer.h"
-#include "../../core/shared_pipeline/PipelineBarrierBuilder.h"
+#include "core/shared_pipeline/PipelineBarrierBuilder.h"
+#include "core_v2/GraphicsPipelineBuilder2.h"
+#include "core/graphics_pipeline/GraphicsCommandBuffer.h"
+#include "core_v2/render_chain/RenderableChain.h"
+#include "core/storage/NewOBJFile.h"
+#include "engine/special_pipelines/ModelBufferGraphicsPipeline.h"
+#include "engine/storage/MTLFile.h"
 
 void NewRenderer::run() {
     buildDescriptorLayouts();
     buildLighting();
-
-    auto vertex = createVertexBuffer(context, "./models/car.obj");
-    vertex.init();
-    auto vertex2 = createVertexBuffer(context, "./models/super_backpack.obj");
-    vertex2.init();
-    auto ground = createVertexBuffer(context, "./models/floor.obj");
-    ground.init();
-
     pipeline =
         buildForwardGraphicsPipeline();
 
     GraphicsCommandBuffer command_buffer(context);
     command_buffer.init();
-
 
     RenderableChain render_chain(context, descriptorManager.get());
 
@@ -29,6 +26,8 @@ void NewRenderer::run() {
 
     ssao_pipeline =
         buildSSAOGraphicsPipeline(depth_pipeline->getDepthImageView());
+
+
 
     auto depth_image_barrier = PipelineBarrierBuilder();
     depth_image_barrier
@@ -76,6 +75,15 @@ void NewRenderer::run() {
             &pipeline.get()->getGraphicsPipeline().getPipelineLayout(),
             {occlusion_image_barrier.build(), shadow_map_barrier.build()}
             });
+
+    buildTexturing();
+
+    auto vertex = createVertexBuffer(context, "./models/car.obj");
+    vertex.init();
+    auto vertex2 = createVertexBuffer(context, "./models/super_backpack.obj");
+    vertex2.init();
+    auto ground = createVertexBuffer(context, "./models/floor.obj");
+    ground.init();
 
     command_buffer.vertexBuffers = { &vertex, &vertex2, &ground };
 
@@ -125,18 +133,18 @@ std::unique_ptr<ForwardRenderedGraphicsPipeline> NewRenderer::buildForwardGraphi
     model_mat = glm::translate(model_mat, glm::vec3(0.f, -1.f, 0.f));
     model_pipeline->modelBuffer->updateBuffer({
             model_mat,
-            Material(glm::vec4(0.3,0.1,0.7,1)),
+            Material(),
             }, 0);
     model_mat = glm::translate(model_mat, glm::vec3(3.0f, 0.0f, 3.0f));
     model_pipeline->modelBuffer->updateBuffer({
             model_mat,
-            Material(glm::vec4(0.3,0.1,0.7,1)),
+            Material(),
             }, 1);
 
     auto ground_model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, -3, 0));
     model_pipeline->modelBuffer->updateBuffer({
             ground_model,
-            Material(glm::vec4(0.3,0.1,0.7,1)),
+            Material(),
             }, 2);
 
     model_pipeline->descriptors = descriptorManager.get();
@@ -207,6 +215,8 @@ void NewRenderer::buildDescriptorLayouts() {
             .setDescriptorType(vk::DescriptorType::eCombinedImageSampler),
             NewDescriptorManager::BindingUpdateRate::Frame
             );
+
+    TextureDescriptorSet::attachLayoutToDescriptorManager(descriptorManager.get());
 }
 
 VertexBuffer NewRenderer::createVertexBuffer(VulkanContext *context, const char *path) {
@@ -216,6 +226,20 @@ VertexBuffer NewRenderer::createVertexBuffer(VulkanContext *context, const char 
 
     buffer.vertices = std::move(raw.vertices);
     buffer.indices = std::move(raw.indices);
+
+    if (!file.getMaterialPaths().empty() && texture_container != nullptr) {
+      std::unordered_map<uint32_t, std::string> index_map =
+          file.getMTLIndexMap();
+
+      for (auto [mtl_index, mtl_path] : index_map) {
+          auto mtl_file = MTLFile::fromFilePath(mtl_path);
+          std::unordered_map<std::string, RenderMaterial> mtl_materials =
+              mtl_file.getRenderMaterials();
+          for (auto [local_material_name, local_material]: mtl_materials) {
+              texture_container->addMaterial(local_material);
+          }
+      }
+    }
     return buffer;
 }
 
@@ -253,6 +277,9 @@ void NewRenderer::tick(double elapsed) {
     pipeline->ubo.lightProjView = shadow_proj * glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0,0,0), glm::vec3(0,0, 1));
 
     light_buffer->updateDescriptor(descriptorManager.get());
+
+    texture_container->copyMaterialsTo(texture_descriptor.get());
+    texture_descriptor->uploadMaterialList();
 }
 
 std::unique_ptr<DepthOnlyPipeline> NewRenderer::buildDepthOnlyPipeline() {
@@ -293,6 +320,7 @@ std::unique_ptr<SSAOGraphicsPipeline> NewRenderer::buildSSAOGraphicsPipeline(vk:
     builder.options.vertexShaderPath = "shaders/new_renderer.vert";
     builder.options.fragmentShaderPath = "shaders/ssao.frag";
     builder.options.format = vk::Format::eR16Sfloat;
+    builder.options.extent = {1280, 720};
 
     auto pipeline = builder.build();
 
@@ -329,7 +357,7 @@ std::unique_ptr<ShadowGraphicsPipeline> NewRenderer::buildShadowGraphicsPipeline
     builder.options.shouldStoreDepth = true;
     builder.options.multisampling = false;
     builder.options.imageSource = GraphicsPipelineBuilder2::ImageSource::Depth;
-    builder.options.extent = {1024, 1024};
+    builder.options.extent = {2048, 2048};
     builder.options.vertexShaderPath = "shaders/shadow.vert";
     builder.options.fragmentShaderPath = "shaders/shadow.frag";
 
@@ -354,12 +382,21 @@ void NewRenderer::buildLighting() {
     light_buffer->addLayoutBinding(descriptorManager.get());
     
 
-    light_buffer->addLight(glm::vec3(0, 2, 0), 
-            glm::lookAt(glm::vec3(0, 2, 0), glm::vec3(0,0,0), glm::vec3(0, 0, 1)));
+    light_buffer->addLight(glm::vec3(0, 5, 0), 
+            glm::lookAt(glm::vec3(0, 2, 0), glm::vec3(0,0,0), glm::vec3(0, 0, 1)), 12.f);
 
     light_buffer->addLight(glm::vec3(2, 2, 0), 
             glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0,0,0), glm::vec3(0, 0, 1)));
 
     light_buffer->addLight(glm::vec3(-2, 2, 0), 
             glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0,0,0), glm::vec3(0, 0, 1)));
+}
+
+
+void NewRenderer::buildTexturing() {
+    texture_descriptor = std::make_unique<TextureDescriptorSet>(context);
+    texture_descriptor->descriptorManager = descriptorManager.get();
+
+    texture_container = std::make_unique<TextureContainer>(context);
+    texture_container->addTextureFromPath("./textures/red.jpeg");
 }

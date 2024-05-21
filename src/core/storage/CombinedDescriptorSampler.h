@@ -5,7 +5,7 @@
 #ifndef VULKAN_ENGINE_DESCRIPTORSAMPLER_H
 #define VULKAN_ENGINE_DESCRIPTORSAMPLER_H
 
-#include "../VulkanContext.h"
+#include "core/VulkanContext.h"
 #include "DescriptorSet.h"
 
 /// Wrapper around a sampler for a particular imageview

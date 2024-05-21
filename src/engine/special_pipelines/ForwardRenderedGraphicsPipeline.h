@@ -12,9 +12,9 @@
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
-#include "../../core/graphics_pipeline/GraphicsPipeline.h"
-#include "../../core/interfaces/Renderable.h"
-#include "../../core/storage/UniformBuffer.h"
+#include "core/graphics_pipeline/GraphicsPipeline.h"
+#include "core/interfaces/Renderable.h"
+#include "core/storage/UniformBuffer.h"
 #include "ModelBufferGraphicsPipeline.h"
 
 /// Graphics pipelines that stores render specific uniforms

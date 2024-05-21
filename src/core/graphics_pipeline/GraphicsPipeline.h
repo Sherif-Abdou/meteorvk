@@ -5,11 +5,11 @@
 #ifndef VULKAN_ENGINE_GRAPHICSPIPELINE_H
 #define VULKAN_ENGINE_GRAPHICSPIPELINE_H
 
-#include "../VulkanContext.h"
+#include "core/VulkanContext.h"
 #include "GraphicsRenderPass.h"
-#include "../storage/DescriptorSet.h"
-#include "../storage/VertexBuffer.h"
-#include "../interfaces/Renderable.h"
+#include "core/storage/DescriptorSet.h"
+#include "core/storage/VertexBuffer.h"
+#include "core/interfaces/Renderable.h"
 
 /// Core of a pipeline, wrapper over VkPipeline
 /// Stores the vulkan pipeline and the images it owns

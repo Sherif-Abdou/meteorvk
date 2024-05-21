@@ -6,6 +6,11 @@
 
 #include "ImageTextureLoader.h"
 
+
+TextureContainer::TextureContainer(VulkanContext* context): context(context) {
+
+}
+
 void TextureContainer::destroy() {
     for (auto& texture: textures) {
         texture.allocation.destroy();
@@ -95,12 +100,16 @@ uint32_t TextureContainer::addMaterial(RenderMaterial material) {
 
 void TextureContainer::copyMaterialsTo(TextureDescriptorSet *set) {
     int index_slot = -1;
-    for (int i = 0; i < std::min(materials.size(), TextureDescriptorSet::MAX_MATERIALS); i++) {
+    for (int i = 0; i < materials.size(); i++) {
         set->materialList.materials[i] = materials[i];
-        if (set->materialList.materials[i].kD_index != -1) {
-            index_slot++;
-            set->materialList.materials[i].kD_index = index_slot;
-            textures[materials[i].kD_index].storageImage->updateDescriptor(*set, 1, index_slot);
-        }
+        // if (set->materialList.materials[i].kD_index != -1) {
+        //     index_slot++;
+        //     set->materialList.materials[i].kD_index = index_slot;
+        //     textures[materials[i].kD_index].storageImage->updateDescriptor(*set, 1, index_slot);
+        // }
     }
+}
+
+TextureContainer::~TextureContainer() {
+    destroy();
 }

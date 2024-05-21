@@ -5,7 +5,7 @@
 #ifndef VULKAN_ENGINE_GRAPHICSRENDERPASS_H
 #define VULKAN_ENGINE_GRAPHICSRENDERPASS_H
 
-#include "../VulkanContext.h"
+#include "core/VulkanContext.h"
 
 /// Wrappper over VkRenderPass
 class GraphicsRenderPass {

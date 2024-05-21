@@ -7,7 +7,6 @@
 #include "../../core/interfaces/IndirectCallStruct.h"
 #include "../../core/compute_pipeline/ComputeCommandBuffer.h"
 #include "../../core/storage/StorageBuffer.h"
-#include "../programs/BackpackRenderer.h"
 
 void CullingComputePipeline::generateIndirects() {
     models->resetIndex();

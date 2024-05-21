@@ -6,7 +6,7 @@
 #define VULKAN_ENGINE_UNIFORMBUFFER_H
 
 #include <vulkan/vulkan_raii.hpp>
-#include "../VulkanContext.h"
+#include "core/VulkanContext.h"
 #include "DescriptorSet.h"
 
 template<typename T>

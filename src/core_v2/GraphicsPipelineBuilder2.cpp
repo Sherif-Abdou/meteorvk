@@ -30,7 +30,7 @@ void GraphicsPipelineBuilder2::initializePipelineStatesDefaults() {
     pipelineViewportStateCreateInfo.setViewportCount(1);
     pipelineViewportStateCreateInfo.setScissorCount(1);
 
-    pipelineRasterizationStateCreateInfo.setCullMode(vk::CullModeFlagBits::eNone);
+    pipelineRasterizationStateCreateInfo.setCullMode(vk::CullModeFlagBits::eFront);
     pipelineRasterizationStateCreateInfo.setRasterizerDiscardEnable(false);
     pipelineRasterizationStateCreateInfo.setLineWidth(1.0f);
     pipelineRasterizationStateCreateInfo.setPolygonMode(vk::PolygonMode::eFill);
@@ -75,11 +75,12 @@ void GraphicsPipelineBuilder2::buildRenderpass() {
     uint32_t attachment_index = 0;
 
     if (options.imageSource == ImageSource::Swapchain) {
+        auto store_op = options.multisampling ? vk::AttachmentStoreOp::eDontCare : vk::AttachmentStoreOp::eStore;
         colorDescription.setFormat(context->swapChainImageFormat)
             .setInitialLayout(vk::ImageLayout::eUndefined)
             .setFinalLayout(vk::ImageLayout::ePresentSrcKHR)
             .setLoadOp(vk::AttachmentLoadOp::eClear)
-            .setStoreOp(vk::AttachmentStoreOp::eStore)
+            .setStoreOp(store_op)
             .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
             .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
         auto* colorRef = new vk::AttachmentReference {};

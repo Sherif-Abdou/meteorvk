@@ -6,10 +6,10 @@
 #define VULKAN_ENGINE_MODELBUFFERGRAPHICSPIPELINE_H
 
 
-#include "../../core/interfaces/Renderable.h"
-#include "../../core/graphics_pipeline/GraphicsPipeline.h"
-#include "../storage/ModelBuffer.h"
-#include "../../core/graphics_pipeline/GraphicsPipelineBuilder.h"
+#include "core/interfaces/Renderable.h"
+#include "core/graphics_pipeline/GraphicsPipeline.h"
+#include "engine/storage/ModelBuffer.h"
+#include "core/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "BasePipeline.h"
 
 /// Graphics pipeline that adjusts the model buffer per vertexbuffer

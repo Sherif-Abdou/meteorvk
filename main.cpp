@@ -1,8 +1,9 @@
-#include <iostream>
 
 #define GLFW_INCLUDE_VULKAN
+#define GLM_FORCE_SILENT_WARNINGS
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_FORCE_SILENT_WARNINGS
 #define GLM_FORCE_SILENT_WARNINGS
 //#define GLM_FORCE_PLATFORM_UNKNOWN
 //#define GLM_FORCE_COMPILER_UNKNOWN
@@ -17,28 +18,10 @@
 #include <unistd.h>
 
 #include "src/core/VulkanContext.h"
-#include "src/core/compute_pipeline/ComputeCommandBuffer.h"
-#include "src/core/compute_pipeline/ComputePipelineBuilder.h"
 #include "src/core/VulkanContext.h"
 #include "src/core/storage/CombinedDescriptorSampler.h"
-#include "src/core/storage/VertexBuffer.h"
-#include "src/core/graphics_pipeline/GraphicsRenderPass.h"
-#include "src/core/graphics_pipeline/GraphicsPipeline.h"
-#include "src/core/graphics_pipeline/GraphicsCommandBuffer.h"
-#include "src/core/graphics_pipeline/GraphicsPipelineBuilder.h"
 #include "src/core/storage/CombinedDescriptorSampler.h"
-#include "src/core/storage/OBJFile.h"
-#include "src/engine/special_pipelines/ShadowGraphicsPipeline.h"
 #include "src/engine/special_pipelines/ForwardRenderedGraphicsPipeline.h"
-#include "src/core/shared_pipeline/PipelineBarrierBuilder.h"
-#include "src/core/shared_pipeline/TransferQueue.h"
-#include "src/core/storage/StorageBuffer.h"
-#include "src/engine/special_pipelines/SSAOGraphicsPipeline.h"
-#include "src/engine/storage/ImageTextureLoader.h"
-#include "src/engine/special_pipelines/DepthOnlyPipeline.h"
-#include "src/engine/programs/BackpackRenderer.h"
-#include "src/engine/special_pipelines/CullingComputePipeline.h"
-#include "src/engine/programs/MinimalRenderer.h"
 #include "src/engine/programs/NewRenderer.h"
 
 CombinedDescriptorSampler createSampler(VulkanContext* context) {

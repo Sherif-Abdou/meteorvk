@@ -1,10 +1,9 @@
 #ifndef VULKAN_ENGINE_LIGHT_BUFFER_H
 #define VULKAN_ENGINE_LIGHT_BUFFER_H
 
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 
-#include "../../core/storage/UniformBuffer.h"
-#include "../../core_v2/NewDescriptorManager.h"
+#include "core/storage/UniformBuffer.h"
+#include "core_v2/NewDescriptorManager.h"
 #include <vulkan/vulkan.hpp>
 #include <glm/ext.hpp>
 
@@ -18,7 +17,7 @@ private:
     struct UBO {
         glm::vec4 light_positions[64];
         glm::mat4 light_povs[64];
-        int32_t light_count;
+        int light_count;
     };
 
     std::unique_ptr<UBO> ubo;
@@ -32,7 +31,7 @@ public:
 
     void addLayoutBinding(NewDescriptorManager* descriptorManager);
 
-    uint32_t addLight(glm::vec3 position, glm::mat4 pov);
+    uint32_t addLight(glm::vec3 position, glm::mat4 pov, int32_t intensity = 1);
 
     ~LightBuffer();
 };

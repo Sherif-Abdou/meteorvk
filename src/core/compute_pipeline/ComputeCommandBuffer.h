@@ -5,7 +5,7 @@
 #ifndef VULKAN_ENGINE_COMPUTECOMMANDBUFFER_H
 #define VULKAN_ENGINE_COMPUTECOMMANDBUFFER_H
 
-#include "../VulkanContext.h"
+#include "core/VulkanContext.h"
 #include "ComputePipeline.h"
 
 class ComputeCommandBuffer {

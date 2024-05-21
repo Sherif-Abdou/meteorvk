@@ -11,7 +11,7 @@
 #include <string>
 #include <optional>
 #include <unordered_map>
-#include "../material/RenderMaterial.h"
+#include "engine/material/RenderMaterial.h"
 
 class MTLFile {
     using string = std::string;

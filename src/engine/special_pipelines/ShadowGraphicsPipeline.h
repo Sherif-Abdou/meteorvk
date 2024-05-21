@@ -9,8 +9,8 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 
-#include "../../core/graphics_pipeline/GraphicsPipeline.h"
-#include "../../core/storage/UniformBuffer.h"
+#include "core/graphics_pipeline/GraphicsPipeline.h"
+#include "core/storage/UniformBuffer.h"
 #include "ModelBufferGraphicsPipeline.h"
 #include <glm/ext.hpp>
 

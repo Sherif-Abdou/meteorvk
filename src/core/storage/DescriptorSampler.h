@@ -6,7 +6,7 @@
 #define DESCRIPTORSAMPLER_H
 
 #include "DescriptorSet.h"
-#include "../VulkanContext.h"
+#include "core/VulkanContext.h"
 
 class DescriptorSampler {
     VulkanContext* context;

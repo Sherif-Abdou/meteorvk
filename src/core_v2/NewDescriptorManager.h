@@ -7,8 +7,8 @@
 
 #include <vulkan/vulkan.hpp>
 #include <unordered_map>
-#include "../core/VulkanContext.h"
-#include "../core/storage/DescriptorSet.h"
+#include "core/VulkanContext.h"
+#include "storage/CustomDescriptorSet.h"
 
 class NewDescriptorManager {
     VulkanContext* context;

@@ -1,9 +1,9 @@
 #ifndef VULKAN_ENGINE_BASEPIPELINE_H
 #define VULKAN_ENGINE_BASEPIPELINE_H
 
-#include "../../core/interfaces/Renderable.h"
-#include "../../core/graphics_pipeline/GraphicsPipeline.h"
-#include "../../core_v2/NewDescriptorManager.h"
+#include "core/interfaces/Renderable.h"
+#include "core/graphics_pipeline/GraphicsPipeline.h"
+#include "core_v2/NewDescriptorManager.h"
 
 // Generic Specialized Pipeline
 class BasePipeline: public Renderable {

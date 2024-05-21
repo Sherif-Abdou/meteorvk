@@ -5,7 +5,7 @@
 #ifndef TRANSFERQUEUE_H
 #define TRANSFERQUEUE_H
 #include "PipelineBarrier.h"
-#include "../VulkanContext.h"
+#include "core/VulkanContext.h"
 
 
 class TransferQueue {

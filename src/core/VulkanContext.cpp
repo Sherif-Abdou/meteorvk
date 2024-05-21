@@ -219,9 +219,11 @@ void VulkanContext::createLogicalDevice() {
     }
     VkPhysicalDeviceFeatures deviceFeatures{};
     deviceFeatures.sampleRateShading = VK_TRUE;
+
     VkPhysicalDeviceSynchronization2Features deviceFeatures2 {};
     deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
     deviceFeatures2.synchronization2 = true;
+
 
     VkPhysicalDeviceDescriptorIndexingFeatures descriptorFeatures {};
     descriptorFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
@@ -230,6 +232,7 @@ void VulkanContext::createLogicalDevice() {
     descriptorFeatures.descriptorBindingVariableDescriptorCount = true;
     descriptorFeatures.descriptorBindingStorageBufferUpdateAfterBind = true;
     descriptorFeatures.runtimeDescriptorArray = true;
+
 
     deviceFeatures2.pNext = &descriptorFeatures;
 

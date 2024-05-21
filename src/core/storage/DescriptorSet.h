@@ -5,7 +5,7 @@
 #ifndef VULKAN_ENGINE_DESCRIPTORSET_H
 #define VULKAN_ENGINE_DESCRIPTORSET_H
 
-#include "../VulkanContext.h"
+#include "core/VulkanContext.h"
 
 /// Wrapper around VkDescriptorSet
 class DescriptorSet {

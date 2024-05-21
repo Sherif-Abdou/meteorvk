@@ -4,7 +4,7 @@
 
 #ifndef PIPELINEBARRIERBUILDER_H
 #define PIPELINEBARRIERBUILDER_H
-#include "../compute_pipeline/ComputePipeline.h"
+#include "core/compute_pipeline/ComputePipeline.h"
 #include "PipelineBarrier.h"
 
 

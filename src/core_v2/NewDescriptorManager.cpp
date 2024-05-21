@@ -63,7 +63,8 @@ DescriptorSet *NewDescriptorManager::buildDescriptorsOfCategory(NewDescriptorMan
     if (bindings.empty()) {
         return nullptr;
     }
-    auto res = new DescriptorSet(context, bindings);
+    auto res = new CustomDescriptorSet(context, bindings);
+    res->setAllocationOptionsFromBindings(bindings);
 
     res->buildDescriptor();
 

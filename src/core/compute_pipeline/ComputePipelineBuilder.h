@@ -5,7 +5,7 @@
 #ifndef VULKAN_ENGINE_COMPUTEPIPELINEBUILDER_H
 #define VULKAN_ENGINE_COMPUTEPIPELINEBUILDER_H
 
-#include "../VulkanContext.h"
+#include "core/VulkanContext.h"
 #include "ComputeShaders.h"
 #include "ComputePipeline.h"
 

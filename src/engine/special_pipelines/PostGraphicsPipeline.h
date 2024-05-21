@@ -6,7 +6,7 @@
 #define VULKAN_ENGINE_POSTGRAPHICSPIPELINE_H
 
 
-#include "../../core/VulkanContext.h"
+#include "core/VulkanContext.h"
 #include "ModelBufferGraphicsPipeline.h"
 #include "glm/ext.hpp"
 

@@ -7,7 +7,7 @@
 
 #include <string>
 #include <shaderc/shaderc.hpp>
-#include "../VulkanContext.h"
+#include "core/VulkanContext.h"
 
 /// Handles the compilation of glsl shaders
 class GraphicsShaders {

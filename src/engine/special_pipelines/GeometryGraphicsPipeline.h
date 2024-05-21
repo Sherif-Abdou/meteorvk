@@ -6,7 +6,7 @@
 #define VULKAN_ENGINE_GEOMETRYGRAPHICSPIPELINE_H
 
 
-#include "../../core/interfaces/Renderable.h"
+#include "core/interfaces/Renderable.h"
 #include "ModelBufferGraphicsPipeline.h"
 #include "glm/ext.hpp"
 

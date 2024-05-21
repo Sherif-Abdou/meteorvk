@@ -9,9 +9,9 @@
 #include <fstream>
 #include <shaderc/shaderc.hpp>
 #include <vulkan/vulkan.hpp>
-#include "../core/VulkanContext.h"
-#include "../core/storage/Vertex.h"
-#include "../core/graphics_pipeline/GraphicsPipeline.h"
+#include "core/VulkanContext.h"
+#include "core/storage/Vertex.h"
+#include "core/graphics_pipeline/GraphicsPipeline.h"
 #include "NewDescriptorManager.h"
 
 class GraphicsPipelineBuilder2 {

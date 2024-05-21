@@ -7,7 +7,7 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
-#include "../../core/storage/DescriptorSet.h"
+#include "core/storage/DescriptorSet.h"
 
 class DescriptorManager {
     std::unordered_map<std::string, DescriptorSet*> descriptors {}; 

@@ -1,19 +1,16 @@
 #ifndef VULKAN_ENGINE_NEW_RENDERER_H
 #define VULKAN_ENGINE_NEW_RENDERER_H
 
-#include "../../core/VulkanContext.h"
-#include "../storage/ModelBuffer.h"
-#include "../../core/storage/VertexBuffer.h"
-#include "../../core_v2/GraphicsPipelineBuilder2.h"
-#include "../../core/graphics_pipeline/GraphicsCommandBuffer.h"
-#include "../../core/storage/NewOBJFile.h"
-#include "../special_pipelines/ModelBufferGraphicsPipeline.h"
-#include "../special_pipelines/ForwardRenderedGraphicsPipeline.h"
-#include "../special_pipelines/DepthOnlyPipeline.h"
-#include "../special_pipelines/SSAOGraphicsPipeline.h"
-#include "../special_pipelines/ShadowGraphicsPipeline.h"
-#include "../../core_v2/render_chain/RenderableChain.h"
-#include "../storage/LightBuffer.h"
+#include "core/VulkanContext.h"
+#include "engine/storage/ModelBuffer.h"
+#include "core/storage/VertexBuffer.h"
+#include "engine/special_pipelines/ForwardRenderedGraphicsPipeline.h"
+#include "engine/special_pipelines/DepthOnlyPipeline.h"
+#include "engine/special_pipelines/SSAOGraphicsPipeline.h"
+#include "engine/special_pipelines/ShadowGraphicsPipeline.h"
+#include "engine/storage/LightBuffer.h"
+#include "engine/storage/TextureContainer.h"
+#include "engine/storage/TextureDescriptorSet.h"
 
 class NewRenderer {
 private:
@@ -36,6 +33,9 @@ private:
 
 
     std::unique_ptr<LightBuffer> light_buffer = nullptr;
+
+    std::unique_ptr<TextureDescriptorSet> texture_descriptor = nullptr;
+    std::unique_ptr<TextureContainer> texture_container = nullptr;
 public:
     explicit NewRenderer(VulkanContext* context): context(context) {};
 
@@ -52,6 +52,8 @@ public:
     VertexBuffer createVertexBuffer(VulkanContext *context, const char *path);
 
     void buildLighting();
+
+    void buildTexturing();
 };
 
 #endif

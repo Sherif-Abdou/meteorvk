@@ -5,13 +5,13 @@
 #ifndef VULKAN_ENGINE_GRAPHICSCOMMANDBUFFER_H
 #define VULKAN_ENGINE_GRAPHICSCOMMANDBUFFER_H
 
-#include "../VulkanContext.h"
+#include "core/VulkanContext.h"
 #include "GraphicsPipeline.h"
-#include "../storage/UniformBuffer.h"
+#include "core/storage/UniformBuffer.h"
 #include <vulkan/vulkan.hpp>
 #include <unordered_map>
 
-#include "../shared_pipeline/PipelineBarrier.h"
+#include "core/shared_pipeline/PipelineBarrier.h"
 
 /// Command buffer that runs pipelines
 class GraphicsCommandBuffer {

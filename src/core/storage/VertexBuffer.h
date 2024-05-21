@@ -6,7 +6,7 @@
 #define VULKAN_RENDERER_VERTEXBUFFER_H
 
 #include "Vertex.h"
-#include "../interfaces/IndirectCallStruct.h"
+#include "core/interfaces/IndirectCallStruct.h"
 
 class VertexBuffer {
 public:

@@ -5,7 +5,7 @@
 #ifndef VULKAN_ENGINE_COMPUTESHADERS_H
 #define VULKAN_ENGINE_COMPUTESHADERS_H
 
-#include "../VulkanContext.h"
+#include "core/VulkanContext.h"
 
 class ComputeShaders {
 private:

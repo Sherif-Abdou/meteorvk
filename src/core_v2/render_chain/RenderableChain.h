@@ -1,11 +1,11 @@
 #ifndef VULKAN_ENGINE_RENDERABLE_CHAIN
 #define VULKAN_ENGINE_RENDERABLE_CHAIN
 
-#include "../../core/graphics_pipeline/GraphicsCommandBuffer.h"
-#include "../../core/interfaces/Renderable.h"
-#include "../../core/shared_pipeline/PipelineBarrier.h"
-#include "../../core/VulkanContext.h"
-#include "../NewDescriptorManager.h"
+#include "core/graphics_pipeline/GraphicsCommandBuffer.h"
+#include "core/interfaces/Renderable.h"
+#include "core/shared_pipeline/PipelineBarrier.h"
+#include "core/VulkanContext.h"
+#include "core_v2/NewDescriptorManager.h"
 
 // Helper class to merge a series of renderables to be used in a commandbuffer
 class RenderableChain {

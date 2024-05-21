@@ -5,7 +5,7 @@
 #ifndef VULKAN_ENGINE_GRAPHICSPIPELINEBUILDER_H
 #define VULKAN_ENGINE_GRAPHICSPIPELINEBUILDER_H
 
-#include "../VulkanContext.h"
+#include "core/VulkanContext.h"
 #include "GraphicsShaders.h"
 #include "GraphicsRenderPass.h"
 #include "GraphicsPipeline.h"

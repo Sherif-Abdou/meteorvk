@@ -6,9 +6,9 @@
 #define SSAOGRAPHICSPIPELINE_H
 #include "BasePipeline.h"
 #include "ModelBufferGraphicsPipeline.h"
-#include "../../core/graphics_pipeline/GraphicsPipeline.h"
-#include "../../core/interfaces/Renderable.h"
-#include "../../core/storage/CombinedDescriptorSampler.h"
+#include "core/graphics_pipeline/GraphicsPipeline.h"
+#include "core/interfaces/Renderable.h"
+#include "core/storage/CombinedDescriptorSampler.h"
 
 
 class SSAOGraphicsPipeline: public BasePipeline {
