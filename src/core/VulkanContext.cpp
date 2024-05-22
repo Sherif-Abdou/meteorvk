@@ -194,6 +194,7 @@ VulkanContext::QueueFamilyIndices VulkanContext::findQueueFamilies(vk::raii::Phy
             indices.graphicsFamily = i;
             indices.computeFamily = i;
         }
+        indices.transferFamily = 1;
         if (indices.isComplete()) break;
         i++;
     }
@@ -206,7 +207,7 @@ void VulkanContext::createLogicalDevice() {
 
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value(), indices.computeFamily.value()};
+    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value(), indices.computeFamily.value(), indices.transferFamily.value()};
 
     float queuePriority = 1.0f;
     for (uint32_t queueFamily : uniqueQueueFamilies) {
@@ -257,6 +258,7 @@ void VulkanContext::createLogicalDevice() {
     graphicsQueue = device.getQueue(indices.graphicsFamily.value(), 0);
     presentQueue = device.getQueue(indices.presentFamily.value(), 0);
     computeQueue = device.getQueue(indices.computeFamily.value(), 0);
+    transferQueue = device.getQueue(indices.transferFamily.value(), 0);
 }
 
 void VulkanContext::createSurface() {

@@ -46,9 +46,9 @@ layout(set = MATERIAL_BUFFER_SET, binding = MATERIAL_BUFFER_BINDING) readonly bu
     RenderMaterial materials[64];
 };
 
-const float kA = 0.01f;
-const float kD = 0.35f;
-const float kS = 0.55f;
+const float kA = 0.02f;
+const float kD = 0.49f;
+const float kS = 0.49f;
 
 float calculateShadow() {
     vec4 lightSpacePosition = vec4(light_space_position, 1.0f);
@@ -102,7 +102,9 @@ void main() {
 
     RenderMaterial material = materials[material_id];
     color += vec4(material.kA, 1);
-    color = shadow * kA * vec4(0.8 * occlusion, 0.2 * occlusion, 0.0, 1.0);
+    float multiplier =  pow(occlusion, 2.0f);
+    vec4 base_color_occluded = vec4(multiplier * vec3(0.8, 0.2, 0.0), 1.0f);
+    color = shadow * kA * base_color_occluded;
 
     for (int i = 0; i < light_count; i++) {
         vec4 light_position = positions[i];

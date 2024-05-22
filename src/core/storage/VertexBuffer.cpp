@@ -7,6 +7,8 @@
 #include "../shared_pipeline/PipelineBarrierBuilder.h"
 #include "../shared_pipeline/TransferQueue.h"
 
+std::mutex VertexBuffer::submission_mutex {};
+
 void VertexBuffer::init() {
     initializeVertexBuffer();
     updateVertexBuffer();
@@ -88,7 +90,9 @@ void VertexBuffer::updateVertexBuffer() {
 
         transfer_queue.copy(vertexStagingBuffer.buffer, vertexBuffer.buffer, copy_region);
 
+        submission_mutex.lock();
         transfer_queue.submit();
+        submission_mutex.unlock();
     } else {
         Vertex::writeVectorToBuffer(vertices, vertexBuffer);
     }
@@ -118,7 +122,9 @@ void VertexBuffer::updateIndexBuffer() {
 
         transfer_queue.copy(indexStagingBuffer.buffer, indexBuffer.buffer, copy_region);
 
+        submission_mutex.lock();
         transfer_queue.submit();
+        submission_mutex.unlock();
     } else {
         void* memory = indexBuffer.mapMemory();
         auto bytes = sizeof((*indices)[0]) * indices->size();

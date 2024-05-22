@@ -6,17 +6,36 @@
 #include "core/storage/NewOBJFile.h"
 #include "engine/special_pipelines/ModelBufferGraphicsPipeline.h"
 #include "engine/storage/MTLFile.h"
+#include "engine/storage/ModelBuffer.h"
+#include "engine/storage/VertexBufferLoader.h"
+
+#include <chrono>
 
 void NewRenderer::run() {
+    auto start = std::chrono::system_clock::now();
     buildDescriptorLayouts();
     buildLighting();
+    buildTexturing();
+
     pipeline =
         buildForwardGraphicsPipeline();
+
+    std::array<const char*, 4> names = {"./models/car.obj", "./models/super_backpack.obj", "./models/floor.obj", "./models/non_triangled_senna.obj"};
+    auto loader = std::make_unique<VertexBufferLoader>(context, model_buffer);
+
+    loader->addModel("car", "./models/car.obj", glm::identity<glm::mat4>());
+    loader->addModel("f", "./models/floor.obj", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, -3, 0)));
+    loader->addModel("senna", "./models/non_triangled_senna.obj", glm::translate(glm::identity<glm::mat4>(), glm::vec3(3, 0,0)));
+
+    loader->addModel("senna2", "./models/non_triangled_senna.obj", glm::translate(glm::identity<glm::mat4>(), glm::vec3(-3, 0,0)));
+
+    loader->addModel("back", "./models/super_backpack.obj", glm::translate(glm::identity<glm::mat4>(), glm::vec3(3, 0,-5)));
 
     GraphicsCommandBuffer command_buffer(context);
     command_buffer.init();
 
     RenderableChain render_chain(context, descriptorManager.get());
+
 
     shadow_pipeline = 
         buildShadowGraphicsPipeline();
@@ -76,19 +95,25 @@ void NewRenderer::run() {
             {occlusion_image_barrier.build(), shadow_map_barrier.build()}
             });
 
-    buildTexturing();
-
+    /*
     auto vertex = createVertexBuffer(context, "./models/car.obj");
     vertex.init();
     auto vertex2 = createVertexBuffer(context, "./models/super_backpack.obj");
     vertex2.init();
     auto ground = createVertexBuffer(context, "./models/floor.obj");
     ground.init();
+    */
 
-    command_buffer.vertexBuffers = { &vertex, &vertex2, &ground };
 
     render_chain.applyToCommandBuffer(&command_buffer);
 
+    loader->waitForAll();
+
+
+    loader->attachToCommandBuffer(&command_buffer.vertexBuffers);
+    auto end = std::chrono::system_clock::now();
+
+    std::cout << end - start << "\n";
     glfwShowWindow(context->window);
 
     auto last_time = glfwGetTime();
@@ -112,7 +137,6 @@ void NewRenderer::run() {
     ssao_pipeline->destroy();
 
     model_buffer->destroy();
-    delete model_buffer;
 }
 
 
@@ -127,7 +151,9 @@ std::unique_ptr<ForwardRenderedGraphicsPipeline> NewRenderer::buildForwardGraphi
 
     GraphicsPipeline pipeline = builder.build();
 
-    auto model_pipeline = std::make_unique<ModelBufferGraphicsPipeline>(std::move(pipeline), 8);
+    model_buffer = new ModelBuffer(context, 2048);
+    auto model_pipeline = std::make_unique<ModelBufferGraphicsPipeline>(std::move(pipeline), model_buffer);
+    /*
     auto model_mat = glm::identity<glm::mat4>();
     model_mat = glm::rotate(model_mat, glm::radians(45.f), glm::vec3(0.f, 1.f, 0.f));
     model_mat = glm::translate(model_mat, glm::vec3(0.f, -1.f, 0.f));
@@ -146,10 +172,14 @@ std::unique_ptr<ForwardRenderedGraphicsPipeline> NewRenderer::buildForwardGraphi
             ground_model,
             Material(),
             }, 2);
+    auto senna_model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(5, -3, 0));
+    model_pipeline->modelBuffer->updateBuffer({
+            senna_model,
+            Material(),
+            }, 3);
+    */
 
     model_pipeline->descriptors = descriptorManager.get();
-
-    model_buffer = model_pipeline->modelBuffer;
 
     auto forward_pipeline = std::make_unique<ForwardRenderedGraphicsPipeline>(std::move(model_pipeline));
     forward_pipeline->descriptors = descriptorManager.get();
@@ -320,7 +350,6 @@ std::unique_ptr<SSAOGraphicsPipeline> NewRenderer::buildSSAOGraphicsPipeline(vk:
     builder.options.vertexShaderPath = "shaders/new_renderer.vert";
     builder.options.fragmentShaderPath = "shaders/ssao.frag";
     builder.options.format = vk::Format::eR16Sfloat;
-    builder.options.extent = {1280, 720};
 
     auto pipeline = builder.build();
 
@@ -383,7 +412,7 @@ void NewRenderer::buildLighting() {
     
 
     light_buffer->addLight(glm::vec3(0, 5, 0), 
-            glm::lookAt(glm::vec3(0, 2, 0), glm::vec3(0,0,0), glm::vec3(0, 0, 1)), 12.f);
+            glm::lookAt(glm::vec3(0, 2, 0), glm::vec3(0,0,0), glm::vec3(0, 0, 1)), 1.f);
 
     light_buffer->addLight(glm::vec3(2, 2, 0), 
             glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0,0,0), glm::vec3(0, 0, 1)));
@@ -399,4 +428,9 @@ void NewRenderer::buildTexturing() {
 
     texture_container = std::make_unique<TextureContainer>(context);
     texture_container->addTextureFromPath("./textures/red.jpeg");
+}
+
+
+NewRenderer::~NewRenderer() {
+    delete model_buffer;
 }

@@ -30,6 +30,7 @@ struct VulkanContext {
     vk::raii::Queue graphicsQueue = VK_NULL_HANDLE;
     vk::raii::Queue presentQueue = VK_NULL_HANDLE;
     vk::raii::Queue computeQueue = VK_NULL_HANDLE;
+    vk::raii::Queue transferQueue = VK_NULL_HANDLE;
     vk::raii::SurfaceKHR surface = VK_NULL_HANDLE;
     vk::raii::SwapchainKHR swapChain = VK_NULL_HANDLE;
     std::vector<vk::Image> swapChainImages;
@@ -49,6 +50,7 @@ struct VulkanContext {
         std::optional<uint32_t> graphicsFamily;
         std::optional<uint32_t> presentFamily;
         std::optional<uint32_t> computeFamily;
+        std::optional<uint32_t> transferFamily;
         bool isComplete() const {
             return graphicsFamily.has_value() && presentFamily.has_value() && computeFamily.has_value();
         }

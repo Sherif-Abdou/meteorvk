@@ -6,7 +6,7 @@
 
 void TransferQueue::init() {
     vk::CommandPoolCreateInfo command_pool_create_info {};
-    command_pool_create_info.setQueueFamilyIndex(*context->findQueueFamilies(context->physicalDevice).graphicsFamily);
+    command_pool_create_info.setQueueFamilyIndex(*context->findQueueFamilies(context->physicalDevice).transferFamily);
 
     pool = context->device.createCommandPool(command_pool_create_info);
 
@@ -44,7 +44,7 @@ void TransferQueue::submit() {
 
     vk::SubmitInfo submit_info {};
     submit_info.setCommandBuffers(*command_buffer);
-    context->graphicsQueue.submit(submit_info, nullptr);
+    context->transferQueue.submit(submit_info, nullptr);
 
     ran = true;
 

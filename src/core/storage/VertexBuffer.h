@@ -8,6 +8,8 @@
 #include "Vertex.h"
 #include "core/interfaces/IndirectCallStruct.h"
 
+#include <mutex>
+
 class VertexBuffer {
 public:
     VulkanContext* context;
@@ -37,6 +39,8 @@ public:
     // Mask Constants
     constexpr static unsigned long DeferredQuadBit = 1 << 1;
     constexpr static unsigned long TransparentBit = 1 << 2;
+
+    static std::mutex submission_mutex;
 private:
     unsigned long vertex_count = 0;
     unsigned long index_count = 0;

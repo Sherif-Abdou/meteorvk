@@ -12,6 +12,10 @@
 #include "engine/storage/TextureContainer.h"
 #include "engine/storage/TextureDescriptorSet.h"
 
+#include <future>
+#include <execution>
+#include <algorithm>
+
 class NewRenderer {
 private:
     VulkanContext* context;
@@ -54,6 +58,8 @@ public:
     void buildLighting();
 
     void buildTexturing();
+    
+    ~NewRenderer();
 };
 
 #endif
