@@ -17,13 +17,16 @@ void DescriptorSetBuilder::addLayoutBinding(const std::string& name, vk::Descrip
 }
 
 void DescriptorSetBuilder::finalizeLayout() {
+    if (built_layout.has_value()) {
+        return;
+    }
     int i = 0;
     std::vector<vk::DescriptorSetLayoutBinding> bindings;
 
     for (const auto& name: layout_names) {
-        bindings.push_back(layouts[name].binding);
         layouts[name].layout.setBinding(i);
         layouts[name].binding = i;
+        bindings.push_back(layouts[name].layout);
         i+=1;
     }
 
@@ -37,7 +40,7 @@ DescriptorSet* DescriptorSetBuilder::buildDescriptorSet() {
     std::vector<vk::DescriptorSetLayoutBinding> bindings;
 
     for (const auto& name: layout_names) {
-        bindings.push_back(layouts[name].binding);
+        bindings.push_back(layouts[name].layout);
     }
     CustomDescriptorSet* descriptor = new CustomDescriptorSet(context, bindings);
     descriptor->setAllocationOptionsFromBindings(bindings);

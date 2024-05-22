@@ -33,7 +33,7 @@ private:
     std::unordered_map<std::string, BindingLayoutInformation> layouts {};
 
     std::unique_ptr<DescriptorSetBuilder> perFrameDescriptorBuilder = nullptr;
-    std::unique_ptr<DescriptorSet> perFrameDescriptor = nullptr;
+    DescriptorSet* perFrameDescriptor = nullptr;
 
     std::vector<std::string> layout_names {};
     std::vector<DescriptorSet*> descriptors {};

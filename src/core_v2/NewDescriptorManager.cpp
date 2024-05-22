@@ -3,30 +3,25 @@
 //
 
 #include "NewDescriptorManager.h"
+#include "core_v2/storage/DescriptorSetBuilder.h"
 
 void NewDescriptorManager::addLayoutBinding(const std::string &name, vk::DescriptorSetLayoutBinding layout,
         NewDescriptorManager::BindingUpdateRate rate) {
-    BindingLayoutInformation layout_info;
-    layout_info.layout = layout;
-    layout_info.bind_rate = rate;
-
     layout_names.push_back(name);
-
-    layouts[name] = layout_info;
+    if (rate == BindingUpdateRate::Frame) {
+        perFrameDescriptorBuilder->addLayoutBinding(name, layout);
+    }
 }
 
 uint32_t NewDescriptorManager::getBindingOf(const std::string &name) {
-    if (layouts.find(name) == layouts.end()) {
-        return -1;
-    }
-    return layouts[name].binding;
+    return perFrameDescriptorBuilder->getBindingOf(name);
 }
 
 uint32_t NewDescriptorManager::getSetOf(const std::string &name) {
-    if (layouts.find(name) == layouts.end()) {
-        return -1;
+    if (perFrameDescriptorBuilder->getBindingOf(name) >= 0) {
+        return 0;
     }
-    return layouts[name].set;
+    return -1;
 }
 
 std::vector<DescriptorSet *> NewDescriptorManager::buildDescriptors() {
@@ -35,54 +30,37 @@ std::vector<DescriptorSet *> NewDescriptorManager::buildDescriptors() {
     }
     descriptors = {};
     DescriptorSet* set;
-    if ((set = buildDescriptorsOfCategory(BindingUpdateRate::Frame, 0)) != nullptr) {
-        descriptors.push_back(set);
-    }
-    if ((set = buildDescriptorsOfCategory(BindingUpdateRate::Pipeline, 1)) != nullptr) {
-        descriptors.push_back(set);
-    }
-    if ((set = buildDescriptorsOfCategory(BindingUpdateRate::Model, 2)) != nullptr) {
-        descriptors.push_back(set);
+    perFrameDescriptorBuilder->finalizeLayout();
+
+    if ((perFrameDescriptor = perFrameDescriptorBuilder->buildDescriptorSet()) != nullptr) {
+        descriptors.push_back(perFrameDescriptor);
     }
 
     return descriptors;
 }
 
 DescriptorSet *NewDescriptorManager::buildDescriptorsOfCategory(NewDescriptorManager::BindingUpdateRate rate, uint32_t set) {
-    uint32_t current_binding = 0;
-    std::vector<vk::DescriptorSetLayoutBinding> bindings {};
-    for (const auto& [name, _] : layouts) {
-        auto& layout = layouts[name];
-        if (layout.bind_rate != rate) { continue; }
-        layout.layout.setBinding(current_binding);
-        layout.set = set;
-        layout.binding = current_binding;
-        current_binding += 1;
-        bindings.push_back(layout.layout);
-    }
-    if (bindings.empty()) {
-        return nullptr;
-    }
-    auto res = new CustomDescriptorSet(context, bindings);
-    res->setAllocationOptionsFromBindings(bindings);
+    if (rate == BindingUpdateRate::Frame) {
+        perFrameDescriptor = perFrameDescriptorBuilder->buildDescriptorSet();
 
-    res->buildDescriptor();
-
-    return res;
+        return perFrameDescriptor;
+    }
+    return nullptr;
 }
 
 const std::vector<std::string> &NewDescriptorManager::getLayoutNames() const {
     return layout_names;
 }
 
-NewDescriptorManager::NewDescriptorManager(VulkanContext *context): context(context) {}
+NewDescriptorManager::NewDescriptorManager(VulkanContext *context): context(context) {
+    perFrameDescriptorBuilder = std::make_unique<DescriptorSetBuilder>(context);
+}
 
 DescriptorSet *NewDescriptorManager::getDescriptorFor(const std::string &name) {
-    if (descriptors.empty() || (layouts.find(name) == layouts.end())) {
-        return nullptr;
+    if (perFrameDescriptorBuilder->getBindingOf(name) >= 0) {
+        return perFrameDescriptor;
     }
-    auto set = getSetOf(name);
-    return descriptors[set];
+    return nullptr;
 }
 
 DescriptorSet* NewDescriptorManager::getDescriptorFor(NewDescriptorManager::BindingUpdateRate rate) {
@@ -97,7 +75,4 @@ DescriptorSet* NewDescriptorManager::getDescriptorFor(NewDescriptorManager::Bind
 }
 
 NewDescriptorManager::~NewDescriptorManager() {
-    for (auto descriptor: descriptors) {
-        delete descriptor;
-    }
 }
