@@ -68,6 +68,7 @@ add_executable(vulkan_engine main.cpp
         src/core_v2/GraphicsPipelineBuilder2.cpp
         src/core_v2/NewDescriptorManager.cpp
         src/core_v2/storage/CustomDescriptorSet.cpp
+        src/core_v2/storage/DescriptorSetBuilder.cpp
         src/engine/programs/MinimalRenderer.cpp
         src/engine/programs/NewRenderer.cpp
         src/engine/storage/LightBuffer.cpp

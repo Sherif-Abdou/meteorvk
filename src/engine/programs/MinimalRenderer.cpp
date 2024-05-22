@@ -40,13 +40,15 @@ void MinimalRenderer::run() {
 
     DescriptorSet* frame_descriptor = descriptorManager->getDescriptorFor(ubo_name);
 
+    /*
     command_buffer.vertexBuffers = {&vertex};
     command_buffer.pipelines = {&pipeline};
-    command_buffer.bindings = std::vector<GraphicsCommandBuffer::DescriptorPipelineBinding> {{
+    command_buffer.bindings = std::vector<GraphicsCommandBuffer::PerPipelineDescriptorBinding> {{
         frame_descriptor,
         &pipeline.getPipelineLayout(),
         0
     }};
+    */
 
     glfwShowWindow(context->window);
 

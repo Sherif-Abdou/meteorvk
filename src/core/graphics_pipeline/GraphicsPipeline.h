@@ -7,9 +7,9 @@
 
 #include "core/VulkanContext.h"
 #include "GraphicsRenderPass.h"
+#include "core/interfaces/Renderable.h"
 #include "core/storage/DescriptorSet.h"
 #include "core/storage/VertexBuffer.h"
-#include "core/interfaces/Renderable.h"
 
 /// Core of a pipeline, wrapper over VkPipeline
 /// Stores the vulkan pipeline and the images it owns

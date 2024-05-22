@@ -1,0 +1,72 @@
+#include "DescriptorSetBuilder.h"
+#include "core/VulkanContext.h"
+#include "core/storage/DescriptorSet.h"
+#include "core_v2/storage/CustomDescriptorSet.h"
+#include "vulkan/vulkan_structs.hpp"
+
+DescriptorSetBuilder::DescriptorSetBuilder(VulkanContext* context): context(context) {
+
+}
+
+void DescriptorSetBuilder::addLayoutBinding(const std::string& name, vk::DescriptorSetLayoutBinding layout) {
+    layout_names.push_back(name);
+    layouts[name] = {
+        layout,
+        -1
+    };
+}
+
+void DescriptorSetBuilder::finalizeLayout() {
+    int i = 0;
+    std::vector<vk::DescriptorSetLayoutBinding> bindings;
+
+    for (const auto& name: layout_names) {
+        bindings.push_back(layouts[name].binding);
+        layouts[name].layout.setBinding(i);
+        layouts[name].binding = i;
+        i+=1;
+    }
+
+    vk::DescriptorSetLayoutCreateInfo createInfo {};
+    createInfo.setBindings(bindings);
+
+    built_layout = context->device.createDescriptorSetLayout(createInfo);
+}
+
+DescriptorSet* DescriptorSetBuilder::buildDescriptorSet() {
+    std::vector<vk::DescriptorSetLayoutBinding> bindings;
+
+    for (const auto& name: layout_names) {
+        bindings.push_back(layouts[name].binding);
+    }
+    CustomDescriptorSet* descriptor = new CustomDescriptorSet(context, bindings);
+    descriptor->setAllocationOptionsFromBindings(bindings);
+    descriptor->buildDescriptor();
+
+    allocated_descriptors.push_back(descriptor);
+
+    return descriptor;
+};
+
+vk::raii::DescriptorSetLayout* DescriptorSetBuilder::getDescriptorLayout() {
+    if (!built_layout.has_value()) {
+        return nullptr;
+    }
+
+    return &(built_layout.value());
+}
+
+DescriptorSetBuilder::~DescriptorSetBuilder() {
+    for (auto descriptor: allocated_descriptors) {
+        delete descriptor;
+    }
+}
+
+
+uint32_t DescriptorSetBuilder::getBindingOf(const std::string& name) {
+    if (!layouts.contains(name)) {
+        return -1;
+    }
+
+    return layouts[name].binding;
+}

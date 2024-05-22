@@ -57,7 +57,7 @@ void GraphicsCommandBuffer::recordCommandBuffer() {
     }
 
     i = 0;
-    for (auto &pipeline: pipelines) {
+    for (auto pipeline: pipelines) {
         if (dependencies.contains(i)) {
             auto dependency_list = dependencies[i];
             for (auto& dependency : dependency_list) {
@@ -70,12 +70,14 @@ void GraphicsCommandBuffer::recordCommandBuffer() {
                 .vertexBuffers = vertexBuffers,
         };
 
-        auto binding = bindings[i];
-        auto descriptorSet = binding.descriptorSet;
-        auto layout = binding.layout;
-        auto set = binding.set;
-        if (descriptorSet != nullptr && layout != nullptr) {
-            descriptorSet->bindToCommandBuffer(&commandBuffer[current_frame], *layout, set);
+        if (bindings.contains(i)) {
+            auto binding = bindings[i];
+            auto descriptorSet = binding.descriptorSet;
+            auto layout = binding.layout;
+            auto set = binding.set;
+            if (descriptorSet != nullptr && layout != nullptr) {
+                descriptorSet->bindToCommandBuffer(&commandBuffer[current_frame], *layout, set);
+        }
         }
 
         pipeline->renderPipeline(arguments);
@@ -124,11 +126,16 @@ void GraphicsCommandBuffer::sendToSwapchain() {
 
     // Make sure not to ever tick the same descriptor set twice using a set
     std::unordered_set<DescriptorSet*> visited_sets {};
-    for (auto &binding: bindings) {
+    for (auto pair: bindings) {
+        auto& binding = pair.second;
         if (binding.descriptorSet != nullptr && !visited_sets.contains(binding.descriptorSet)) {
             visited_sets.insert(binding.descriptorSet);
             binding.descriptorSet->nextFrame();
         }
+    }
+    if (frameDescriptorSet != nullptr && !visited_sets.contains(frameDescriptorSet)) {
+        visited_sets.insert(frameDescriptorSet);
+        frameDescriptorSet->nextFrame();
     }
 }
 

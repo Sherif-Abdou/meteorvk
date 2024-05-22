@@ -5,9 +5,12 @@
 #ifndef VULKAN_ENGINE_NEWDESCRIPTORMANAGER_H
 #define VULKAN_ENGINE_NEWDESCRIPTORMANAGER_H
 
+#include <memory>
 #include <vulkan/vulkan.hpp>
 #include <unordered_map>
 #include "core/VulkanContext.h"
+#include "core/storage/DescriptorSet.h"
+#include "core_v2/storage/DescriptorSetBuilder.h"
 #include "storage/CustomDescriptorSet.h"
 
 class NewDescriptorManager {
@@ -28,6 +31,9 @@ private:
     };
 
     std::unordered_map<std::string, BindingLayoutInformation> layouts {};
+
+    std::unique_ptr<DescriptorSetBuilder> perFrameDescriptorBuilder = nullptr;
+    std::unique_ptr<DescriptorSet> perFrameDescriptor = nullptr;
 
     std::vector<std::string> layout_names {};
     std::vector<DescriptorSet*> descriptors {};

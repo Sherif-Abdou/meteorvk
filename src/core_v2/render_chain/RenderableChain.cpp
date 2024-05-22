@@ -11,11 +11,11 @@ void RenderableChain::applyToCommandBuffer(GraphicsCommandBuffer* command_buffer
     for (auto& context : this->renderable_contexts) {
         command_buffer->pipelines.push_back(context.renderable);
         command_buffer->dependencies[i] = context.barriers;
-        command_buffer->bindings.push_back({
+        command_buffer->bindings[i] = {
                 descriptorManager->getDescriptorFor(NewDescriptorManager::BindingUpdateRate::Frame),
                 context.pipeline_layout,
                 0
-                });
+                };
         i++;
     }
 
