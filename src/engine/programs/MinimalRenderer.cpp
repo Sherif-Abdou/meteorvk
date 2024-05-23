@@ -87,7 +87,7 @@ GraphicsPipeline MinimalRenderer::buildPipeline() {
     buffer = new ModelBuffer(context, true);
     buffer->updateBuffer(ModelBuffer::PerModelBuffer {
         glm::identity<glm::mat4>(),
-        Material(glm::zero<glm::vec4>())
+        {},
     }, 0);
 
 
@@ -102,9 +102,8 @@ GraphicsPipeline MinimalRenderer::buildPipeline() {
     builder.options.imageSource = GraphicsPipelineBuilder2::ImageSource::Swapchain;
 
     vk::ShaderStageFlags flag_bits = vk::ShaderStageFlagBits::eAllGraphics;
-    builder.descriptorManager->addLayoutBinding(ubo_name,
-                                         vk::DescriptorSetLayoutBinding().setDescriptorCount(1).setDescriptorType(vk::DescriptorType::eUniformBuffer).setStageFlags(flag_bits),
-                                         NewDescriptorManager::BindingUpdateRate::Frame);
+    builder.descriptorManager->addLayoutBindingForFrame(ubo_name,
+                                         vk::DescriptorSetLayoutBinding().setDescriptorCount(1).setDescriptorType(vk::DescriptorType::eUniformBuffer).setStageFlags(flag_bits));
 
     GraphicsPipeline pipeline = builder.build();
 

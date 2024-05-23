@@ -1,28 +1,39 @@
 #include "VertexBufferLoader.h"
 #include "core/storage/NewOBJFile.h"
 #include "core/storage/VertexBuffer.h"
+#include "core_v2/NewDescriptorManager.h"
 
 
-VertexBufferLoader::VertexBufferLoader(VulkanContext* context, ModelBuffer* model_buffer):
-    context(context), model_buffer(model_buffer) {
+VertexBufferLoader::VertexBufferLoader(VulkanContext* context, ModelBuffer* model_buffer, NewDescriptorManager* descriptor_manager):
+    context(context), model_buffer(model_buffer), descriptor_manager(descriptor_manager) {
 
 }
 
-void VertexBufferLoader::addModel(const std::string& name, const std::string& model_path, glm::mat4 model_matrix) {
+void VertexBufferLoader::addModel(const std::string& name, const std::string& model_path, glm::mat4 model_matrix, bool useTexture) {
     uint32_t index = size;
     name_index_map[name] = index;
     vertex_buffers.push_back(nullptr);
     size++;
     should_update = true;
 
-    auto handle = std::async(std::launch::async, [index, model_path, model_matrix, this]() {
+    auto handle = std::async(std::launch::async, [index, useTexture, model_path, model_matrix, this]() {
             auto vertex_buffer = std::make_unique<VertexBuffer>(VertexBufferLoader::createVertexBuffer(this->context, model_path.c_str()));
             vertex_buffer->init();
+            if (this->descriptor_manager != nullptr) {
+                vertex_buffer->createModelDescriptorSet(this->descriptor_manager);
+            }
 
             this->data_mutex.lock();
             model_buffer->updateBuffer({
                     model_matrix,
-                    Material(),
+                    {
+                        glm::vec4(0.02),
+                        glm::vec4(0.49),
+                        glm::vec4(0.49),
+                        0.0f,
+                        1,
+                        useTexture ? 0 : -1,
+                    },
                     }, index);
             vertex_buffers[index] = std::move(vertex_buffer);
             this->data_mutex.unlock();
@@ -33,7 +44,6 @@ void VertexBufferLoader::addModel(const std::string& name, const std::string& mo
 void VertexBufferLoader::updateModelMatrix(const std::string& name, glm::mat4 model_matrix) {
     model_buffer->updateBuffer({
             model_matrix,
-            Material(),
             }, name_index_map[name]);
 }
 
@@ -79,4 +89,13 @@ void VertexBufferLoader::attachToCommandBuffer(std::vector<VertexBuffer*> *buffe
         buffer->push_back(vbo.get());
     }
     should_update = false;
+}
+
+DescriptorSet* VertexBufferLoader::getDescriptorForModel(const std::string& name) {
+    if (!name_index_map.contains(name)) {
+        return nullptr;
+    }
+    auto& vbo = vertex_buffers[name_index_map[name]];
+
+    return vbo->getModelDescriptorSet();
 }

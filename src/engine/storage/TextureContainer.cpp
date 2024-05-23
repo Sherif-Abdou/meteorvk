@@ -5,6 +5,7 @@
 #include "TextureContainer.h"
 
 #include "ImageTextureLoader.h"
+#include "core_v2/NewDescriptorManager.h"
 
 
 TextureContainer::TextureContainer(VulkanContext* context): context(context) {
@@ -112,4 +113,17 @@ void TextureContainer::copyMaterialsTo(TextureDescriptorSet *set) {
 
 TextureContainer::~TextureContainer() {
     destroy();
+}
+
+void TextureContainer::primitiveApplyToDescriptorSet(DescriptorSet* set, NewDescriptorManager* manager, uint32_t index) {
+    if (textures.empty() || samplers.empty()) {
+        return;
+    }
+
+    textures[index].storageImage->updateDescriptor(*set, manager->getBindingOf("model_texture"));
+    samplers[0]->updateSampler(*set, manager->getBindingOf("model_sampler"));
+    set->nextFrame();
+    textures[index].storageImage->updateDescriptor(*set, manager->getBindingOf("model_texture"));
+    samplers[0]->updateSampler(*set, manager->getBindingOf("model_sampler"));
+    set->nextFrame();
 }

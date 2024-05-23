@@ -1,5 +1,6 @@
 #include "NewRenderer.h"
 #include "core/shared_pipeline/PipelineBarrierBuilder.h"
+#include "core/storage/DescriptorSampler.h"
 #include "core_v2/GraphicsPipelineBuilder2.h"
 #include "core/graphics_pipeline/GraphicsCommandBuffer.h"
 #include "core_v2/render_chain/RenderableChain.h"
@@ -8,6 +9,7 @@
 #include "engine/storage/MTLFile.h"
 #include "engine/storage/ModelBuffer.h"
 #include "engine/storage/VertexBufferLoader.h"
+#include "vulkan/vulkan_handles.hpp"
 
 #include <chrono>
 
@@ -21,18 +23,21 @@ void NewRenderer::run() {
         buildForwardGraphicsPipeline();
 
     std::array<const char*, 4> names = {"./models/car.obj", "./models/super_backpack.obj", "./models/floor.obj", "./models/non_triangled_senna.obj"};
-    auto loader = std::make_unique<VertexBufferLoader>(context, model_buffer);
+    loader =
+        std::make_unique<VertexBufferLoader>(context, model_buffer, descriptorManager.get());
 
     loader->addModel("car", "./models/car.obj", glm::identity<glm::mat4>());
     loader->addModel("f", "./models/floor.obj", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, -3, 0)));
     loader->addModel("senna", "./models/non_triangled_senna.obj", glm::translate(glm::identity<glm::mat4>(), glm::vec3(3, 0,0)));
 
-    loader->addModel("senna2", "./models/non_triangled_senna.obj", glm::translate(glm::identity<glm::mat4>(), glm::vec3(-3, 0,0)));
+    // loader->addModel("senna2", "./models/non_triangled_senna.obj", glm::translate(glm::identity<glm::mat4>(), glm::vec3(-3, 0,0)));
 
-    loader->addModel("back", "./models/super_backpack.obj", glm::translate(glm::identity<glm::mat4>(), glm::vec3(3, 0,-5)));
+    loader->addModel("back", "./models/super_backpack.obj", glm::translate(glm::identity<glm::mat4>(), glm::vec3(-3, 0,0)), true);
 
     GraphicsCommandBuffer command_buffer(context);
     command_buffer.init();
+
+    command_buffer.descriptorManager = descriptorManager.get();
 
     RenderableChain render_chain(context, descriptorManager.get());
 
@@ -109,6 +114,13 @@ void NewRenderer::run() {
 
     loader->waitForAll();
 
+    texture_container->primitiveApplyToDescriptorSet(loader->getDescriptorForModel("back"), descriptorManager.get(), 2);
+
+    texture_container->primitiveApplyToDescriptorSet(loader->getDescriptorForModel("f"), descriptorManager.get(), 1);
+
+    texture_container->primitiveApplyToDescriptorSet(loader->getDescriptorForModel("car"), descriptorManager.get(), 0);
+
+    texture_container->primitiveApplyToDescriptorSet(loader->getDescriptorForModel("senna"), descriptorManager.get(), 0);
 
     loader->attachToCommandBuffer(&command_buffer.vertexBuffers);
     auto end = std::chrono::system_clock::now();
@@ -141,12 +153,12 @@ void NewRenderer::run() {
 
 
 std::unique_ptr<ForwardRenderedGraphicsPipeline> NewRenderer::buildForwardGraphicsPipeline() {
-    GraphicsPipelineBuilder2 builder(context);
+    GraphicsPipelineBuilder2 builder(context, nullptr, "forward_pipeline");
     builder.descriptorManager = descriptorManager.get();
     builder.options.useDepth = true;
     builder.options.vertexShaderPath = "./shaders/new_renderer.vert";
     builder.options.fragmentShaderPath = "./shaders/new_renderer.frag";
-    builder.options.multisampling = true;
+    builder.options.multisampling = false;
     builder.options.imageSource = GraphicsPipelineBuilder2::ImageSource::Swapchain;
 
     GraphicsPipeline pipeline = builder.build();
@@ -196,55 +208,68 @@ void NewRenderer::buildDescriptorLayouts() {
 
     vk::ShaderStageFlags stages = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
 
-    descriptorManager->addLayoutBinding(ForwardRenderedGraphicsPipeline::FORWARD_UBO_NAME, 
+    descriptorManager->addLayoutBindingForFrame(ForwardRenderedGraphicsPipeline::FORWARD_UBO_NAME, 
             vk::DescriptorSetLayoutBinding()
             .setDescriptorCount(1)
             .setStageFlags(stages)
-            .setDescriptorType(vk::DescriptorType::eUniformBuffer),
-            NewDescriptorManager::BindingUpdateRate::Frame
+            .setDescriptorType(vk::DescriptorType::eUniformBuffer)
             );
-    descriptorManager->addLayoutBinding("shadow_ubo", 
+
+    descriptorManager->addLayoutBindingForFrame(ModelBufferGraphicsPipeline::MODEL_BUFFER_DESCRIPTOR_NAME, 
             vk::DescriptorSetLayoutBinding()
             .setDescriptorCount(1)
             .setStageFlags(stages)
-            .setDescriptorType(vk::DescriptorType::eUniformBuffer),
-            NewDescriptorManager::BindingUpdateRate::Frame
+            .setDescriptorType(vk::DescriptorType::eUniformBufferDynamic)
             );
-    descriptorManager->addLayoutBinding(ModelBufferGraphicsPipeline::MODEL_BUFFER_DESCRIPTOR_NAME, 
+
+    descriptorManager->addLayoutBindingForPipeline("shadow_ubo", "shadow_pipeline",
             vk::DescriptorSetLayoutBinding()
             .setDescriptorCount(1)
             .setStageFlags(stages)
-            .setDescriptorType(vk::DescriptorType::eUniformBufferDynamic),
-            NewDescriptorManager::BindingUpdateRate::Frame
+            .setDescriptorType(vk::DescriptorType::eUniformBuffer)
             );
-    descriptorManager->addLayoutBinding(SSAOGraphicsPipeline::SSAO_DEPTH_NAME, 
+    descriptorManager->addLayoutBindingForPipeline(SSAOGraphicsPipeline::SSAO_DEPTH_NAME, "ssao_pipeline",
             vk::DescriptorSetLayoutBinding()
             .setDescriptorCount(1)
             .setStageFlags(stages)
-            .setDescriptorType(vk::DescriptorType::eCombinedImageSampler),
-            NewDescriptorManager::BindingUpdateRate::Frame
+            .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
             );
-    descriptorManager->addLayoutBinding(SSAOGraphicsPipeline::SSAO_NOISE_NAME, 
+
+    descriptorManager->addLayoutBindingForPipeline(SSAOGraphicsPipeline::SSAO_NOISE_NAME, "ssao_pipeline",
             vk::DescriptorSetLayoutBinding()
             .setDescriptorCount(1)
             .setStageFlags(stages)
-            .setDescriptorType(vk::DescriptorType::eCombinedImageSampler),
-            NewDescriptorManager::BindingUpdateRate::Frame
+            .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
             );
-    descriptorManager->addLayoutBinding("occlusion_map", 
+
+    descriptorManager->addLayoutBindingForFrame("occlusion_map", 
             vk::DescriptorSetLayoutBinding()
             .setDescriptorCount(1)
             .setStageFlags(stages)
-            .setDescriptorType(vk::DescriptorType::eCombinedImageSampler),
-            NewDescriptorManager::BindingUpdateRate::Frame
+            .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
             );
-    descriptorManager->addLayoutBinding("shadow_map", 
+    descriptorManager->addLayoutBindingForFrame("shadow_map", 
             vk::DescriptorSetLayoutBinding()
             .setDescriptorCount(1)
             .setStageFlags(stages)
-            .setDescriptorType(vk::DescriptorType::eCombinedImageSampler),
-            NewDescriptorManager::BindingUpdateRate::Frame
+            .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
             );
+
+    descriptorManager->addModelLayoutBinding("model_sampler",
+            vk::DescriptorSetLayoutBinding()
+            .setStageFlags(stages)
+            .setDescriptorCount(1)
+            .setDescriptorType(vk::DescriptorType::eSampler));
+    descriptorManager->addModelLayoutBinding("model_texture",
+            vk::DescriptorSetLayoutBinding()
+            .setStageFlags(stages)
+            .setDescriptorCount(1)
+            .setDescriptorType(vk::DescriptorType::eSampledImage));
+    descriptorManager->addModelLayoutBinding("model_info",
+            vk::DescriptorSetLayoutBinding()
+            .setStageFlags(stages)
+            .setDescriptorCount(1)
+            .setDescriptorType(vk::DescriptorType::eUniformBuffer));
 
     TextureDescriptorSet::attachLayoutToDescriptorManager(descriptorManager.get());
 }
@@ -297,28 +322,27 @@ void NewRenderer::tick(double elapsed) {
     shadow_sampler->updateSampler(*descriptorManager->getDescriptorFor("shadow_map"), descriptorManager->getBindingOf("shadow_map"));
 
 
-
-    depth_pipeline->getUBO().ubo.view = pipeline->ubo.view;
-    ssao_pipeline->ubo->view = pipeline->ubo.view;
-
     glm::mat4 shadow_proj = glm::ortho(-20.f, 20.f, -20.f, 20.f, 0.1f, 20.f);
 
-    shadow_pipeline->lightUBO.view = glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0,0,0), glm::vec3(0,0, 1));
-    pipeline->ubo.lightProjView = shadow_proj * glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0,0,0), glm::vec3(0,0, 1));
+    shadow_pipeline->lightUBO.view = glm::lookAt(glm::vec3(0, 5, -3), glm::vec3(0,0,0), glm::vec3(0,0, 1));
+    pipeline->ubo.lightProjView = shadow_pipeline->exportLightProjView();
 
     light_buffer->updateDescriptor(descriptorManager.get());
 
     texture_container->copyMaterialsTo(texture_descriptor.get());
+
+
     texture_descriptor->uploadMaterialList();
 }
 
 std::unique_ptr<DepthOnlyPipeline> NewRenderer::buildDepthOnlyPipeline() {
-    GraphicsPipelineBuilder2 builder(context, descriptorManager.get());
+    GraphicsPipelineBuilder2 builder(context, descriptorManager.get(), "ssao_depth_pipeline");
 
     builder.options.useDepth = true;
     builder.options.shouldStoreDepth = true;
     builder.options.multisampling = false;
     builder.options.imageSource = GraphicsPipelineBuilder2::ImageSource::Depth;
+    builder.options.extent = {1280, 720};
     builder.options.vertexShaderPath = "shaders/new_renderer.vert";
     builder.options.fragmentShaderPath = "shaders/shadow.frag";
 
@@ -341,7 +365,7 @@ std::unique_ptr<DepthOnlyPipeline> NewRenderer::buildDepthOnlyPipeline() {
 }
 
 std::unique_ptr<SSAOGraphicsPipeline> NewRenderer::buildSSAOGraphicsPipeline(vk::ImageView depth_image_view) {
-    GraphicsPipelineBuilder2 builder(context, descriptorManager.get());
+    GraphicsPipelineBuilder2 builder(context, descriptorManager.get(), "ssao_pipeline");
 
     builder.options.useDepth = true;
     builder.options.shouldStoreDepth = false;
@@ -349,7 +373,9 @@ std::unique_ptr<SSAOGraphicsPipeline> NewRenderer::buildSSAOGraphicsPipeline(vk:
     builder.options.imageSource = GraphicsPipelineBuilder2::ImageSource::Custom;
     builder.options.vertexShaderPath = "shaders/new_renderer.vert";
     builder.options.fragmentShaderPath = "shaders/ssao.frag";
+    builder.options.extent = {1280, 720};
     builder.options.format = vk::Format::eR16Sfloat;
+    builder.options.pipeline_name = "ssao_pipeline";
 
     auto pipeline = builder.build();
 
@@ -380,7 +406,7 @@ std::unique_ptr<SSAOGraphicsPipeline> NewRenderer::buildSSAOGraphicsPipeline(vk:
 }
 
 std::unique_ptr<ShadowGraphicsPipeline> NewRenderer::buildShadowGraphicsPipeline() {
-    GraphicsPipelineBuilder2 builder(context, descriptorManager.get());
+    GraphicsPipelineBuilder2 builder(context, descriptorManager.get(), "shadow_pipeline");
 
     builder.options.useDepth = true;
     builder.options.shouldStoreDepth = true;
@@ -389,6 +415,7 @@ std::unique_ptr<ShadowGraphicsPipeline> NewRenderer::buildShadowGraphicsPipeline
     builder.options.extent = {2048, 2048};
     builder.options.vertexShaderPath = "shaders/shadow.vert";
     builder.options.fragmentShaderPath = "shaders/shadow.frag";
+    builder.options.pipeline_name = "shadow_pipeline";
 
     GraphicsPipeline pipeline = builder.build();
 
@@ -411,8 +438,8 @@ void NewRenderer::buildLighting() {
     light_buffer->addLayoutBinding(descriptorManager.get());
     
 
-    light_buffer->addLight(glm::vec3(0, 5, 0), 
-            glm::lookAt(glm::vec3(0, 2, 0), glm::vec3(0,0,0), glm::vec3(0, 0, 1)), 1.f);
+    light_buffer->addLight(glm::vec3(0, 5, -3), 
+            glm::lookAt(glm::vec3(0, 2, 0), glm::vec3(0,0,0), glm::vec3(0, 0, 1)), 0.f);
 
     light_buffer->addLight(glm::vec3(2, 2, 0), 
             glm::lookAt(glm::vec3(0, 5, 0), glm::vec3(0,0,0), glm::vec3(0, 0, 1)));
@@ -428,6 +455,13 @@ void NewRenderer::buildTexturing() {
 
     texture_container = std::make_unique<TextureContainer>(context);
     texture_container->addTextureFromPath("./textures/red.jpeg");
+    texture_container->addTextureFromPath("./textures/img.png");
+    texture_container->addTextureFromPath("./textures/1001_albedo.jpg");
+
+    auto* sampler = new DescriptorSampler(context);
+    sampler->buildSampler();
+
+    texture_container->addSampler(sampler);
 }
 
 

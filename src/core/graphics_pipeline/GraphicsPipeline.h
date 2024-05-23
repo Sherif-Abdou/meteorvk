@@ -15,6 +15,8 @@
 /// Stores the vulkan pipeline and the images it owns
 class GraphicsPipeline: public Renderable {
 public:
+    std::string pipeline_name;
+
     struct ImagePair {
         VulkanAllocator::VulkanImageAllocation imageAllocation;
         vk::raii::ImageView imageView;
@@ -47,8 +49,7 @@ public:
 
     void destroy();
 
-    void renderVertexBuffer(RenderArguments renderArguments, VertexBuffer *vbo) const;
-
+    void renderVertexBuffer(RenderArguments renderArguments, VertexBuffer *vbo);
 private:
     vk::raii::Pipeline pipeline = nullptr;
 public:

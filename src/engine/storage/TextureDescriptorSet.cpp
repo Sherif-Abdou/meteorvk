@@ -19,9 +19,8 @@ TextureDescriptorSet::~TextureDescriptorSet() {
 }
 
 void TextureDescriptorSet::attachLayoutToDescriptorManager(NewDescriptorManager* descriptor) {
-    descriptor->addLayoutBinding(MATERIAL_BUFFER_NAME, vk::DescriptorSetLayoutBinding()
+    descriptor->addLayoutBindingForFrame(MATERIAL_BUFFER_NAME, vk::DescriptorSetLayoutBinding()
             .setStageFlags(vk::ShaderStageFlagBits::eAll)
             .setDescriptorCount(1)
-            .setDescriptorType(vk::DescriptorType::eStorageBuffer), 
-            NewDescriptorManager::BindingUpdateRate::Frame);
+            .setDescriptorType(vk::DescriptorType::eStorageBuffer));
 }

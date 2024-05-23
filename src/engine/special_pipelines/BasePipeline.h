@@ -1,25 +1,35 @@
 #ifndef VULKAN_ENGINE_BASEPIPELINE_H
 #define VULKAN_ENGINE_BASEPIPELINE_H
 
+#include "vulkan/vulkan_raii.hpp"
+
 #include "core/interfaces/Renderable.h"
 #include "core/graphics_pipeline/GraphicsPipeline.h"
 #include "core_v2/NewDescriptorManager.h"
 
 // Generic Specialized Pipeline
 class BasePipeline: public Renderable {
-  public:
-    NewDescriptorManager* descriptors;
+    public:
+        std::string pipeline_name = "";
 
-    BasePipeline() = default;
+        NewDescriptorManager* descriptors;
 
-    // Helper constructor to support composition of special pipelines
-    BasePipeline(BasePipeline* super);
+        BasePipeline() = default;
 
-    virtual GraphicsPipeline& getGraphicsPipeline() = 0;
+        // Helper constructor to support composition of special pipelines
+        BasePipeline(BasePipeline* super);
 
-    virtual ~BasePipeline() = default;
+        virtual GraphicsPipeline& getGraphicsPipeline() = 0;
 
-    virtual void destroy() {};
+        virtual ~BasePipeline() = default;
+
+        virtual void destroy() {};
+    protected:
+        DescriptorSet* local_descriptor = nullptr;
+
+        void tryLoadLocalDescriptor();
+        
+        void tryBindLocalDescriptor(vk::raii::CommandBuffer *commandBuffer);
 };
 
 #endif

@@ -11,6 +11,7 @@
 #include "engine/storage/LightBuffer.h"
 #include "engine/storage/TextureContainer.h"
 #include "engine/storage/TextureDescriptorSet.h"
+#include "engine/storage/VertexBufferLoader.h"
 
 #include <future>
 #include <execution>
@@ -40,6 +41,8 @@ private:
 
     std::unique_ptr<TextureDescriptorSet> texture_descriptor = nullptr;
     std::unique_ptr<TextureContainer> texture_container = nullptr;
+
+    std::unique_ptr<VertexBufferLoader> loader = nullptr;
 public:
     explicit NewRenderer(VulkanContext* context): context(context) {};
 

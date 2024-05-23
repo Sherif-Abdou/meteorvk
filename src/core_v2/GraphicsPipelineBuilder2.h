@@ -13,6 +13,7 @@
 #include "core/storage/Vertex.h"
 #include "core/graphics_pipeline/GraphicsPipeline.h"
 #include "NewDescriptorManager.h"
+#include "vulkan/vulkan_raii.hpp"
 
 class GraphicsPipelineBuilder2 {
     using ImagePair = GraphicsPipeline::ImagePair;
@@ -20,7 +21,7 @@ class GraphicsPipelineBuilder2 {
     VulkanContext* context;
     vk::raii::PipelineLayout pipelineLayout = nullptr;
 
-    std::vector<DescriptorSet*> descriptorSets;
+    std::vector<vk::raii::DescriptorSetLayout*> descriptorSetLayouts;
 
     // Pipeline creation structs
     vk::Viewport viewport {};
@@ -73,6 +74,8 @@ public:
         std::string vertexShaderPath;
         std::string fragmentShaderPath;
 
+        std::string pipeline_name = "";
+
         std::optional<vk::Extent2D> extent;
     };
     struct ImageTargets {
@@ -93,10 +96,12 @@ public:
 
     std::vector<ImagePair> ownedImages;
 
-    explicit GraphicsPipelineBuilder2(VulkanContext* context, NewDescriptorManager* descriptorManager = nullptr);
+    explicit GraphicsPipelineBuilder2(VulkanContext* context, NewDescriptorManager* descriptorManager = nullptr, const std::string& pipeline_name = "untitled_pipeline");
 
     GraphicsPipeline build();
 private:
+    std::string pipeline_name;
+
     void initializePipelineStatesDefaults();
     void enableMultisampling();
     void buildDescriptors();

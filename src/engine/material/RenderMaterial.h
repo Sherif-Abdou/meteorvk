@@ -8,9 +8,9 @@
 #include <glm/glm.hpp>
 
 struct RenderMaterial {
-    glm::vec3 kA;
-    glm::vec3 kD;
-    glm::vec3 kS;
+    glm::vec4 kA;
+    glm::vec4 kD;
+    glm::vec4 kS;
     float_t nS;
     uint32_t illum = 1;
     int32_t kD_index = -1;

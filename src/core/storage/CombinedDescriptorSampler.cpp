@@ -6,12 +6,13 @@
 
 void CombinedDescriptorSampler::buildSampler() {
     vk::SamplerCreateInfo samplerCreateInfo {};
-    samplerCreateInfo.setAddressModeU(vk::SamplerAddressMode::eRepeat);
-    samplerCreateInfo.setAddressModeV(vk::SamplerAddressMode::eRepeat);
+    samplerCreateInfo.setAddressModeU(vk::SamplerAddressMode::eClampToBorder);
+    samplerCreateInfo.setAddressModeV(vk::SamplerAddressMode::eClampToBorder);
     samplerCreateInfo.setAnisotropyEnable(false);
     samplerCreateInfo.setMagFilter(vk::Filter::eNearest);
     samplerCreateInfo.setMinFilter(vk::Filter::eNearest);
     samplerCreateInfo.setMipmapMode(vk::SamplerMipmapMode::eNearest);
+    samplerCreateInfo.setBorderColor(vk::BorderColor::eFloatOpaqueWhite);
 
     sampler = context->device.createSampler(samplerCreateInfo);
 }

@@ -66,10 +66,18 @@ DescriptorSetBuilder::~DescriptorSetBuilder() {
 }
 
 
-uint32_t DescriptorSetBuilder::getBindingOf(const std::string& name) {
-    if (!layouts.contains(name)) {
+int32_t DescriptorSetBuilder::getBindingOf(const std::string& name) {
+    if (!this->layouts.contains(name)) {
         return -1;
     }
 
     return layouts[name].binding;
+}
+
+void DescriptorSetBuilder::tickAllDescriptors() {
+    for (auto descriptor: allocated_descriptors) {
+        if (descriptor != nullptr) {
+            descriptor->nextFrame();
+        }
+    }
 }

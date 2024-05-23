@@ -7,6 +7,10 @@
 
 #include "Vertex.h"
 #include "core/interfaces/IndirectCallStruct.h"
+#include "core/storage/DescriptorSet.h"
+#include "core_v2/NewDescriptorManager.h"
+#include "vulkan/vulkan_handles.hpp"
+#include "vulkan/vulkan_raii.hpp"
 
 #include <mutex>
 
@@ -41,6 +45,11 @@ public:
     constexpr static unsigned long TransparentBit = 1 << 2;
 
     static std::mutex submission_mutex;
+
+    void createModelDescriptorSet(NewDescriptorManager* manager);
+    void tryBindModelDescriptorSet(vk::raii::CommandBuffer* buffer, vk::raii::PipelineLayout* layout);
+
+    DescriptorSet* getModelDescriptorSet();
 private:
     unsigned long vertex_count = 0;
     unsigned long index_count = 0;
@@ -50,6 +59,8 @@ private:
     VulkanAllocator::VulkanBufferAllocation indexBuffer;
     VulkanAllocator::VulkanBufferAllocation vertexStagingBuffer;
     VulkanAllocator::VulkanBufferAllocation indexStagingBuffer;
+
+    DescriptorSet* model_descriptor_set = nullptr;
 
     bool use_staging_buffer = false;
     bool use_index_buffer = false;

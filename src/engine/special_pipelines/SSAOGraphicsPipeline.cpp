@@ -17,6 +17,7 @@ SSAOGraphicsPipeline::SSAOGraphicsPipeline(VulkanContext* context, std::unique_p
     ubo_buffer = std::make_unique<UniformBuffer<UBO>>(context);
 
     this->descriptors =  this->pipeline->descriptors;
+    pipeline_name = "ssao_pipeline";
 };
 
 void SSAOGraphicsPipeline::init() {
@@ -30,17 +31,20 @@ void SSAOGraphicsPipeline::init() {
 }
 
 void SSAOGraphicsPipeline::renderPipeline(Renderable::RenderArguments renderArguments) {
+    tryBindLocalDescriptor(&renderArguments.commandBuffer);
     pipeline->renderPipeline(renderArguments);
 }
 
 void SSAOGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {
+    BasePipeline::tryLoadLocalDescriptor();
+
     pipeline->prepareRender(renderArguments);
     ubo_buffer->updateBuffer(*ubo);
-    DescriptorSet& ref = *descriptors->getDescriptorFor(SSAO_UBO_NAME);
-    ubo_buffer->writeToDescriptor(ref, descriptors->getBindingOf(SSAO_UBO_NAME));
-    noise_sampler->updateSampler(ref, descriptors->getBindingOf(SSAO_NOISE_NAME));
+    // ubo_buffer->writeToDescriptor(*descriptors->getDescriptorFor(SSAO_UBO_NAME), descriptors->getBindingOf(SSAO_UBO_NAME));
+    DescriptorSet& ref = *local_descriptor;
+    noise_sampler->updateSampler(ref, descriptors->getBindingOf(SSAO_NOISE_NAME, pipeline_name));
     if (depth_sampler != nullptr) {
-        depth_sampler->updateSampler(ref, descriptors->getBindingOf(SSAO_DEPTH_NAME));
+        depth_sampler->updateSampler(ref, descriptors->getBindingOf(SSAO_DEPTH_NAME, pipeline_name));
     } else {
         std::cerr << "Missing depth sampler \n";
     }

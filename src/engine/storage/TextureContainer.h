@@ -9,6 +9,7 @@
 #include "core/VulkanContext.h"
 #include "core/storage/StorageImage.h"
 #include "core/storage/DescriptorSampler.h"
+#include "core_v2/NewDescriptorManager.h"
 #include "engine/material/RenderMaterial.h"
 #include "TextureDescriptorSet.h"
 
@@ -41,6 +42,8 @@ public:
     StorageImage* getStorageImage(uint32_t index);
     vk::raii::ImageView* getImageView(uint32_t index);
     VulkanAllocator::VulkanImageAllocation* getAllocation(uint32_t index);
+
+    void primitiveApplyToDescriptorSet(DescriptorSet* set, NewDescriptorManager* manager, uint32_t index=0);
 
     Texture& operator[](uint32_t index);
 

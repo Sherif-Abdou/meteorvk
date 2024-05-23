@@ -41,7 +41,8 @@ void GraphicsPipeline::renderPipeline(Renderable::RenderArguments renderArgument
 void GraphicsPipeline::finishRender(
         const Renderable::RenderArguments &renderArguments) const { renderArguments.commandBuffer.endRenderPass(); }
 
-void GraphicsPipeline::renderVertexBuffer(Renderable::RenderArguments renderArguments, VertexBuffer *vbo) const {
+void GraphicsPipeline::renderVertexBuffer(Renderable::RenderArguments renderArguments, VertexBuffer *vbo) {
+    vbo->tryBindModelDescriptorSet(&renderArguments.commandBuffer, &pipelineLayout);
     if (renderArguments.indirectBuffer != nullptr) {
         vbo->draw_indirect(renderArguments.commandBuffer, *renderArguments.indirectBuffer, renderArguments.indirectBufferOffset);
     } else {

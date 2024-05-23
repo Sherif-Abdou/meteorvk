@@ -196,3 +196,18 @@ uint32_t VertexBuffer::getVertexCount() {
     return vertex_count;
 }
 
+
+void VertexBuffer::createModelDescriptorSet(NewDescriptorManager* manager) {
+    model_descriptor_set = manager->buildModelDescriptorSet();
+}
+
+void VertexBuffer::tryBindModelDescriptorSet(vk::raii::CommandBuffer* buffer, vk::raii::PipelineLayout* layout) {
+    if (model_descriptor_set == nullptr) {
+        return;
+    }
+    model_descriptor_set->bindToCommandBuffer(buffer, *layout, 1);
+}
+
+DescriptorSet* VertexBuffer::getModelDescriptorSet() {
+    return this->model_descriptor_set;
+}

@@ -30,9 +30,11 @@ class DescriptorSetBuilder {
         void addLayoutBinding(const std::string& name, vk::DescriptorSetLayoutBinding layout);
         void finalizeLayout();
         DescriptorSet* buildDescriptorSet();
-        uint32_t getBindingOf(const std::string& name);
+        int32_t getBindingOf(const std::string& name);
 
         vk::raii::DescriptorSetLayout* getDescriptorLayout();
+
+        void tickAllDescriptors();
 
         ~DescriptorSetBuilder();
 };

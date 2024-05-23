@@ -31,13 +31,12 @@ uint32_t LightBuffer::addLight(glm::vec3 position, glm::mat4 pov, int32_t intens
 
 
 void LightBuffer::addLayoutBinding(NewDescriptorManager* descriptorManager) {
-    descriptorManager->addLayoutBinding(
+    descriptorManager->addLayoutBindingForFrame(
             LIGHT_UBO_NAME,
             vk::DescriptorSetLayoutBinding()
             .setDescriptorCount(1)
             .setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment)
-            .setDescriptorType(vk::DescriptorType::eUniformBuffer),
-            NewDescriptorManager::BindingUpdateRate::Frame
+            .setDescriptorType(vk::DescriptorType::eUniformBuffer)
             );
 }
 

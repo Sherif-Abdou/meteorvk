@@ -17,9 +17,9 @@ layout(location = 5) flat in uint material_id;
 const float PI = 3.14159265359;
 
 struct RenderMaterial {
-    vec3 kA;
-    vec3 kD;
-    vec3 kS;
+    vec4 kA;
+    vec4 kD;
+    vec4 kS;
     float nS;
     uint illum;
     int kD_index;
@@ -42,13 +42,25 @@ layout(set = LIGHT_UBO_SET, binding = LIGHT_UBO_BINDING) uniform Lights {
 
 layout(set = SHADOW_MAP_SET, binding = SHADOW_MAP_BINDING) uniform sampler2D shadow_map;
 
+/*
 layout(set = MATERIAL_BUFFER_SET, binding = MATERIAL_BUFFER_BINDING) readonly buffer Materials {
     RenderMaterial materials[64];
 };
+*/
+
+layout(set = MODEL_BUFFER_SET, binding = MODEL_BUFFER_BINDING) uniform DynamicUBO {
+    mat4 model;
+    RenderMaterial material;
+};
+
+layout(set = MODEL_SAMPLER_SET, binding = MODEL_SAMPLER_BINDING) uniform sampler textureSampler;
+
+layout(set = MODEL_TEXTURE_SET, binding = MODEL_TEXTURE_BINDING) uniform texture2D textureImage;
 
 const float kA = 0.02f;
 const float kD = 0.49f;
 const float kS = 0.49f;
+
 
 float calculateShadow() {
     vec4 lightSpacePosition = vec4(light_space_position, 1.0f);
@@ -100,10 +112,16 @@ void main() {
     float occlusion = calculateOcclusion();
     float shadow = 1.0f - calculateShadow();
 
-    RenderMaterial material = materials[material_id];
-    color += vec4(material.kA, 1);
-    float multiplier =  pow(occlusion, 2.0f);
-    vec4 base_color_occluded = vec4(multiplier * vec3(0.8, 0.2, 0.0), 1.0f);
+    vec3 image_base;
+    if (material.kD_index >= 0) {
+        image_base = texture(sampler2D(textureImage, textureSampler), uv).rgb;
+    } else {
+        image_base = material.kD.rgb;
+    }
+
+    color += vec4(material.kA);
+    float multiplier =  pow(occlusion, 1.0f);
+    vec4 base_color_occluded = vec4(multiplier * image_base, 1.0f);
     color = shadow * kA * base_color_occluded;
 
     for (int i = 0; i < light_count; i++) {
@@ -129,8 +147,8 @@ void main() {
             attent = 1.0f;
         }
 
-        color += intensity * shadow * attent * diffuse * kD * vec4(0.8, 0.2, 0.0, 0.0);
-        color += intensity * shadow * attent * specular * kS * vec4(0.9, 0.3, 0.1, 0);
+        color += intensity * shadow * attent * diffuse * kD * vec4(image_base, 0.0);
+        color += intensity * shadow * attent * specular * kS * vec4(image_base + 0.1, 0);
     }
 
     color = color / (color + vec4(1));

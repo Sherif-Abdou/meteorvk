@@ -13,6 +13,7 @@
 #include <unordered_map>
 
 #include "core/shared_pipeline/PipelineBarrier.h"
+#include "core_v2/NewDescriptorManager.h"
 #include "engine/special_pipelines/BasePipeline.h"
 
 /// Command buffer that runs pipelines
@@ -46,6 +47,8 @@ public:
         uint32_t set = 0;
     };
     DescriptorSet* frameDescriptorSet = nullptr;
+
+    NewDescriptorManager* descriptorManager;
 
     std::unordered_map<uint32_t, PerPipelineDescriptorBinding> bindings {}; /// Descriptor set to bind for each pipeline
     std::vector<VertexBuffer*> vertexBuffers {}; /// All vertex buffers to render

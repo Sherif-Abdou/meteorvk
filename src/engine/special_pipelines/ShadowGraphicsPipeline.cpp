@@ -5,6 +5,7 @@
 #include "ShadowGraphicsPipeline.h"
 
 void ShadowGraphicsPipeline::renderPipeline(GraphicsPipeline::RenderArguments renderArguments) {
+    BasePipeline::tryBindLocalDescriptor(&renderArguments.commandBuffer);
     pipeline->renderPipeline(renderArguments);
 }
 
@@ -12,6 +13,8 @@ ShadowGraphicsPipeline::ShadowGraphicsPipeline(std::unique_ptr<ModelBufferGraphi
     this->descriptors = this->pipeline->descriptors;
     lightUniformBuffer.allocateBuffer();
     lightUniformBuffer.updateBuffer(lightUBO);
+
+    pipeline_name = "shadow_pipeline";
 }
 
 GraphicsPipeline &ShadowGraphicsPipeline::getPipeline() {
@@ -23,9 +26,11 @@ GraphicsPipeline &ShadowGraphicsPipeline::getGraphicsPipeline() {
 }
 
 void ShadowGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {
+    BasePipeline::tryLoadLocalDescriptor();
+
     pipeline->prepareRender(renderArguments);
     lightUniformBuffer.updateBuffer(lightUBO);
-    lightUniformBuffer.writeToDescriptor(*descriptors->getDescriptorFor("shadow_ubo"), descriptors->getBindingOf("shadow_ubo"));
+    lightUniformBuffer.writeToDescriptor(*local_descriptor, descriptors->getBindingOf("shadow_ubo", this->pipeline_name));
 }
 
 ShadowGraphicsPipeline::~ShadowGraphicsPipeline() {
@@ -46,4 +51,8 @@ vk::ImageView ShadowGraphicsPipeline::getDepthImageView() {
 
 vk::Image ShadowGraphicsPipeline::getDepthImage() {
     return this->pipeline->getGraphicsPipeline().ownedImages[0].imageAllocation.image;
+}
+
+glm::mat4 ShadowGraphicsPipeline::exportLightProjView() {
+    return lightUBO.proj * lightUBO.view;
 }

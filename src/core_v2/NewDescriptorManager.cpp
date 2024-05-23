@@ -5,38 +5,74 @@
 #include "NewDescriptorManager.h"
 #include "core_v2/storage/DescriptorSetBuilder.h"
 
-void NewDescriptorManager::addLayoutBinding(const std::string &name, vk::DescriptorSetLayoutBinding layout,
-        NewDescriptorManager::BindingUpdateRate rate) {
+void NewDescriptorManager::addLayoutBindingForFrame(const std::string &name, vk::DescriptorSetLayoutBinding layout) {
     layout_names.push_back(name);
-    if (rate == BindingUpdateRate::Frame) {
-        perFrameDescriptorBuilder->addLayoutBinding(name, layout);
+    perFrameDescriptorBuilder->addLayoutBinding(name, layout);
+}
+
+uint32_t NewDescriptorManager::getBindingOf(const std::string &name, const std::string &pipeline_name) {
+    int32_t binding = -1;
+    if (perPipelineDescriptorBuilders.contains(pipeline_name) && ((binding = perPipelineDescriptorBuilders[pipeline_name]->getBindingOf(name)) >= 0)) {
+        return binding;
     }
+    if ((binding = perModelDescriptorBuilder->getBindingOf(name)) >= 0) {
+        return binding;
+    }
+    if ((binding = perFrameDescriptorBuilder->getBindingOf(name)) >= 0) {
+        return binding;
+    }
+    return binding;
 }
 
-uint32_t NewDescriptorManager::getBindingOf(const std::string &name) {
-    return perFrameDescriptorBuilder->getBindingOf(name);
-}
-
-uint32_t NewDescriptorManager::getSetOf(const std::string &name) {
-    if (perFrameDescriptorBuilder->getBindingOf(name) >= 0) {
+uint32_t NewDescriptorManager::getSetOf(const std::string &name, const std::string &pipeline_name) {
+    if (perPipelineDescriptorBuilders.contains(pipeline_name) && (perPipelineDescriptorBuilders[pipeline_name]->getBindingOf(name) >= 0)) {
+        return 2;
+    }
+    if (perModelDescriptorBuilder != nullptr && (perModelDescriptorBuilder->getBindingOf(name) >= 0)) {
+        return 1;
+    }
+    if (perFrameDescriptorBuilder != nullptr && perFrameDescriptorBuilder->getBindingOf(name) >= 0) {
         return 0;
     }
     return -1;
 }
 
-std::vector<DescriptorSet *> NewDescriptorManager::buildDescriptors() {
+std::vector<vk::raii::DescriptorSetLayout*> NewDescriptorManager::getDescriptorLayoutsForPipeline(const std::string& pipeline_name) {
+    std::vector<vk::raii::DescriptorSetLayout*> descriptor_layouts {};
+
+    if (this->perFrameDescriptorBuilder != nullptr) {
+        perFrameDescriptorBuilder->finalizeLayout();
+        descriptor_layouts.push_back(perFrameDescriptorBuilder->getDescriptorLayout());
+    }
+    if (this->perModelDescriptorBuilder != nullptr) {
+        perModelDescriptorBuilder->finalizeLayout();
+        descriptor_layouts.push_back(perModelDescriptorBuilder->getDescriptorLayout());
+    }
+    if (this->perPipelineDescriptorBuilders.contains(pipeline_name)) {
+        this->perPipelineDescriptorBuilders[pipeline_name]->finalizeLayout();
+        descriptor_layouts.push_back(this->perPipelineDescriptorBuilders[pipeline_name]->getDescriptorLayout());
+    }     
+
+    return descriptor_layouts;
+}
+std::vector<vk::raii::DescriptorSetLayout*> NewDescriptorManager::buildDescriptorsForPipeline(const std::string& pipeline_name) {
     if (!descriptors.empty()) {
-        return descriptors;
+        return getDescriptorLayoutsForPipeline(pipeline_name);
     }
     descriptors = {};
     DescriptorSet* set;
     perFrameDescriptorBuilder->finalizeLayout();
 
-    if ((perFrameDescriptor = perFrameDescriptorBuilder->buildDescriptorSet()) != nullptr) {
+    if (perFrameDescriptorBuilder != nullptr && ((perFrameDescriptor = perFrameDescriptorBuilder->buildDescriptorSet()) != nullptr)) {
         descriptors.push_back(perFrameDescriptor);
     }
 
-    return descriptors;
+    return getDescriptorLayoutsForPipeline(pipeline_name);
+}
+
+DescriptorSet* NewDescriptorManager::buildModelDescriptorSet() {
+    perModelDescriptorBuilder->finalizeLayout();
+    return perModelDescriptorBuilder->buildDescriptorSet();
 }
 
 DescriptorSet *NewDescriptorManager::buildDescriptorsOfCategory(NewDescriptorManager::BindingUpdateRate rate, uint32_t set) {
@@ -74,5 +110,41 @@ DescriptorSet* NewDescriptorManager::getDescriptorFor(NewDescriptorManager::Bind
     }
 }
 
+void NewDescriptorManager::addLayoutBindingForPipeline(const std::string& name, const std::string& pipeline_name, vk::DescriptorSetLayoutBinding binding) {
+    if (!perPipelineDescriptorBuilders.contains(pipeline_name)) {
+        perPipelineDescriptorBuilders[pipeline_name] = std::make_unique<DescriptorSetBuilder>(context);
+    }
+    perPipelineDescriptorBuilders[pipeline_name]->addLayoutBinding(name, binding);
+    layout_names.push_back(name);
+};
+void NewDescriptorManager::addModelLayoutBinding(const std::string& name,vk::DescriptorSetLayoutBinding binding) {
+    layout_names.push_back(name);
+    if (perModelDescriptorBuilder == nullptr) {
+        perModelDescriptorBuilder = std::make_unique<DescriptorSetBuilder>(context);
+    }
+    perModelDescriptorBuilder->addLayoutBinding(name, binding);
+}
+
+void NewDescriptorManager::tickAllDescriptors() {
+    if (perFrameDescriptorBuilder != nullptr) {
+        perFrameDescriptorBuilder->tickAllDescriptors();
+    }
+    if (perModelDescriptorBuilder != nullptr) {
+        perModelDescriptorBuilder->tickAllDescriptors();
+    }
+    for (auto& [_, v] : perPipelineDescriptorBuilders) {
+        if (v != nullptr) {
+            v->tickAllDescriptors();
+        }
+    }
+}
+
 NewDescriptorManager::~NewDescriptorManager() {
+}
+
+DescriptorSet* NewDescriptorManager::buildPipelineDescriptorSet(const std::string& name) {
+    if (!perPipelineDescriptorBuilders.contains(name)) {
+        return nullptr;
+    }
+    return perPipelineDescriptorBuilders[name]->buildDescriptorSet();
 }

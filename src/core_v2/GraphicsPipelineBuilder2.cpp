@@ -3,8 +3,9 @@
 //
 
 #include "GraphicsPipelineBuilder2.h"
+#include "shaderc/shaderc.h"
 
-GraphicsPipelineBuilder2::GraphicsPipelineBuilder2(VulkanContext *context, NewDescriptorManager* manager): context(context), descriptorManager(manager) {
+GraphicsPipelineBuilder2::GraphicsPipelineBuilder2(VulkanContext *context, NewDescriptorManager* manager, const std::string& pipeline_name): context(context), descriptorManager(manager), pipeline_name(pipeline_name) {
     if (descriptorManager == nullptr) {
       descriptorManager = new NewDescriptorManager(context);
     }
@@ -67,7 +68,7 @@ void GraphicsPipelineBuilder2::enableMultisampling() {
 }
 
 void GraphicsPipelineBuilder2::buildDescriptors() {
-    descriptorSets = descriptorManager->buildDescriptors();
+    descriptorSetLayouts = descriptorManager->buildDescriptorsForPipeline(options.pipeline_name);
 }
 
 void GraphicsPipelineBuilder2::buildRenderpass() {
@@ -261,14 +262,14 @@ std::vector<uint32_t> GraphicsPipelineBuilder2::compileShader(const std::string 
 
     compile_options.AddMacroDefinition("CUSTOM_BINDINGS");
     for (auto layout_name: descriptorManager->getLayoutNames()) {
-        uint32_t setNum = descriptorManager->getSetOf(layout_name);
-        uint32_t bindingNum = descriptorManager->getBindingOf(layout_name);
+        uint32_t setNum = descriptorManager->getSetOf(layout_name, options.pipeline_name);
+        uint32_t bindingNum = descriptorManager->getBindingOf(layout_name, options.pipeline_name);
         std::transform(layout_name.begin(), layout_name.end(), layout_name.begin(), ::toupper);
         compile_options.AddMacroDefinition(layout_name + "_BINDING", std::to_string(bindingNum));
         compile_options.AddMacroDefinition(layout_name + "_SET", std::to_string(setNum));
     }
 
-    compile_options.SetOptimizationLevel(shaderc_optimization_level_zero);
+    compile_options.SetOptimizationLevel(shaderc_optimization_level_performance);
 
     std::string source = readFile(path);
 
@@ -400,10 +401,10 @@ void GraphicsPipelineBuilder2::createPipelineLayout() {
 
     vk::PipelineLayoutCreateInfo layoutCreateInfo {};
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts {};
-    descriptorSetLayouts.reserve(descriptorSets.size());
+    descriptorSetLayouts.reserve(descriptorSetLayouts.size());
 
-    for (auto descriptorSet: descriptorSets) {
-        descriptorSetLayouts.push_back(descriptorSet->getDescriptorSetLayout());
+    for (auto descriptorSet: this->descriptorSetLayouts) {
+        descriptorSetLayouts.push_back(**descriptorSet);
     }
 
     layoutCreateInfo.setSetLayouts(descriptorSetLayouts);

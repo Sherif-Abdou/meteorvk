@@ -5,6 +5,7 @@
 #ifndef VULKAN_ENGINE_SHADOWGRAPHICSPIPELINE_H
 #define VULKAN_ENGINE_SHADOWGRAPHICSPIPELINE_H
 
+#include "core/storage/DescriptorSet.h"
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
@@ -50,6 +51,8 @@ public:
 
     vk::ImageView getDepthImageView();
     vk::Image getDepthImage();
+
+    glm::mat4 exportLightProjView();
 
     virtual ~ShadowGraphicsPipeline();
 

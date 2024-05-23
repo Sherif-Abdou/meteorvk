@@ -26,19 +26,19 @@ MTLFile::MTLFile(std::istream &stream) {
             float r, g, b;
             stringstream >> r >> g >> b;
 
-            current_material->kA = {r, g, b};
+            current_material->kA = {r, g, b, 1.0f};
         }
         if (opener == "Kd") {
             float r, g, b;
             stringstream >> r >> g >> b;
 
-            current_material->kD = {r, g, b};
+            current_material->kD = {r, g, b, 1.0f};
         }
         if (opener == "Ks") {
             float r, g, b;
             stringstream >> r >> g >> b;
 
-            current_material->kS = {r, g, b};
+            current_material->kS = {r, g, b, 1.0f};
         }
         if (opener == "Ns") {
             float s;

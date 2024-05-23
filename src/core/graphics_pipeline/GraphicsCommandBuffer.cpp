@@ -125,6 +125,7 @@ void GraphicsCommandBuffer::sendToSwapchain() {
     current_frame = (current_frame + 1) % FRAMES_IN_FLIGHT;
 
     // Make sure not to ever tick the same descriptor set twice using a set
+    /*
     std::unordered_set<DescriptorSet*> visited_sets {};
     for (auto pair: bindings) {
         auto& binding = pair.second;
@@ -136,6 +137,10 @@ void GraphicsCommandBuffer::sendToSwapchain() {
     if (frameDescriptorSet != nullptr && !visited_sets.contains(frameDescriptorSet)) {
         visited_sets.insert(frameDescriptorSet);
         frameDescriptorSet->nextFrame();
+    }
+    */
+    if (descriptorManager != nullptr) {
+        descriptorManager->tickAllDescriptors();
     }
 }
 
