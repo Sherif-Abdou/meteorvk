@@ -3,6 +3,7 @@
 //
 
 #include "GraphicsCommandBuffer.h"
+#include "vulkan/vulkan_enums.hpp"
 #include <unordered_set>
 
 void GraphicsCommandBuffer::createCommandPool() {
@@ -92,13 +93,24 @@ void GraphicsCommandBuffer::beginCommandBuffer() const {
     commandBuffer[current_frame].begin(beginInfo);
 }
 
-void GraphicsCommandBuffer::submitCommandBuffer() {
+void GraphicsCommandBuffer::submitCommandBuffer(bool waitOnSwapchain) {
     vk::SubmitInfo submitInfo{};
     vk::PipelineStageFlags waitStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
     submitInfo.setCommandBuffers(*commandBuffer[current_frame]);
-    submitInfo.setWaitSemaphores(*imageAvailableSemaphore[current_frame]);
-    submitInfo.setSignalSemaphores(*renderFinishedSemaphore[current_frame]);
-    submitInfo.setWaitDstStageMask(waitStage);
+    if (waitOnSwapchain) {
+        submitInfo.setWaitSemaphores(*imageAvailableSemaphore[current_frame]);
+        submitInfo.setWaitDstStageMask(waitStage);
+    } else {
+        // submitInfo.setWaitSemaphores(*renderFinishedSemaphore[current_frame]);
+        submitInfo.setWaitSemaphores({});
+        submitInfo.setWaitSemaphoreCount(0);
+    }
+    if (waitOnSwapchain) {
+        submitInfo.setSignalSemaphores(*renderFinishedSemaphore[current_frame]);
+    } else {
+        submitInfo.setSignalSemaphores({});
+        submitInfo.setSignalSemaphoreCount(0);
+    }
 
     context->graphicsQueue.submit(submitInfo, *inFlightFence[current_frame]);
 }
@@ -159,15 +171,23 @@ void GraphicsCommandBuffer::renderToSwapchain() {
 }
 
 void GraphicsCommandBuffer::finishSwapchainRender() {
-    recordCommandBuffer();
     submitCommandBuffer();
     sendToSwapchain();
-}
+}       
 
 void GraphicsCommandBuffer::beginSwapchainRender() {
     waitForFence();
     fetchSwapchain();
     beginCommandBuffer();
+}
+
+void GraphicsCommandBuffer::beginSimpleRender() {
+    waitForFence();
+    beginCommandBuffer();
+}
+
+void GraphicsCommandBuffer::finishSimpleRender() {
+    submitCommandBuffer(false);
 }
 
 GraphicsCommandBuffer::GraphicsCommandBuffer(VulkanContext *context) : context(context) {}
@@ -178,3 +198,16 @@ void GraphicsCommandBuffer::destroy() {
     }
 }
 
+vk::raii::Semaphore* GraphicsCommandBuffer::getCurrentImageAvailableSemaphore() {
+    return &this->imageAvailableSemaphore[current_frame];
+}
+vk::raii::Semaphore* GraphicsCommandBuffer::getCurrentRenderFinishedSemaphore() {
+    return &this->renderFinishedSemaphore[current_frame];
+}
+
+void GraphicsCommandBuffer::recordSwapchainRender() {
+    recordCommandBuffer();
+}
+void GraphicsCommandBuffer::recordSimpleRender() {
+    recordCommandBuffer();
+}

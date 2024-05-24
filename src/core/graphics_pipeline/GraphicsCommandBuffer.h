@@ -36,7 +36,7 @@ private:
     void waitForFence();
     void fetchSwapchain();
     void recordCommandBuffer();
-    void submitCommandBuffer();
+    void submitCommandBuffer(bool waitOnSwapChain = true);
     void sendToSwapchain();
 
 public:
@@ -61,11 +61,19 @@ public:
     void renderToSwapchain();
     void destroy();
 
+    vk::raii::Semaphore* getCurrentImageAvailableSemaphore();
+    vk::raii::Semaphore* getCurrentRenderFinishedSemaphore();
+
     void beginCommandBuffer() const;
 
     void beginSwapchainRender();
+    void beginSimpleRender();
+
+    void recordSwapchainRender();
+    void recordSimpleRender();
 
     void finishSwapchainRender();
+    void finishSimpleRender();
 };
 
 

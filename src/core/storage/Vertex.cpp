@@ -9,7 +9,25 @@ vk::VertexInputBindingDescription Vertex::bindingDescription() {
     binding.binding = 0;
     binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
     binding.stride = sizeof (Vertex);
+
+    auto instance_binding = VkVertexInputBindingDescription();
+    instance_binding.binding = 1;
+    instance_binding.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+    instance_binding.stride = sizeof (glm::mat4);
     return binding;
+}
+
+std::vector<vk::VertexInputBindingDescription> Vertex::bindingDescriptions() {
+    auto binding =  VkVertexInputBindingDescription();
+    binding.binding = 0;
+    binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    binding.stride = sizeof (Vertex);
+
+    auto instance_binding = VkVertexInputBindingDescription();
+    instance_binding.binding = 1;
+    instance_binding.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+    instance_binding.stride = sizeof (glm::mat4);
+    return {binding};
 }
 
 std::array<vk::VertexInputAttributeDescription, Vertex::VERTEX_NUM> Vertex::attributeDescriptions() {

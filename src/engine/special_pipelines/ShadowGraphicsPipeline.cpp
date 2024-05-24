@@ -11,6 +11,7 @@ void ShadowGraphicsPipeline::renderPipeline(GraphicsPipeline::RenderArguments re
 
 ShadowGraphicsPipeline::ShadowGraphicsPipeline(std::unique_ptr<ModelBufferGraphicsPipeline> pipeline) : pipeline(std::move(pipeline)), lightUniformBuffer(this->pipeline->getGraphicsPipeline().context) {
     this->descriptors = this->pipeline->descriptors;
+    this->pipeline->automaticBind = false;
     lightUniformBuffer.allocateBuffer();
     lightUniformBuffer.updateBuffer(lightUBO);
 
@@ -28,9 +29,9 @@ GraphicsPipeline &ShadowGraphicsPipeline::getGraphicsPipeline() {
 void ShadowGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {
     BasePipeline::tryLoadLocalDescriptor();
 
-    pipeline->prepareRender(renderArguments);
     lightUniformBuffer.updateBuffer(lightUBO);
     lightUniformBuffer.writeToDescriptor(*local_descriptor, descriptors->getBindingOf("shadow_ubo", this->pipeline_name));
+    pipeline->prepareRender(renderArguments);
 }
 
 ShadowGraphicsPipeline::~ShadowGraphicsPipeline() {

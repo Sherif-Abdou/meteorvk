@@ -21,7 +21,9 @@ private:
   uint32_t max_size;
 
   void loadGraphicsPipeline();
+
 public:
+    bool automaticBind = true;
     static constexpr const char* MODEL_BUFFER_DESCRIPTOR_NAME = "model_buffer";
 
     explicit ModelBufferGraphicsPipeline(GraphicsPipeline &&graphicsPipeline,

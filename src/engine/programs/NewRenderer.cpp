@@ -37,9 +37,14 @@ void NewRenderer::run() {
     GraphicsCommandBuffer command_buffer(context);
     command_buffer.init();
 
+    GraphicsCommandBuffer side_buffer(context);
+    side_buffer.init();
+
     command_buffer.descriptorManager = descriptorManager.get();
+    side_buffer.descriptorManager = descriptorManager.get();
 
     RenderableChain render_chain(context, descriptorManager.get());
+    RenderableChain side_chain(context, descriptorManager.get());
 
 
     shadow_pipeline = 
@@ -59,9 +64,9 @@ void NewRenderer::run() {
             .whichUses(vk::AccessFlagBits2::eDepthStencilAttachmentWrite)
             .beforeDoing(vk::PipelineStageFlagBits2::eFragmentShader)
             .whichUses(vk::AccessFlagBits2::eShaderRead)
-            .forImage(depth_pipeline->getDepthImage(), vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1))
-            .withInitialLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
-            .withFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+            .forImage(depth_pipeline->getDepthImage(), vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1));
+            //.withInitialLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
+            // .withFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
     auto occlusion_image_barrier = PipelineBarrierBuilder();
     occlusion_image_barrier
@@ -81,18 +86,19 @@ void NewRenderer::run() {
         .withInitialLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
         .withFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
-    render_chain.addRenderable({
+    side_chain.addRenderable({
             shadow_pipeline.get(),
-            &shadow_pipeline.get()->getPipeline().getPipelineLayout(),
+            &shadow_pipeline.get()->getGraphicsPipeline().getPipelineLayout(),
             });
+
     render_chain.addRenderable({
             depth_pipeline.get(),
             &depth_pipeline.get()->getPipeline().getPipelineLayout(),
             });
     render_chain.addRenderable({
             ssao_pipeline.get(),
-            &ssao_pipeline->getPipeline().getPipelineLayout(),
-            // {depth_image_barrier.build()},
+            &ssao_pipeline->getGraphicsPipeline().getPipelineLayout(),
+            {depth_image_barrier.build()},
             });
     render_chain.addRenderable({
             pipeline.get(),
@@ -110,6 +116,7 @@ void NewRenderer::run() {
     */
 
 
+    side_chain.applyToCommandBuffer(&side_buffer);
     render_chain.applyToCommandBuffer(&command_buffer);
 
     loader->waitForAll();
@@ -123,6 +130,7 @@ void NewRenderer::run() {
     texture_container->primitiveApplyToDescriptorSet(loader->getDescriptorForModel("senna"), descriptorManager.get(), 0);
 
     loader->attachToCommandBuffer(&command_buffer.vertexBuffers);
+    loader->attachToCommandBuffer(&side_buffer.vertexBuffers);
     auto end = std::chrono::system_clock::now();
 
     std::cout << end - start << "\n";
@@ -131,13 +139,18 @@ void NewRenderer::run() {
     auto last_time = glfwGetTime();
     while (!glfwWindowShouldClose(context->window)) {
         glfwPollEvents();
-        auto current_time = glfwGetTime();
+        side_buffer.beginSimpleRender();
         command_buffer.beginSwapchainRender();
 
+        auto current_time = glfwGetTime();
         tick(current_time - last_time);
-
-        command_buffer.finishSwapchainRender();
         last_time = current_time;
+
+        command_buffer.recordSwapchainRender();
+        side_buffer.recordSimpleRender();
+
+        side_buffer.finishSimpleRender();
+        command_buffer.finishSwapchainRender();
     }
 
     context->device.waitIdle();

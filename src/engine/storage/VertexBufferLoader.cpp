@@ -81,14 +81,18 @@ VertexBuffer VertexBufferLoader::createVertexBuffer(VulkanContext *context, cons
 }
 
 void VertexBufferLoader::attachToCommandBuffer(std::vector<VertexBuffer*> *buffer) {
+    /*
     if (!should_update) {
         return;
     }
+    */
     buffer->clear();
     for (auto& vbo: vertex_buffers) {
         buffer->push_back(vbo.get());
     }
+    /*
     should_update = false;
+    */
 }
 
 DescriptorSet* VertexBufferLoader::getDescriptorForModel(const std::string& name) {

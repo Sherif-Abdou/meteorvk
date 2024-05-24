@@ -3,6 +3,9 @@
 //
 
 #include "TransferQueue.h"
+#include "vulkan/vulkan_structs.hpp"
+#include <cstdint>
+#include <stdexcept>
 
 void TransferQueue::init() {
     vk::CommandPoolCreateInfo command_pool_create_info {};
@@ -44,9 +47,14 @@ void TransferQueue::submit() {
 
     vk::SubmitInfo submit_info {};
     submit_info.setCommandBuffers(*command_buffer);
-    context->transferQueue.submit(submit_info, nullptr);
+    vk::raii::Fence fence = context->device.createFence(vk::FenceCreateInfo());
+    context->transferQueue.submit(submit_info, *fence);
 
     ran = true;
 
-    context->device.waitIdle();
+    auto res = context->device.waitForFences(*fence, false, UINT32_MAX);
+    if (res != vk::Result::eSuccess) {
+        throw std::runtime_error("Fence failure");
+    }
+    // context->device.waitIidle();
 }

@@ -37,7 +37,7 @@ class GraphicsPipelineBuilder2 {
     vk::Extent2D extent = context->swapChainExtent;
     std::vector<vk::DynamicState> dynamic_states {};
     std::vector<vk::PipelineShaderStageCreateInfo> stages {};
-    std::vector<vk::VertexInputBindingDescription> bindings = {Vertex::bindingDescription()};
+    std::vector<vk::VertexInputBindingDescription> bindings = Vertex::bindingDescriptions();
     std::array<vk::VertexInputAttributeDescription, Vertex::VERTEX_NUM> descriptions = Vertex::attributeDescriptions();
     std::vector<vk::PipelineColorBlendAttachmentState> colorBlendAttachments = {};
 

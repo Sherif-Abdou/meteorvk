@@ -20,6 +20,7 @@ struct Vertex {
     uint32_t material = -1;
 
     static vk::VertexInputBindingDescription bindingDescription();
+    static std::vector<vk::VertexInputBindingDescription> bindingDescriptions();
     static std::array<vk::VertexInputAttributeDescription, VERTEX_NUM> attributeDescriptions();
     static void writeVectorToBuffer(const std::vector<Vertex>&, VulkanAllocator::VulkanBufferAllocation&);
 

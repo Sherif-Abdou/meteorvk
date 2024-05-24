@@ -41,7 +41,9 @@ ModelBufferGraphicsPipeline::ModelBufferGraphicsPipeline(GraphicsPipeline &&grap
 }
 
 void ModelBufferGraphicsPipeline::prepareRender(Renderable::RenderArguments renderArguments) {
-    modelBuffer->writeBuffer(*descriptors->getDescriptorFor(MODEL_BUFFER_DESCRIPTOR_NAME), descriptors->getBindingOf(MODEL_BUFFER_DESCRIPTOR_NAME));
+    if (automaticBind) {
+        modelBuffer->writeBuffer(*descriptors->getDescriptorFor(MODEL_BUFFER_DESCRIPTOR_NAME), descriptors->getBindingOf(MODEL_BUFFER_DESCRIPTOR_NAME));
+    }
 }
 
 ModelBufferGraphicsPipeline::ModelBufferGraphicsPipeline(GraphicsPipeline &&graphicsPipeline,
